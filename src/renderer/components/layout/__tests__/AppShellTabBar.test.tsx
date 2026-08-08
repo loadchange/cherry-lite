@@ -55,11 +55,6 @@ vi.mock('@renderer/utils/platform', () => ({
   platform: 'linux'
 }))
 
-vi.mock('@renderer/components/icons/miniAppsLogo', () => ({
-  getMiniAppsLogoRef: () => undefined,
-  useMiniAppLogo: () => undefined
-}))
-
 vi.mock('@data/hooks/usePreference', () => ({
   usePreference: () => [false]
 }))

@@ -3,17 +3,8 @@ import HighlightText from '@renderer/components/HighlightText'
 import { cn } from '@renderer/utils/style'
 import { formatRelativeTime } from '@renderer/utils/time'
 import type { EntitySearchItem } from '@shared/data/api/schemas/search'
-import type { AgentSessionMessageSearchRole } from '@shared/data/types/message'
-import {
-  ArrowRight,
-  Bot,
-  ChevronDown,
-  Clock3,
-  FileSearch,
-  MessageSquare,
-  MousePointerClick,
-  Sparkles
-} from 'lucide-react'
+import type { TopicMessageSearchRole } from '@shared/data/types/message'
+import { ArrowRight, ChevronDown, Clock3, MessageSquare, Sparkles } from 'lucide-react'
 import { type MouseEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -29,39 +20,23 @@ import { getGlobalSearchOptionDomId } from './useGlobalSearchKeyboard'
 
 const RESULT_ICONS: Record<EntitySearchItem['type'], typeof MessageSquare> = {
   topic: MessageSquare,
-  session: MousePointerClick,
-  assistant: Sparkles,
-  agent: Bot,
-  'knowledge-base': FileSearch
-}
-
-const RECENT_ICONS = {
-  route: Clock3,
-  topic: MessageSquare,
-  session: MousePointerClick
+  assistant: Sparkles
 }
 
 const GROUP_LABEL_KEYS: Record<GlobalSearchGroupId, string> = {
   recent: 'globalSearch.groups.recent',
   topic: 'globalSearch.groups.topic',
-  session: 'globalSearch.groups.session',
   message: 'globalSearch.groups.message',
-  assistant: 'globalSearch.groups.assistant',
-  agent: 'globalSearch.groups.agent',
-  'knowledge-base': 'globalSearch.groups.knowledge-base'
+  assistant: 'globalSearch.groups.assistant'
 }
 
 const RESULT_TYPE_LABEL_KEYS: Record<EntitySearchItem['type'], string> = {
   topic: 'globalSearch.resultTypes.topic',
-  session: 'globalSearch.resultTypes.session',
-  assistant: 'globalSearch.resultTypes.assistant',
-  agent: 'globalSearch.resultTypes.agent',
-  'knowledge-base': 'common.knowledge_base'
+  assistant: 'globalSearch.resultTypes.assistant'
 }
 
-const MESSAGE_ROLE_LABEL_KEYS: Record<AgentSessionMessageSearchRole, string> = {
+const MESSAGE_ROLE_LABEL_KEYS: Record<TopicMessageSearchRole, string> = {
   assistant: 'globalSearch.messageSearch.roles.assistant',
-  system: 'globalSearch.messageSearch.roles.system',
   user: 'globalSearch.messageSearch.roles.user'
 }
 
@@ -73,7 +48,7 @@ function getResultTypeLabelKey(type: EntitySearchItem['type']) {
   return RESULT_TYPE_LABEL_KEYS[type]
 }
 
-function getMessageRoleLabelKey(role: AgentSessionMessageSearchRole) {
+function getMessageRoleLabelKey(role: TopicMessageSearchRole) {
   return MESSAGE_ROLE_LABEL_KEYS[role]
 }
 
@@ -90,7 +65,7 @@ function getMessageActorLabel(
 }
 
 function getResultSubtitle(result: EntitySearchItem, t: (key: string) => string) {
-  if (result.type === 'topic' || result.type === 'session') {
+  if (result.type === 'topic') {
     return result.subtitle
   }
 
@@ -172,9 +147,8 @@ export function GlobalSearchRow({
   const isRecent = item.kind === 'recent'
   const title = isRecent ? item.recent.title : item.result.title
   const subtitle = isRecent ? undefined : getResultSubtitle(item.result, t)
-  const Icon = isRecent ? RECENT_ICONS[item.recent.kind] : RESULT_ICONS[item.result.type]
-  const emoji =
-    !isRecent && ['assistant', 'agent', 'knowledge-base'].includes(item.result.type) ? item.result.emoji : undefined
+  const Icon = isRecent ? (item.recent.kind === 'route' ? Clock3 : MessageSquare) : RESULT_ICONS[item.result.type]
+  const emoji = !isRecent && item.result.type === 'assistant' ? item.result.emoji : undefined
   const updatedAt = isRecent ? undefined : item.result.updatedAt
   const updatedAtLabel = updatedAt ? formatRelativeTime(updatedAt, language) : undefined
 
@@ -226,11 +200,8 @@ export function GlobalMessageSearchGroupHeader({
   inset?: GlobalMessageSearchInset
 }) {
   const { t } = useTranslation()
-  const Icon = group.sourceType === 'topic' ? MessageSquare : MousePointerClick
-  const sourceLabelKey =
-    group.sourceType === 'topic'
-      ? 'globalSearch.messageSearch.sources.topic'
-      : 'globalSearch.messageSearch.sources.session'
+  const Icon = MessageSquare
+  const sourceLabelKey = 'globalSearch.messageSearch.sources.topic'
 
   return (
     <div

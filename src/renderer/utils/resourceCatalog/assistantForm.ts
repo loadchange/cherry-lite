@@ -56,7 +56,6 @@ export interface AssistantFormState {
   contextCompressModelId: string | null
   // relations
   groupId: string | null
-  knowledgeBaseIds: string[]
   mcpServerIds: string[]
 }
 
@@ -116,7 +115,6 @@ export function initialAssistantFormState(assistant: Assistant): AssistantFormSt
     contextTruncateThreshold: ctx?.truncateThreshold ?? DEFAULT_CONTEXT_SETTINGS.truncateThreshold,
     contextCompressModelId: ctx?.compress?.modelId ?? null,
     groupId: assistant.groupId,
-    knowledgeBaseIds: assistant.knowledgeBaseIds ?? [],
     mcpServerIds: assistant.mcpServerIds ?? []
   }
 }
@@ -147,7 +145,7 @@ export type AssistantSaveIntent = {
  *   or any settings field differs, the dto carries all five column
  *   keys + a full `settings` object spread over `assistant.settings`
  *   (preserves unrelated settings keys the UI doesn't surface).
- * - Relation arrays (knowledgeBaseIds / mcpServerIds) ship only when
+ * - The relation array (mcpServerIds) ships only when
  *   their set differs — order-insensitive, matches junction semantics.
  * - Group: placed directly on the DTO as the canonical `groupId`.
  *
@@ -186,10 +184,9 @@ export function diffAssistantUpdate(
     customParametersChanged
 
   const groupChanged = baseline.groupId !== form.groupId
-  const knowledgeBaseIdsChanged = !sameIdSet(baseline.knowledgeBaseIds, form.knowledgeBaseIds)
   const mcpServerIdsChanged = !sameIdSet(baseline.mcpServerIds, form.mcpServerIds)
 
-  if (!columnsChanged && !groupChanged && !knowledgeBaseIdsChanged && !mcpServerIdsChanged) {
+  if (!columnsChanged && !groupChanged && !mcpServerIdsChanged) {
     return null
   }
 
@@ -204,7 +201,6 @@ export function diffAssistantUpdate(
           settings: buildAssistantSettingsFromForm(form, assistant.settings)
         }
       : {}),
-    ...(knowledgeBaseIdsChanged ? { knowledgeBaseIds: form.knowledgeBaseIds } : {}),
     ...(mcpServerIdsChanged ? { mcpServerIds: form.mcpServerIds } : {}),
     ...(groupChanged ? { groupId: form.groupId } : {})
   }

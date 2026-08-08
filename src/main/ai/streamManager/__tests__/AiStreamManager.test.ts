@@ -58,8 +58,6 @@ class FakeListener implements StreamListener {
 
 // ── Mocks ───────────────────────────────────────────────────────────
 
-const mockAbortPendingTurn = vi.fn<(sessionId: string, reason: string) => boolean>(() => false)
-
 vi.mock('@main/data/services/MessageService', () => ({
   messageService: { create: vi.fn().mockResolvedValue({ id: 'msg-001' }) }
 }))
@@ -118,7 +116,6 @@ const fakeCacheService = {
   })
 }
 const mockSaveSpans = vi.fn<(topicId: string) => Promise<void>>(async () => undefined)
-const mockWillContinueTopic = vi.fn<(topicId: string) => boolean>(() => false)
 
 vi.mock('@application', async () => {
   const { mockApplicationFactory } = await import('@test-mocks/main/application')
@@ -130,8 +127,7 @@ vi.mock('@application', async () => {
   return mockApplicationFactory({
     AiService: { streamText: mockStreamText },
     CacheService: fakeCacheService,
-    TraceStorageService: { saveSpans: mockSaveSpans },
-    AgentSessionRuntimeService: { willContinueTopic: mockWillContinueTopic, abortPendingTurn: mockAbortPendingTurn }
+    TraceStorageService: { saveSpans: mockSaveSpans }
   } as Parameters<typeof mockApplicationFactory>[0])
 })
 
@@ -230,8 +226,6 @@ describe('AiStreamManager', () => {
       pendingStream((request.requestOptions as { signal?: AbortSignal } | undefined)?.signal)
     )
     mockSaveSpans.mockResolvedValue(undefined)
-    mockWillContinueTopic.mockReturnValue(false)
-    mockAbortPendingTurn.mockReturnValue(false)
     sharedCacheStore.clear()
   })
 
@@ -313,53 +307,6 @@ describe('AiStreamManager', () => {
 
       expect(result).toEqual({ mode: 'injected', executionIds: [] })
       expect(mgr.inspect('a')).toBeUndefined()
-    })
-
-    it('aborts the agent-session turn controller for a pre-stream stop request', async () => {
-      const turnAbortController = new AbortController()
-      mockAbortPendingTurn.mockImplementationOnce((_sessionId, reason) => {
-        turnAbortController.abort(reason)
-        return true
-      })
-      const listener = new FakeListener('l:agent')
-
-      mgr.abort('agent-session:session-1', 'user-requested')
-      const snap = startSingle(mgr, {
-        topicId: 'agent-session:session-1',
-        modelId: 'provider-a::model-a',
-        request: { ...req('agent-session:session-1'), messageId: 'assistant-paused' },
-        listeners: [listener],
-        abortController: turnAbortController
-      })
-
-      expect(mockAbortPendingTurn).toHaveBeenCalledWith('session-1', 'user-requested')
-      expect(snap.status).toBe('aborted')
-
-      await vi.advanceTimersByTimeAsync(0)
-      expect(listener.pausedResults).toHaveLength(1)
-    })
-
-    it('does not apply an old pre-stream stop request to a new agent-session turn controller', () => {
-      const oldTurnAbortController = new AbortController()
-      const newTurnAbortController = new AbortController()
-      mockAbortPendingTurn.mockImplementationOnce((_sessionId, reason) => {
-        oldTurnAbortController.abort(reason)
-        return true
-      })
-
-      mgr.abort('agent-session:session-1', 'user-requested')
-      const snap = startSingle(mgr, {
-        topicId: 'agent-session:session-1',
-        modelId: 'provider-a::model-a',
-        request: { ...req('agent-session:session-1'), messageId: 'assistant-new' },
-        listeners: [new FakeListener('l:agent')],
-        abortController: newTurnAbortController
-      })
-
-      expect(snap.status).toBe('pending')
-      expect(snap.executions[0].abortSignal.aborted).toBe(false)
-      expect(oldTurnAbortController.signal.aborted).toBe(true)
-      expect(newTurnAbortController.signal.aborted).toBe(false)
     })
 
     it('evicts finished stream and creates new one', async () => {
@@ -504,7 +451,6 @@ describe('AiStreamManager', () => {
     it('attaches a follow-up subscriber to a grace-period stream so the next turn carries it', async () => {
       // Drive an agent-session turn to terminal-but-kept-alive: the inter-turn
       // drain/grace window where the runtime will open the next turn.
-      mockWillContinueTopic.mockReturnValue(true)
       const topicId = 'agent-session:s1'
       startSingle(mgr, {
         topicId,
@@ -751,50 +697,6 @@ describe('AiStreamManager', () => {
       await mgr.onExecutionDone('agent-session:session-1', 'provider-a::model-a')
 
       expect(mockSaveSpans).toHaveBeenCalledWith('agent-session:session-1')
-    })
-
-    it('keeps an agent-session stream alive when the runtime will continue', async () => {
-      mockWillContinueTopic.mockReturnValue(true)
-      const topicId = 'agent-session:session-1'
-      const listener = new FakeListener(`l:${topicId}`)
-      startSingle(mgr, {
-        topicId,
-        modelId: 'provider-a::model-a',
-        request: req(topicId),
-        listeners: [listener]
-      })
-
-      await mgr.onExecutionDone(topicId, 'provider-a::model-a')
-
-      expect(listener.doneResults).toHaveLength(1)
-      expect(listener.doneResults[0].isTopicDone).toBe(false)
-      expect(mgr.inspect(topicId)).toBeDefined()
-    })
-
-    it('suspends an unadmitted runtime turn without terminalizing its internal listeners', async () => {
-      mockWillContinueTopic.mockReturnValue(true)
-      const topicId = 'agent-session:session-1'
-      const feed = controlledStream()
-      mockStreamText.mockResolvedValueOnce(feed.stream)
-      const renderer = new FakeListener(`wc:1:${topicId}`)
-      const persistence = new FakeListener(`persistence:agents-db:${topicId}:model`)
-      const runtime = new FakeListener(`agent-runtime:session-1`)
-      startSingle(mgr, {
-        topicId,
-        modelId: 'provider-a::model-a',
-        request: req(topicId),
-        listeners: [renderer, persistence, runtime]
-      })
-      await vi.waitFor(() => expect(mockStreamText).toHaveBeenCalled())
-
-      const suspended = mgr.suspendUnadmittedRuntimeTurn(topicId)
-      feed.close()
-      await suspended
-
-      expect(renderer.doneResults).toHaveLength(1)
-      expect(renderer.doneResults[0].isTopicDone).toBe(false)
-      expect(persistence.doneResults).toEqual([])
-      expect(runtime.doneResults).toEqual([])
     })
 
     it('does not let trace flush failure block terminal completion', async () => {
@@ -1570,23 +1472,7 @@ describe('AiStreamManager', () => {
     // so AiStreamManager doesn't dispatch here — it only KEEPS the stream alive (isTopicDone=false, no
     // terminal lifecycle) when `willContinueTopic` is true, so the runtime's next turn can carry the
     // renderer listeners. Without this the stream is evicted and the follow-up reaches no renderer.
-    it('keeps an agent-session stream alive when the runtime will continue (no terminal lifecycle)', async () => {
-      mockWillContinueTopic.mockReturnValue(true)
-      const topicId = 'agent-session:s1'
-      const listener = new FakeListener(`l:${topicId}`)
-      startSingle(mgr, { topicId, modelId: 'provider-a::model-a', request: req(topicId), listeners: [listener] })
-
-      await mgr.onExecutionDone(topicId, 'provider-a::model-a')
-
-      // The bubble finalises but the topic stays busy and the terminal lifecycle is skipped (no idle
-      // flicker), so the stream object survives for the runtime's follow-up turn to carry listeners.
-      expect(listener.doneResults).toHaveLength(1)
-      expect(listener.doneResults[0].isTopicDone).toBe(false)
-      expect((sharedCacheStore.get(`topic.stream.statuses.${topicId}`) as any)?.status).not.toBe('done')
-    })
-
     it('tears down an agent-session stream when the runtime will not continue', async () => {
-      mockWillContinueTopic.mockReturnValue(false)
       const topicId = 'agent-session:s2'
       const listener = new FakeListener(`l:${topicId}`)
       startSingle(mgr, { topicId, modelId: 'provider-a::model-a', request: req(topicId), listeners: [listener] })
@@ -1602,7 +1488,6 @@ describe('AiStreamManager', () => {
     // leave the held stream in `activeStreams` with its status cache un-settled and still attachable —
     // `terminateHeldTopicStream` must error the subscribers, settle the status cache, and evict it.
     it('terminateHeldTopicStream settles and evicts a held agent-session stream whose continuation failed', async () => {
-      mockWillContinueTopic.mockReturnValue(true)
       const topicId = 'agent-session:s3'
       const listener = new FakeListener(`l:${topicId}`)
       startSingle(mgr, { topicId, modelId: 'provider-a::model-a', request: req(topicId), listeners: [listener] })

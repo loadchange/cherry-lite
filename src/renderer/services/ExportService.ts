@@ -8,15 +8,12 @@ import { Client } from '@notionhq/client'
 import { getTopicMessages } from '@renderer/hooks/useTopic'
 import { getProviderLabelKey } from '@renderer/i18n/label'
 import i18n from '@renderer/i18n/resolver'
-import { ipcApi } from '@renderer/ipc'
-import { addNote } from '@renderer/services/NotesService'
 import { toast } from '@renderer/services/toast'
 import type { ExportableMessage } from '@renderer/types/messageExport'
 import type { Topic } from '@renderer/types/topic'
 import { fetchMessagesSummary } from '@renderer/utils/aiGeneration'
 import { getTitleFromString, messagesToPlainText, processCitations } from '@renderer/utils/export'
 import { removeSpecialCharactersForFileName } from '@renderer/utils/file'
-import { captureScrollableAsBlob, captureScrollableAsDataUrl } from '@renderer/utils/image'
 import { convertMathFormula, markdownToPlainText } from '@renderer/utils/markdown'
 import { stripCitationMarkers } from '@renderer/utils/message/citations'
 import { getComposerTextFromMessage } from '@renderer/utils/message/composerTokens'
@@ -1079,162 +1076,4 @@ async function createSiyuanDoc(
   }
 
   return data.data
-}
-
-const saveContentToNotes = async (title: string, content: string, folderPath: string): Promise<void> => {
-  await addNote(title, content, folderPath)
-
-  toast.success(i18n.t('message.success.notes.export'))
-}
-
-const handleNotesExportError = (error: unknown): void => {
-  logger.error('导出到笔记失败:', error as Error)
-  toast.error(i18n.t('message.error.notes.export'))
-}
-
-/**
- * 导出任意文本内容到笔记工作区
- * @param title 笔记标题
- * @param content 笔记内容
- * @param folderPath 目标笔记文件夹
- */
-export const exportContentToNotes = async (title: string, content: string, folderPath: string): Promise<void> => {
-  try {
-    await saveContentToNotes(title, content, folderPath)
-  } catch (error) {
-    handleNotesExportError(error)
-    throw error
-  }
-}
-
-/**
- * 导出消息到笔记工作区
- * @param title
- * @param content
- * @param folderPath
- */
-export const exportMessageToNotes = async (title: string, content: string, folderPath: string): Promise<void> => {
-  const cleanedContent = content.replace(/^## 🤖 Assistant(\n|$)/m, '')
-  await exportContentToNotes(title, cleanedContent, folderPath)
-}
-
-/**
- * 导出话题到笔记工作区
- * @param topic 要导出的话题
- * @param folderPath
- */
-export const exportTopicToNotes = async (topic: Topic, folderPath: string): Promise<void> => {
-  try {
-    const content = await topicToMarkdown(topic)
-    await saveContentToNotes(topic.name, content, folderPath)
-  } catch (error) {
-    handleNotesExportError(error)
-    throw error
-  }
-}
-
-// NOTE (domain-axis follow-up, deferred per the cycle-break refactor plan):
-// the note-export helpers from here down (`exportNoteAsMarkdown`, the
-// `getScrollable*` accessors, the image-capture helpers, and the `exportNote`
-// dispatcher) are notes-domain-specific — `getScrollableElement` even reaches
-// into the `#notes-page` DOM of the notes page. They sit in this shared,
-// cross-domain service only because notes has no `features/notes/` home yet;
-// once it earns one, this cluster should move into the notes feature. Out of
-// scope for breaking the MessagesService <-> utils/export cycle.
-const exportNoteAsMarkdown = async (noteName: string, content: string): Promise<void> => {
-  const markdown = `# ${noteName}\n\n${content}`
-  const fileName = removeSpecialCharactersForFileName(noteName) + '.md'
-  const result = await window.api.file.save(fileName, markdown)
-  if (result) {
-    toast.success(i18n.t('message.success.markdown.export.specified'))
-  }
-}
-
-const getScrollableElement = (): HTMLElement | null => {
-  const notesPage = document.querySelector('#notes-page')
-  if (!notesPage) return null
-
-  const allDivs = notesPage.querySelectorAll('div')
-  for (const div of Array.from(allDivs)) {
-    const style = window.getComputedStyle(div)
-    if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
-      if (div.querySelector('.ProseMirror')) {
-        return div as HTMLElement
-      }
-    }
-  }
-  return null
-}
-
-const getScrollableRef = (): { current: HTMLElement } | null => {
-  const element = getScrollableElement()
-  if (!element) {
-    toast.warning(i18n.t('notes.no_content_to_copy'))
-    return null
-  }
-  return { current: element }
-}
-
-const exportNoteAsImageToClipboard = async (): Promise<void> => {
-  const scrollableRef = getScrollableRef()
-  if (!scrollableRef) return
-
-  await captureScrollableAsBlob(scrollableRef, async (blob) => {
-    if (blob) {
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-      toast.success(i18n.t('common.copied'))
-    }
-  })
-}
-
-const exportNoteAsImageFile = async (noteName: string): Promise<void> => {
-  const scrollableRef = getScrollableRef()
-  if (!scrollableRef) return
-
-  const dataUrl = await captureScrollableAsDataUrl(scrollableRef)
-  if (dataUrl) {
-    const fileName = removeSpecialCharactersForFileName(noteName)
-    await window.api.file.saveImage(fileName, dataUrl)
-  }
-}
-
-interface NoteExportOptions {
-  node: { name: string; externalPath: string }
-  platform: 'markdown' | 'docx' | 'notion' | 'yuque' | 'joplin' | 'siyuan' | 'copyImage' | 'exportImage'
-}
-
-export const exportNote = async ({ node, platform }: NoteExportOptions): Promise<void> => {
-  try {
-    const content = await window.api.file.readExternal(node.externalPath)
-
-    switch (platform) {
-      case 'copyImage':
-        return await exportNoteAsImageToClipboard()
-      case 'exportImage':
-        return await exportNoteAsImageFile(node.name)
-      case 'markdown':
-        return await exportNoteAsMarkdown(node.name, content)
-      case 'docx':
-        void ipcApi.request('export.word.from_markdown', {
-          markdown: `# ${node.name}\n\n${content}`,
-          fileName: removeSpecialCharactersForFileName(node.name)
-        })
-        return
-      case 'notion':
-        await exportMessageToNotion(node.name, content)
-        return
-      case 'yuque':
-        await exportMarkdownToYuque(node.name, `# ${node.name}\n\n${content}`)
-        return
-      case 'joplin':
-        await exportMarkdownToJoplin(node.name, content)
-        return
-      case 'siyuan':
-        await exportMarkdownToSiyuan(node.name, `# ${node.name}\n\n${content}`)
-        return
-    }
-  } catch (error) {
-    logger.error(`Failed to export note to ${platform}:`, error as Error)
-    throw error
-  }
 }

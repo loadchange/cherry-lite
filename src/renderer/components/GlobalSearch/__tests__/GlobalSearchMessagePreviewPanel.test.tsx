@@ -11,15 +11,10 @@ let scrollTargets: Element[] = []
 
 const mocks = vi.hoisted(() => ({
   topicPages: [] as any[],
-  sessionPages: [] as any[],
   topicHasNext: false,
-  sessionHasNext: false,
   topicIsRefreshing: false,
-  sessionIsRefreshing: false,
   topicError: undefined as Error | undefined,
-  sessionError: undefined as Error | undefined,
   topicLoadNext: vi.fn(),
-  sessionLoadNext: vi.fn(),
   useInfiniteQuery: vi.fn(),
   onClose: vi.fn(),
   onOpenMessage: vi.fn()
@@ -53,25 +48,14 @@ vi.mock('@data/hooks/useDataApi', () => ({
   }
 }))
 
-function mockPreviewInfiniteQuery(path: string) {
-  if (path === '/topics/:topicId/messages') {
-    return {
-      pages: mocks.topicPages,
-      isLoading: false,
-      isRefreshing: mocks.topicIsRefreshing,
-      error: mocks.topicError,
-      hasNext: mocks.topicHasNext,
-      loadNext: mocks.topicLoadNext
-    }
-  }
-
+function mockPreviewInfiniteQuery() {
   return {
-    pages: mocks.sessionPages,
+    pages: mocks.topicPages,
     isLoading: false,
-    isRefreshing: mocks.sessionIsRefreshing,
-    error: mocks.sessionError,
-    hasNext: mocks.sessionHasNext,
-    loadNext: mocks.sessionLoadNext
+    isRefreshing: mocks.topicIsRefreshing,
+    error: mocks.topicError,
+    hasNext: mocks.topicHasNext,
+    loadNext: mocks.topicLoadNext
   }
 }
 
@@ -110,7 +94,6 @@ vi.mock('react-i18next', () => ({
         'globalSearch.messageSearch.roles.system': 'System',
         'globalSearch.messageSearch.roles.tool': 'Tool',
         'globalSearch.messageSearch.roles.user': 'User',
-        'globalSearch.messageSearch.sources.session': 'Task messages',
         'globalSearch.messageSearch.sources.topic': 'Conversation messages'
       })[key] ?? key
   })
@@ -128,13 +111,6 @@ const TOPIC_TARGET = {
   messageId: 'topic-message-2'
 } satisfies GlobalSearchMessagePreviewTarget
 
-const SESSION_TARGET = {
-  sourceType: 'session',
-  sessionId: 'session-1',
-  title: 'Session A',
-  messageId: 'session-message-1'
-} satisfies GlobalSearchMessagePreviewTarget
-
 function createTopicMessage(overrides: Record<string, unknown> = {}) {
   return {
     message: {
@@ -149,24 +125,6 @@ function createTopicMessage(overrides: Record<string, unknown> = {}) {
       updatedAt: '2026-01-01T00:00:00.000Z',
       ...overrides
     }
-  }
-}
-
-function createSessionMessage() {
-  return {
-    id: 'session-message-1',
-    sessionId: 'session-1',
-    role: 'assistant',
-    data: { parts: [{ type: 'text', text: 'session reply' }] },
-    status: 'success',
-    createdAt: '2026-01-01T00:00:00.000Z',
-    updatedAt: '2026-01-01T00:00:00.000Z',
-    modelId: null,
-    messageSnapshot: null,
-    traceId: null,
-    stats: null,
-    runtimeResumeToken: null,
-    searchableText: 'session reply'
   }
 }
 
@@ -213,13 +171,9 @@ describe('GlobalSearchMessagePreviewPanel', () => {
         ]
       }
     ]
-    mocks.sessionPages = []
     mocks.topicHasNext = false
-    mocks.sessionHasNext = false
     mocks.topicIsRefreshing = false
-    mocks.sessionIsRefreshing = false
     mocks.topicError = undefined
-    mocks.sessionError = undefined
     mocks.useInfiniteQuery.mockImplementation(mockPreviewInfiniteQuery)
   })
 
@@ -262,61 +216,22 @@ describe('GlobalSearchMessagePreviewPanel', () => {
     expect(mocks.onClose).toHaveBeenCalledTimes(1)
   })
 
-  it('loads the anchored session preview page without auto-loading more context', async () => {
-    mocks.topicPages = []
-    mocks.sessionHasNext = true
-    mocks.sessionPages = [
-      {
-        items: [createSessionMessage()],
-        nextCursor: 'cursor-1'
-      }
-    ]
+  it('anchors the topic preview query on the matched message without auto-loading more context', async () => {
+    mocks.topicHasNext = true
 
-    renderPreview(SESSION_TARGET)
+    renderPreview()
 
-    expect(await screen.findByText('message-content:session-message-1')).toBeInTheDocument()
-    expect(screen.getByText('Session A')).toBeInTheDocument()
-    expect(screen.getByText('Task messages')).toBeInTheDocument()
+    expect(await screen.findByText('message-content:topic-message-2')).toBeInTheDocument()
     expect(mocks.useInfiniteQuery).toHaveBeenCalledWith(
-      '/agent-sessions/:sessionId/messages',
+      '/topics/:topicId/messages',
       expect.objectContaining({
-        params: { sessionId: 'session-1' },
-        limit: expect.any(Number),
-        enabled: true
+        params: { topicId: 'topic-1' },
+        query: { includeSiblings: false, nodeId: 'topic-message-2' },
+        limit: expect.any(Number)
       })
     )
-    const sessionQueryOptions = vi
-      .mocked(mocks.useInfiniteQuery)
-      .mock.calls.find(([path]) => path === '/agent-sessions/:sessionId/messages')?.[1] as Record<string, unknown>
-    expect(sessionQueryOptions).toMatchObject({
-      query: { messageId: 'session-message-1' }
-    })
     // Anchored at the matched message; older context is never auto-paginated even when available.
-    expect(mocks.sessionLoadNext).not.toHaveBeenCalled()
-  })
-
-  it('loads an older session page when the user scrolls near the top', async () => {
-    mocks.topicPages = []
-    mocks.sessionHasNext = true
-    mocks.sessionPages = [
-      {
-        items: [createSessionMessage()],
-        nextCursor: 'cursor-1'
-      }
-    ]
-
-    const { container } = renderPreview(SESSION_TARGET)
-
-    await screen.findByText('message-content:session-message-1')
-    const scroller = container.querySelector('.overflow-y-auto') as HTMLElement
-
-    setScrollGeometry(scroller, { scrollTop: 1000, scrollHeight: 4000 })
-    fireEvent.scroll(scroller)
-    expect(mocks.sessionLoadNext).not.toHaveBeenCalled()
-
-    setScrollGeometry(scroller, { scrollTop: 0, scrollHeight: 4000 })
-    fireEvent.scroll(scroller)
-    expect(mocks.sessionLoadNext).toHaveBeenCalledTimes(1)
+    expect(mocks.topicLoadNext).not.toHaveBeenCalled()
   })
 
   it('loads an older topic page when the user scrolls near the top', async () => {
@@ -326,6 +241,10 @@ describe('GlobalSearchMessagePreviewPanel', () => {
 
     await screen.findByText('message-content:topic-message-2')
     const scroller = container.querySelector('.overflow-y-auto') as HTMLElement
+
+    setScrollGeometry(scroller, { scrollTop: 1000, scrollHeight: 4000 })
+    fireEvent.scroll(scroller)
+    expect(mocks.topicLoadNext).not.toHaveBeenCalled()
 
     setScrollGeometry(scroller, { scrollTop: 0, scrollHeight: 4000 })
     fireEvent.scroll(scroller)

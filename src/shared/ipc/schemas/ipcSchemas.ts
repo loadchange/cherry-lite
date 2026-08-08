@@ -1,31 +1,23 @@
 import type { RouteDef } from '../define'
 import { type AiEventSchemas, aiRequestSchemas } from './ai'
-import { apiGatewayRequestSchemas } from './apiGateway'
 import { type AppEventSchemas, appRequestSchemas } from './app'
 import { type BackupEventSchemas, backupRequestSchemas } from './backup'
 import { type BinaryEventSchemas, binaryRequestSchemas } from './binary'
-import { type ChannelEventSchemas, channelRequestSchemas } from './channel'
 import { cherryinRequestSchemas } from './cherryin'
 import { citationRequestSchemas } from './citation'
-import { codeCliRequestSchemas } from './codeCli'
 import { exportRequestSchemas } from './export'
 import { fileRequestSchemas } from './file'
 import { fileProcessingRequestSchemas } from './fileProcessing'
-import { knowledgeRequestSchemas } from './knowledge'
-import { type LocalModelEventSchemas, localModelRequestSchemas } from './localModel'
 import { type McpEventSchemas, mcpRequestSchemas } from './mcp'
-import { miniAppRequestSchemas } from './miniApp'
 import { type NavigationEventSchemas, navigationRequestSchemas } from './navigation'
 import { type NotificationEventSchemas, notificationRequestSchemas } from './notification'
 import { type OAuthEventSchemas, oauthRequestSchemas } from './oauth'
-import { openclawRequestSchemas } from './openclaw'
 import { ovmsRequestSchemas } from './ovms'
 import { printRequestSchemas } from './print'
 import { profileRequestSchemas } from './profile'
 import { providerRequestSchemas } from './provider'
 import { type QuickAssistantEventSchemas, quickAssistantRequestSchemas } from './quickAssistant'
 import { type SelectionEventSchemas, selectionRequestSchemas } from './selection'
-import { skillRequestSchemas } from './skill'
 import { type SystemEventSchemas, systemRequestSchemas } from './system'
 import { type TabEventSchemas, tabRequestSchemas } from './tab'
 import { translateRequestSchemas } from './translate'
@@ -42,32 +34,24 @@ import { type WindowEventSchemas, windowRequestSchemas } from './window'
  */
 export const ipcRequestSchemas = {
   ...aiRequestSchemas,
-  ...apiGatewayRequestSchemas,
   ...appRequestSchemas,
   ...backupRequestSchemas,
   ...binaryRequestSchemas,
-  ...channelRequestSchemas,
   ...cherryinRequestSchemas,
   ...citationRequestSchemas,
-  ...codeCliRequestSchemas,
   ...exportRequestSchemas,
   ...fileRequestSchemas,
   ...fileProcessingRequestSchemas,
-  ...knowledgeRequestSchemas,
-  ...localModelRequestSchemas,
   ...mcpRequestSchemas,
-  ...miniAppRequestSchemas,
   ...navigationRequestSchemas,
   ...notificationRequestSchemas,
   ...oauthRequestSchemas,
-  ...openclawRequestSchemas,
   ...ovmsRequestSchemas,
   ...printRequestSchemas,
   ...profileRequestSchemas,
   ...providerRequestSchemas,
   ...quickAssistantRequestSchemas,
   ...selectionRequestSchemas,
-  ...skillRequestSchemas,
   ...systemRequestSchemas,
   ...tabRequestSchemas,
   ...translateRequestSchemas,
@@ -89,8 +73,6 @@ export type IpcEventSchemas = AiEventSchemas &
   AppEventSchemas &
   BackupEventSchemas &
   BinaryEventSchemas &
-  ChannelEventSchemas &
-  LocalModelEventSchemas &
   McpEventSchemas &
   NavigationEventSchemas &
   NotificationEventSchemas &

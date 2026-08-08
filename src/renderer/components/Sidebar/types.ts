@@ -1,38 +1,24 @@
 import type { CommandContextMenuExtraItem } from '@renderer/components/command'
 import type { ReactNode } from 'react'
 
-export interface SidebarMiniApp {
-  id: string
-  color?: string
-  url?: string
-  logo?: string
-}
-
-export interface SidebarMiniAppTab {
-  title: string
-  miniApp: SidebarMiniApp
-}
-
 /** The active-route state a resolved entry matches itself against. */
 export interface SidebarActiveState {
   /** Active built-in app id. */
   activeItem: string
-  /** Active mini app id (concrete mini app route). */
-  activeTabId?: string
 }
 
 /**
  * A fully-resolved, type-agnostic sidebar row. The app layer produces these from
  * the tagged favorites via the variant registry (see `components/app/sidebarVariants`);
- * the presentation layer renders them without knowing whether a row is a built-in
- * app or a mini app. Adding a new sidebar item type is a new variant descriptor —
- * leaf item rows keep this presentation contract.
+ * the presentation layer renders them without knowing the row type.
+ * Adding a new sidebar item type is a new variant descriptor — leaf item rows keep
+ * this presentation contract.
  */
 export interface ResolvedSidebarEntry {
   /** Stable identity — react key and reorder-matching key (`${type}:${id}`). */
   key: string
   label: string
-  renderIcon: (size: number, miniAppSize: 'md' | 'lg') => ReactNode
+  renderIcon: (size: number) => ReactNode
   isActive: (active: SidebarActiveState) => boolean
   onOpen: () => void
   contextMenuItems?: readonly CommandContextMenuExtraItem[]

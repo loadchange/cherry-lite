@@ -1,17 +1,12 @@
 import { assistantTable } from '@data/db/schemas/assistant'
 import { messageTable } from '@data/db/schemas/message'
-import { preferenceTable } from '@data/db/schemas/preference'
 import { topicTable } from '@data/db/schemas/topic'
-import { userModelTable } from '@data/db/schemas/userModel'
-import { userProviderTable } from '@data/db/schemas/userProvider'
-import { CherryAiDefaultModelSeeder } from '@data/db/seeding/seeders/cherryaiDefaultModelSeeder'
 import { DefaultAssistantSeeder } from '@data/db/seeding/seeders/defaultAssistantSeeder'
 import { generateOrderKeyBetween } from '@data/services/utils/orderKey'
-import { CHERRYAI_DEFAULT_UNIQUE_MODEL_ID, CHERRYAI_PROVIDER_ID } from '@shared/data/presets/cherryai'
 import { DEFAULT_ASSISTANT_EMOJI, DEFAULT_ASSISTANT_PROMPT } from '@shared/data/presets/defaultAssistant'
 import { DEFAULT_ASSISTANT_SETTINGS } from '@shared/data/types/assistant'
 import { setupTestDatabase, withRoot } from '@test-helpers/db'
-import { and, eq } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { app } from 'electron'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -19,52 +14,24 @@ describe('DefaultAssistantSeeder', () => {
   const dbh = setupTestDatabase()
   const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
 
-  async function runCherryAiModelDependencySeed() {
-    // Provides the CherryAI model row the default assistant's modelId FK requires
-    new CherryAiDefaultModelSeeder().run(dbh.db)
-  }
-
   beforeEach(() => {
     vi.mocked(app.getLocale).mockReturnValue('en-US')
     vi.mocked(app.getPreferredSystemLanguages).mockReturnValue(['en-US'])
   })
 
-  it('seeds the default assistant when only the CherryAI default model dependency seed has run', async () => {
-    await runCherryAiModelDependencySeed()
-
+  it('seeds the default assistant with no bound model on a fresh database', async () => {
     new DefaultAssistantSeeder().run(dbh.db)
 
     const [assistant] = await dbh.db.select().from(assistantTable).limit(1)
-    const [provider] = await dbh.db
-      .select()
-      .from(userProviderTable)
-      .where(eq(userProviderTable.providerId, CHERRYAI_PROVIDER_ID))
-      .limit(1)
-    const [model] = await dbh.db
-      .select()
-      .from(userModelTable)
-      .where(eq(userModelTable.id, CHERRYAI_DEFAULT_UNIQUE_MODEL_ID))
-      .limit(1)
-    const [preference] = await dbh.db
-      .select()
-      .from(preferenceTable)
-      .where(and(eq(preferenceTable.scope, 'default'), eq(preferenceTable.key, 'chat.default_model_id')))
-      .limit(1)
 
     expect(assistant?.id).toMatch(UUID_V4_PATTERN)
     expect(assistant).toMatchObject({
       name: 'Cherry Assistant',
       emoji: DEFAULT_ASSISTANT_EMOJI,
       prompt: DEFAULT_ASSISTANT_PROMPT,
-      modelId: CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
+      modelId: null,
       settings: DEFAULT_ASSISTANT_SETTINGS
     })
-    expect(provider).toMatchObject({
-      providerId: CHERRYAI_PROVIDER_ID,
-      isEnabled: true
-    })
-    expect(model?.id).toBe(CHERRYAI_DEFAULT_UNIQUE_MODEL_ID)
-    expect(preference?.value).toBe(CHERRYAI_DEFAULT_UNIQUE_MODEL_ID)
 
     const [topic] = await dbh.db.select().from(topicTable).limit(1)
     expect(topic?.id).toMatch(UUID_V4_PATTERN)
@@ -85,7 +52,6 @@ describe('DefaultAssistantSeeder', () => {
 
   it('seeds the default assistant with the Chinese name for Chinese app locales', async () => {
     vi.mocked(app.getPreferredSystemLanguages).mockReturnValue(['zh-CN'])
-    await runCherryAiModelDependencySeed()
 
     new DefaultAssistantSeeder().run(dbh.db)
 
@@ -98,7 +64,6 @@ describe('DefaultAssistantSeeder', () => {
       throw new Error('app.getLocale cannot be called before ready')
     })
     vi.mocked(app.getPreferredSystemLanguages).mockReturnValue(['zh-CN'])
-    await runCherryAiModelDependencySeed()
 
     expect(() => new DefaultAssistantSeeder().run(dbh.db)).not.toThrow()
 
@@ -111,7 +76,6 @@ describe('DefaultAssistantSeeder', () => {
     vi.mocked(app.getPreferredSystemLanguages).mockImplementation(() => {
       throw new Error('preferred languages unavailable')
     })
-    await runCherryAiModelDependencySeed()
 
     expect(() => new DefaultAssistantSeeder().run(dbh.db)).not.toThrow()
 
@@ -122,7 +86,6 @@ describe('DefaultAssistantSeeder', () => {
   it('falls back to the English default assistant name when preferred system languages are empty', async () => {
     vi.mocked(app.getLocale).mockReturnValue('zh-CN')
     vi.mocked(app.getPreferredSystemLanguages).mockReturnValue([])
-    await runCherryAiModelDependencySeed()
 
     new DefaultAssistantSeeder().run(dbh.db)
 

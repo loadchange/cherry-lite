@@ -152,7 +152,7 @@ export class CherryInOAuthService {
   }
 
   // Token fetch, the not-signed-in guard and the 401 force-refresh+retry live in
-  // OAuthRuntimeService.authenticatedFetch (shared with Codex/Grok). CherryIN only
+  // OAuthRuntimeService.authenticatedFetch. CherryIN only
   // shapes the request (apiHost + bearer/json headers), threads its `apiHost`
   // context for refresh, and supplies the 401 diagnostic log.
   private authenticatedFetch = (apiHost: string, endpoint: string, options: RequestInit = {}): Promise<Response> => {

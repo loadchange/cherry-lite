@@ -69,7 +69,6 @@ function createMockContext(
         get: vi.fn(),
         getAll: vi.fn()
       } as unknown as MigrationContext['sources']['localStorage'],
-      knowledgeVectorSource: {} as unknown as MigrationContext['sources']['knowledgeVectorSource'],
       legacyHomeConfig: {} as unknown as MigrationContext['sources']['legacyHomeConfig']
     },
     db: db as unknown as MigrationContext['db'],

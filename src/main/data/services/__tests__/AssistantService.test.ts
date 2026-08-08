@@ -2,9 +2,8 @@
 import '@data/services/MessageService'
 
 import { assistantTable } from '@data/db/schemas/assistant'
-import { assistantKnowledgeBaseTable, assistantMcpServerTable } from '@data/db/schemas/assistantRelations'
+import { assistantMcpServerTable } from '@data/db/schemas/assistantRelations'
 import { groupTable } from '@data/db/schemas/group'
-import { knowledgeBaseTable } from '@data/db/schemas/knowledge'
 import { mcpServerTable } from '@data/db/schemas/mcpServer'
 import { pinTable } from '@data/db/schemas/pin'
 import { topicTable } from '@data/db/schemas/topic'
@@ -94,19 +93,6 @@ describe('AssistantDataService', () => {
     await dbh.db.insert(mcpServerTable).values({ id, name })
   }
 
-  async function seedKnowledgeBase(id = 'kb-1') {
-    await dbh.db.insert(knowledgeBaseTable).values({
-      id,
-      name: 'KB',
-      dimensions: 1024,
-      embeddingModelId: createUniqueModelId('openai', 'text-embedding-3-large'),
-      status: 'completed',
-      error: null,
-      chunkSize: 1024,
-      chunkOverlap: 200
-    })
-  }
-
   async function seedAssistantGroup(id: string, name = 'Group', orderKey = 'a0') {
     await dbh.db.insert(groupTable).values({ id, entityType: 'assistant', name, orderKey })
   }
@@ -136,40 +122,11 @@ describe('AssistantDataService', () => {
   })
 
   describe('getById', () => {
-    it('should return an assistant with relation ids when found', async () => {
-      await seedAssistantRow({ id: 'ast-1', name: 'test', modelId: 'openai::gpt-4' })
-      await seedMcpServer()
-      await seedKnowledgeBase()
-      await dbh.db.insert(assistantMcpServerTable).values({ assistantId: 'ast-1', mcpServerId: 'srv-1' })
-      await dbh.db.insert(assistantKnowledgeBaseTable).values({ assistantId: 'ast-1', knowledgeBaseId: 'kb-1' })
-
-      const result = assistantDataService.getById('ast-1')
-
-      expect(result.id).toBe('ast-1')
-      expect(result.name).toBe('test')
-      expect(result.modelId).toBe('openai::gpt-4')
-      expect(result.mcpServerIds).toEqual(['srv-1'])
-      expect(result.knowledgeBaseIds).toEqual(['kb-1'])
-      expect(typeof result.createdAt).toBe('string')
-    })
-
     it('should return null modelId when not set', async () => {
       await seedAssistantRow({ id: 'ast-1', name: 'test' })
 
       const result = assistantDataService.getById('ast-1')
       expect(result.modelId).toBeNull()
-    })
-
-    it('should surface DB DEFAULT empty strings for prompt and description', async () => {
-      // emoji and settings are NOT NULL with no DB DEFAULT, so the helper supplies them.
-      // prompt and description carry DB DEFAULT '' — confirm SQLite fills them when omitted.
-      await seedAssistantRow({ id: 'ast-1', name: 'test' })
-
-      const result = assistantDataService.getById('ast-1')
-      expect(result.prompt).toBe('')
-      expect(result.description).toBe('')
-      expect(result.mcpServerIds).toEqual([])
-      expect(result.knowledgeBaseIds).toEqual([])
     })
 
     it('should return soft-deleted assistant when includeDeleted is true', async () => {
@@ -574,27 +531,6 @@ describe('AssistantDataService', () => {
       expect(row.emoji).toBe('🤖')
     })
 
-    it('should sync junction rows when relation ids are provided', async () => {
-      await seedMcpServer()
-      await seedKnowledgeBase()
-
-      const result = assistantDataService.create({
-        name: 'test-assistant',
-        modelId: 'openai::gpt-4',
-        mcpServerIds: ['srv-1'],
-        knowledgeBaseIds: ['kb-1']
-      })
-
-      expect(result.mcpServerIds).toEqual(['srv-1'])
-      expect(result.knowledgeBaseIds).toEqual(['kb-1'])
-
-      const mcpRows = await dbh.db.select().from(assistantMcpServerTable)
-      const kbRows = await dbh.db.select().from(assistantKnowledgeBaseTable)
-      expect(mcpRows).toHaveLength(1)
-      expect(kbRows).toHaveLength(1)
-      expect(mcpRows[0].assistantId).toBe(result.id)
-    })
-
     it('should throw validation error when name is empty', async () => {
       let err: unknown
       try {
@@ -880,24 +816,6 @@ describe('AssistantDataService', () => {
 
       const mcpRows = await dbh.db.select().from(assistantMcpServerTable)
       expect(mcpRows).toHaveLength(1)
-    })
-
-    it('should handle relation-only updates without modifying assistant columns', async () => {
-      await seedAssistantRow({ id: 'ast-1', name: 'original', modelId: 'openai::gpt-4' })
-      await seedMcpServer()
-      await seedKnowledgeBase()
-
-      const result = assistantDataService.update('ast-1', {
-        mcpServerIds: ['srv-1'],
-        knowledgeBaseIds: ['kb-1']
-      })
-
-      expect(result.mcpServerIds).toEqual(['srv-1'])
-      expect(result.knowledgeBaseIds).toEqual(['kb-1'])
-
-      const [row] = await dbh.db.select().from(assistantTable)
-      expect(row.name).toBe('original')
-      expect(row.modelId).toBe('openai::gpt-4')
     })
 
     it('should preserve groupId after a column-only update', async () => {

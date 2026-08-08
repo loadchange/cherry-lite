@@ -1,10 +1,7 @@
 import { EmojiIcon } from '@cherrystudio/ui'
-import MiniAppLogo from '@renderer/components/icons/MiniAppIcon'
 import { isEmoji } from '@renderer/utils/naming'
 
-import type { SidebarMiniAppTab, SidebarUser } from './types'
-
-type MiniAppIconSize = 'sm' | 'md' | 'lg'
+import type { SidebarUser } from './types'
 
 export function ActiveIndicator({ className, glow = false }: { className?: string; glow?: boolean }) {
   return (
@@ -26,26 +23,6 @@ export function DefaultLogo({ title }: { title: string }) {
   return (
     <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/15 font-medium text-primary text-sm">
       {title ? title.slice(0, 1).toUpperCase() : ''}
-    </div>
-  )
-}
-
-export function MiniAppIcon({ tab, size = 'sm' }: { tab: SidebarMiniAppTab; size?: MiniAppIconSize }) {
-  const pixelSize = size === 'sm' ? 14 : size === 'md' ? 16 : 22
-  const { miniApp } = tab
-
-  if (miniApp.logo) {
-    return <MiniAppLogo app={{ logo: miniApp.logo, name: tab.title }} appearance="bare" size={pixelSize} />
-  }
-
-  const iconSize = size === 'sm' ? 'h-3.5 w-3.5' : size === 'md' ? 'h-4 w-4' : 'h-[22px] w-[22px]'
-  const fontSize = size === 'sm' ? 'text-[6px]' : size === 'md' ? 'text-[8px]' : 'text-[11px]'
-
-  return (
-    <div
-      className={`${iconSize} ${fontSize} flex flex-shrink-0 items-center justify-center rounded-[3px] text-white`}
-      style={{ background: miniApp.color ?? 'transparent' }}>
-      {tab.title?.[0] ?? ''}
     </div>
   )
 }

@@ -6,13 +6,11 @@ import {
   getComposerFileTokenSourceId,
   readComposerFileTokenIdSuffix
 } from '@renderer/utils/message/composerFileTokenSource'
-import type { KnowledgeBase } from '@shared/data/types/knowledge'
 import type { CherryMessagePart } from '@shared/data/types/message'
 import { readCherryMeta } from '@shared/data/types/uiParts'
 import { getFileTypeByExt } from '@shared/utils/file'
 
 import { type ComposerSerializedToken, isComposerDraftTokenKind } from '../../tokens'
-import { chatComposerTokenId, getComposerTokenIds } from '../chatComposerTokens'
 
 export interface EditableMessageDraft {
   text: string
@@ -120,14 +118,4 @@ export function createEditableMessageDraft(parts: CherryMessagePart[]): Editable
   })
 
   return { text, draftTokens: normalizedDraftTokens, files }
-}
-
-export function getEditableKnowledgeBases(
-  draftTokens: readonly ComposerSerializedToken[],
-  selectableKnowledgeBases: readonly KnowledgeBase[]
-) {
-  const knowledgeTokenIds = getComposerTokenIds(draftTokens, 'knowledge')
-  if (knowledgeTokenIds.size === 0) return []
-
-  return selectableKnowledgeBases.filter((base) => knowledgeTokenIds.has(chatComposerTokenId.knowledge(base)))
 }

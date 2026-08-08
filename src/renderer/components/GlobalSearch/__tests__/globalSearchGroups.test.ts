@@ -5,7 +5,6 @@ import {
   buildGlobalMessageSearchGroups,
   buildGlobalSearchGroups,
   createRecentRouteEntryFromTab,
-  createRecentSessionEntryFromSession,
   createRecentTopicEntryFromTopic,
   getDisplayGlobalSearchRecentEntries,
   getGlobalSearchTypes,
@@ -193,41 +192,6 @@ describe('globalSearchGroups', () => {
     ).toEqual(['assistant'])
   })
 
-  it('includes knowledge bases in all search and supports knowledge filtering', () => {
-    const response: EntitySearchResponse = {
-      query: 'docs',
-      groups: [
-        {
-          type: 'knowledge-base',
-          items: [
-            {
-              type: 'knowledge-base',
-              id: 'knowledge-1',
-              title: 'Docs',
-              target: { knowledgeBaseId: 'knowledge-1' }
-            }
-          ]
-        }
-      ]
-    }
-
-    expect(getGlobalSearchTypes('all')).toEqual(['topic', 'session', 'assistant', 'agent', 'knowledge-base'])
-    expect(getGlobalSearchTypes('knowledge')).toEqual(['knowledge-base'])
-    expect(
-      buildGlobalSearchGroups({
-        query: 'docs',
-        filter: 'all',
-        recentItems: [],
-        response
-      })
-    ).toEqual([
-      expect.objectContaining({
-        id: 'knowledge-base',
-        items: [expect.objectContaining({ id: 'knowledge-base:knowledge-1' })]
-      })
-    ])
-  })
-
   it('creates entity-level recent entries and skips coarse chat routes', () => {
     expect(
       createRecentRouteEntryFromTab({
@@ -263,24 +227,9 @@ describe('globalSearchGroups', () => {
       title: 'Topic title',
       lastAccessTime: 20
     })
-
-    expect(
-      createRecentSessionEntryFromSession(
-        {
-          id: 'session-1',
-          name: 'Session title'
-        },
-        30
-      )
-    ).toEqual({
-      kind: 'session',
-      sessionId: 'session-1',
-      title: 'Session title',
-      lastAccessTime: 30
-    })
   })
 
-  it('maps topic and session filters to separate search types and groups', () => {
+  it('maps the topic filter to its own search type and group', () => {
     const response: EntitySearchResponse = {
       query: 'plan',
       groups: [
@@ -294,23 +243,11 @@ describe('globalSearchGroups', () => {
               target: { topicId: 'topic-1' }
             }
           ]
-        },
-        {
-          type: 'session',
-          items: [
-            {
-              type: 'session',
-              id: 'session-1',
-              title: 'Session',
-              target: { sessionId: 'session-1', agentId: 'agent-1' }
-            }
-          ]
         }
       ]
     }
 
     expect(getGlobalSearchTypes('topic')).toEqual(['topic'])
-    expect(getGlobalSearchTypes('session')).toEqual(['session'])
     expect(
       buildGlobalSearchGroups({
         query: 'plan',
@@ -328,28 +265,14 @@ describe('globalSearchGroups', () => {
     expect(
       buildGlobalSearchGroups({
         query: 'plan',
-        filter: 'session',
-        recentItems: [],
-        response
-      })
-    ).toEqual([
-      expect.objectContaining({
-        id: 'session',
-        items: [expect.objectContaining({ id: 'session:session-1' })]
-      })
-    ])
-
-    expect(
-      buildGlobalSearchGroups({
-        query: 'plan',
         filter: 'all',
         recentItems: [],
         response
       }).map((group) => group.id)
-    ).toEqual(['topic', 'session'])
+    ).toEqual(['topic'])
   })
 
-  it('collapses topic and session groups only in all search', () => {
+  it('collapses the topic group only in all search', () => {
     const response: EntitySearchResponse = {
       query: 'plan',
       groups: [
@@ -360,15 +283,6 @@ describe('globalSearchGroups', () => {
             id: `topic-${index}`,
             title: `Topic ${index}`,
             target: { topicId: `topic-${index}` }
-          }))
-        },
-        {
-          type: 'session',
-          items: Array.from({ length: GLOBAL_SEARCH_ENTITY_GROUP_COLLAPSED_LIMIT + 1 }, (_, index) => ({
-            type: 'session',
-            id: `session-${index}`,
-            title: `Session ${index}`,
-            target: { sessionId: `session-${index}`, agentId: 'agent-1' }
           }))
         }
       ]
@@ -390,7 +304,6 @@ describe('globalSearchGroups', () => {
       })
     )
     expect(collapsedGroups[0]?.items).toHaveLength(GLOBAL_SEARCH_ENTITY_GROUP_COLLAPSED_LIMIT)
-    expect(collapsedGroups[1]?.items).toHaveLength(GLOBAL_SEARCH_ENTITY_GROUP_COLLAPSED_LIMIT)
 
     const expandedGroups = buildGlobalSearchGroups({
       expandedGroupIds: new Set(['topic']),
@@ -448,35 +361,24 @@ describe('globalSearchGroups', () => {
   })
 
   it('maps message search source filters and groups message results by parent', () => {
-    expect(getMessageSearchSources('all')).toEqual(['topic', 'session'])
+    expect(getMessageSearchSources('all')).toEqual(['topic'])
     expect(getMessageSearchSources('topic')).toEqual(['topic'])
-    expect(getMessageSearchSources('session')).toEqual(['session'])
 
     const groups = buildGlobalMessageSearchGroups({
       expandedParentIds: new Set(),
-      items: [
-        ...Array.from({ length: GLOBAL_MESSAGE_SEARCH_GROUP_COLLAPSED_LIMIT + 1 }, (_, index) => ({
-          sourceType: 'topic' as const,
-          messageId: `message-${index}`,
-          topicId: 'topic-1',
-          topicName: 'Topic',
-          topicCreatedAt: '2026-01-01T00:00:00.000Z',
-          topicUpdatedAt: '2026-01-01T00:00:00.000Z',
-          snippet: `Snippet ${index}`,
-          createdAt: `2026-01-01T00:00:0${index}.000Z`
-        })),
-        {
-          sourceType: 'session',
-          messageId: 'session-message-1',
-          sessionId: 'session-1',
-          sessionName: 'Session',
-          snippet: 'Session snippet',
-          createdAt: '2026-01-01T00:00:10.000Z'
-        }
-      ]
+      items: Array.from({ length: GLOBAL_MESSAGE_SEARCH_GROUP_COLLAPSED_LIMIT + 1 }, (_, index) => ({
+        sourceType: 'topic' as const,
+        messageId: `message-${index}`,
+        topicId: 'topic-1',
+        topicName: 'Topic',
+        topicCreatedAt: '2026-01-01T00:00:00.000Z',
+        topicUpdatedAt: '2026-01-01T00:00:00.000Z',
+        snippet: `Snippet ${index}`,
+        createdAt: `2026-01-01T00:00:0${index}.000Z`
+      }))
     })
 
-    expect(groups).toHaveLength(2)
+    expect(groups).toHaveLength(1)
     expect(groups[0]).toEqual(
       expect.objectContaining({
         id: 'topic:topic-1',
@@ -484,14 +386,6 @@ describe('globalSearchGroups', () => {
         title: 'Topic',
         total: GLOBAL_MESSAGE_SEARCH_GROUP_COLLAPSED_LIMIT + 1,
         items: expect.arrayContaining([expect.objectContaining({ kind: 'more', remainingCount: 1 })])
-      })
-    )
-    expect(groups[1]).toEqual(
-      expect.objectContaining({
-        id: 'session:session-1',
-        sourceType: 'session',
-        title: 'Session',
-        total: 1
       })
     )
   })

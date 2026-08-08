@@ -72,7 +72,7 @@ describe('isAppRendererUrl', () => {
     expect(isAppRendererUrl('http://localhost:5173/index.html', 'not a url', APP_ROOT)).toBe(false)
   })
 
-  it('rejects remote https origins (MiniApp / webview SSRF vector)', () => {
+  it('rejects remote https origins (webview SSRF vector)', () => {
     expect(isAppRendererUrl('https://evil.example.com/page', null, APP_ROOT)).toBe(false)
   })
 

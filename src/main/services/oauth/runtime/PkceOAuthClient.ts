@@ -5,7 +5,7 @@ import * as z from 'zod'
 
 // Token endpoint response. Superset of what every provider returns — extra
 // fields each provider cares about (id_token, expires_in) are optional so the
-// same schema validates Codex, CherryIN, and future providers alike.
+// same schema validates CherryIN and future providers alike.
 export const OAuthTokenResponseSchema = z.object({
   access_token: z.string(),
   refresh_token: z.string().optional(),

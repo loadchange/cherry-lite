@@ -46,7 +46,6 @@ export function buildPathRegistry() {
   const sysHome = os.homedir()
   const appUserData = app.getPath('userData')
   const appUserDataData = path.join(appUserData, 'Data')
-  const appUserDataRuntime = path.join(appUserData, 'Runtime')
   const appUserDataToolchain = path.join(appUserData, 'Toolchain')
   const appUserDataToolchainMise = path.join(appUserDataToolchain, 'mise')
   const appSession = app.getPath('sessionData')
@@ -101,13 +100,6 @@ export function buildPathRegistry() {
       ? path.join(appExtraResources, 'provider-registry')
       : path.join(__dirname, '../../packages/provider-registry/data'),
 
-    // Local embedding model cache (transformers.js HF cache root, downloaded on first use)
-    'feature.embedding.models': path.join(appUserDataRuntime, 'models', 'qwen3-embedding'),
-
-    // onnxruntime-node native binary (napi addon + shared lib), downloaded on first
-    // use of local embedding or local OCR — see OnnxRuntimeBinaryService.
-    'feature.onnxruntime.binary': path.join(appUserDataToolchain, 'onnxruntime'),
-
     // BinaryManager (tool manager)
     'feature.binary.data': appUserDataToolchainMise,
     // Windows-only: %LOCALAPPDATA%/%APPDATA% relocated into the isolated install
@@ -136,15 +128,7 @@ export function buildPathRegistry() {
     'feature.ovms.ovocr': path.join(CHERRY_HOME, 'ovms', 'ovocr'),
 
     // Agents
-    'feature.agents.skills.builtin': path.join(appRootResources, 'skills'), // bundled skill templates (read-only)
-    'feature.agents.skills': path.join(appUserDataData, 'Skills'), // installed skills storage
-    'feature.agents.skills.install.temp': path.join(appTemp, 'skill-install'),
     'feature.agents.claude.root': path.join(appUserDataData, 'Agents', '.claude'), // v1 userData/.claude is copied here during v2 migration
-    'feature.agents.claude.skills': path.join(appUserDataData, 'Agents', '.claude', 'skills'), // symlinks → feature.agents.skills
-    'feature.agents.channels': path.join(appUserDataData, 'Channels'),
-    'feature.agents.data': path.join(appUserDataData, 'Agents'), // per-agent identity + memory data
-    'feature.agents.system_workspaces': path.join(appUserDataData, 'Agents', 'system'), // app-owned session workspaces
-    'feature.agents.builtin': path.join(appRootResources, 'builtin-agents'), // bundled agent templates (read-only)
     'feature.agents.assistant.manifest.file': path.join(
       appRootResources,
       'builtin-agents',
@@ -152,15 +136,12 @@ export function buildPathRegistry() {
       'product-manifest.json'
     ),
 
-    // Files / Notes / Knowledgebase
+    // Files / Knowledgebase
     'feature.files.data': path.join(appUserDataData, 'Files'),
-    'feature.notes.data': path.join(appUserDataData, 'Notes'),
     'feature.knowledgebase.data': path.join(appUserDataData, 'KnowledgeBase'),
 
     // OCR
     'feature.ocr.tesseract': path.join(appUserData, 'tesseract'),
-    // Local OCR model files (PaddleOCR / ppu-paddle-ocr, downloaded on demand)
-    'feature.ocr.paddleocr': path.join(appUserDataRuntime, 'models', 'pp-ocrv6'),
 
     // Version log
     'feature.version_log.file': path.join(appUserData, 'version.log'),
@@ -196,7 +177,6 @@ export function buildPathRegistry() {
     'feature.files.tempcopy.temp': path.join(appTemp, 'files-tempcopy'),
 
     // -- E. external.* — third-party tool paths (Cherry reads/writes, does NOT own) --
-    'external.openclaw.config': path.join(os.homedir(), '.openclaw'),
     // Nested ternary (not object literal) to satisfy file-level ESLint constraint
     'external.obsidian.config_file': isWin
       ? path.join(app.getPath('appData'), 'obsidian', 'obsidian.json')
@@ -243,12 +223,7 @@ const NO_ENSURE = [
   'app.root.resources.binaries',
   'app.database.migrations',
   'feature.provider_registry.data',
-  'feature.agents.builtin',
-  'feature.agents.assistant.manifest.file',
-  'feature.agents.skills.builtin',
-  // AgentSessionService stores this path through DataApi. The runtime creates
-  // the concrete session directory later, keeping database writes filesystem-free.
-  'feature.agents.system_workspaces'
+  'feature.agents.assistant.manifest.file'
 ] as const satisfies readonly NoEnsureEntry[]
 
 /** Whether Application.getPath() should auto-create the directory for this key. */

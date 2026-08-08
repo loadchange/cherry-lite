@@ -33,7 +33,7 @@
     },
     "builtin": {
       "cherry_assistant": {
-        "description": "Consilier integrat Cherry Studio. Diagnostică probleme, ghidează operațiuni, colectează întrebări frecvente, trimite rapoarte de erori/cereri de funcționalități și caută/crează Abilități (Skills)"
+        "description": "Consilier integrat Cherry Studio Lite. Diagnostică probleme, ghidează operațiuni, colectează întrebări frecvente, trimite rapoarte de erori/cereri de funcționalități și caută/crează Abilități (Skills)"
       }
     },
     "channels": {
@@ -1085,55 +1085,6 @@
       "server_not_running_description": "Serverul API trebuie să fie pornit pentru ca agenții să funcționeze. Îl poți porni direct sau verifica setările."
     }
   },
-  "apiGateway": {
-    "actions": {
-      "regenerate": "Regenerează",
-      "restart": {
-        "button": "Repornește",
-        "tooltip": "Repornește serverul"
-      },
-      "start": "Pornește",
-      "stop": "Oprește"
-    },
-    "authHeader": {
-      "title": "Header de autorizare"
-    },
-    "description": "Expune capacitățile AI ale Cherry Studio prin API-uri HTTP compatibile cu OpenAI",
-    "documentation": {
-      "title": "Documentație API"
-    },
-    "fields": {
-      "apiKey": {
-        "copyTooltip": "Copiază cheia API",
-        "label": "Cheie API",
-        "placeholder": "Cheia API va fi generată automat"
-      },
-      "port": {
-        "label": "Port"
-      },
-      "url": {
-        "copyTooltip": "Copiază URL-ul",
-        "label": "URL"
-      }
-    },
-    "messages": {
-      "apiKeyRegenerated": "Cheia API a fost regenerată",
-      "notEnabled": "Serverul API nu este activat.",
-      "operationFailed": "Operațiunea serverului API a eșuat: ",
-      "restartError": "Nu s-a putut reporni serverul API: ",
-      "restartFailed": "Repornirea serverului API a eșuat: ",
-      "restartSuccess": "Serverul API a repornit cu succes",
-      "startError": "Nu s-a putut porni serverul API: ",
-      "startSuccess": "Serverul API a pornit cu succes",
-      "stopError": "Nu s-a putut opri serverul API: ",
-      "stopSuccess": "Serverul API s-a oprit cu succes"
-    },
-    "status": {
-      "running": "Rulează",
-      "stopped": "Oprit"
-    },
-    "title": "Server API"
-  },
   "assistants": {
     "abbr": "Asistenți",
     "clear": {
@@ -2137,11 +2088,6 @@
       },
       "select_placeholder": "Selectare…"
     },
-    "api_gateway": {
-      "description": "Orice CLI, fiecare model",
-      "requires_running": "Păstrează Cherry Studio rulând după activare — CLI-ul extern se conectează la gateway-ul pe care îl găzduiește.",
-      "title": "Gateway Unificat"
-    },
     "apply_failed": "Nu s-a reușit scrierea configurației CLI în fișierul de sistem",
     "auto_update_to_latest": "Actualizează automat la cea mai recentă versiune",
     "bun_required_message": "Mediul Bun este necesar pentru a rula instrumente CLI",
@@ -2448,9 +2394,6 @@
     "yesterday": "Ieri",
     "you": "Tu"
   },
-  "docs": {
-    "title": "Documentație"
-  },
   "emoji_picker": {
     "categories": {
       "activities": "Activități",
@@ -2519,12 +2462,12 @@
       "content": "Conținut blocat de sistemul de securitate, modificați și reîncercați",
       "context_length": "Conversația este prea lungă, te rugăm să ștergi istoricul sau să începi o conversație nouă",
       "deprecated": "Acest model a fost retras, te rugăm să treci la alt model",
-      "free_model_unavailable": "Diagnosticul AI este temporar indisponibil",
       "go_to_settings": "Mergi la setări",
       "knowledge": "Vectorizarea bazei de cunoștințe a eșuat",
       "mcp": "Conexiunea la serverul MCP a eșuat, verificați dacă serviciul rulează",
       "model": "Model negăsit sau fără acces",
       "model_conflict": "Modelul de diagnostic este identic cu modelul cu eroare",
+      "model_unavailable": "Diagnosticul AI este temporar indisponibil",
       "network": "Nu se poate conecta la server, verificați setările de rețea sau proxy",
       "ocr": "Motorul OCR nu este inițializat, verificați setările OCR",
       "parse": "IA a returnat un răspuns invalid, vă rugăm să reîncercați sau să schimbați modelul",
@@ -3986,9 +3929,6 @@
           "specified": "Nu s-a putut exporta fișierul Markdown"
         }
       },
-      "notes": {
-        "export": "Nu s-au putut exporta notele"
-      },
       "notion": {
         "export": "Nu s-a putut exporta în Notion. Te rugăm să verifici starea conexiunii și configurarea conform documentației",
         "no_api_key": "ApiKey-ul Notion sau DatabaseID-ul Notion nu sunt configurate",
@@ -4092,9 +4032,6 @@
           "preconf": "Fișierul Markdown a fost exportat cu succes în calea preconfigurată",
           "specified": "Fișierul Markdown a fost exportat cu succes"
         }
-      },
-      "notes": {
-        "export": "Exportat cu succes în note"
       },
       "notion": {
         "export": "Exportat cu succes în Notion"
@@ -4493,159 +4430,6 @@
   "navigate": {
     "provider_settings": "Mergi la setările furnizorului"
   },
-  "notes": {
-    "auto_rename": {
-      "empty_note": "Notița este goală, nu se poate genera numele",
-      "failed": "Generarea numelui notiței a eșuat",
-      "label": "Generează nume notiță",
-      "success": "Numele notiței a fost generat cu succes"
-    },
-    "characters": "Caractere",
-    "collapse": "Restrânge",
-    "conflict": {
-      "description": "Această notă a fost modificată în afara editorului. Reîncărcați pentru a încărca cea mai recentă versiune (modificările nesalvate vor fi eliminate) sau continuați editarea.",
-      "keep_draft": "Continuați editarea",
-      "reload": "Reîncărcare",
-      "title": "Notă modificată pe disc"
-    },
-    "content_placeholder": "Introdu conținutul notiței...",
-    "copyContent": "Copiază conținutul",
-    "create_folder_failed": "Nu s-a reușit crearea folderului",
-    "create_note_failed": "Nu s-a reușit crearea notei",
-    "crossPlatformRestoreWarning": "Configurația multi-platformă a fost restaurată, dar directorul de notițe este gol. Te rugăm să copiezi fișierele notițelor în: {{path}}",
-    "delete": "Șterge",
-    "delete_confirm": "Ești sigur că vrei să ștergi acest {{type}}?",
-    "delete_failed": "Nu s-a reușit ștergerea notei",
-    "delete_folder_confirm": "Ești sigur că vrei să ștergi dosarul \"{{name}}\" și tot conținutul său?",
-    "delete_note_confirm": "Ești sigur că vrei să ștergi notița \"{{name}}\"?",
-    "drop_markdown_hint": "Trage fișiere sau dosare .md aici pentru a importa",
-    "empty": "Încă nu există notițe disponibile",
-    "expand": "Extinde",
-    "exportToPDF": "Exportă în PDF",
-    "exportToWord": "Exportă în Word",
-    "export_failed": "Exportul în baza de cunoștințe a eșuat",
-    "export_knowledge": "Exportă notițele în baza de cunoștințe",
-    "export_success": "Exportat cu succes în baza de cunoștințe",
-    "export_to_pdf_failed": "Nu s-a reușit exportul în PDF",
-    "export_to_pdf_success": "Exportat în PDF",
-    "export_to_word_failed": "Exportul în Word a eșuat",
-    "file_removed_draft": "Această notă a fost eliminată de pe disc. Schița ta nesalvată este încă disponibilă în editor.",
-    "folder": "Dosar",
-    "leave": {
-      "description": "Părăsirea acestei note va elimina modificările nesalvate. Doriți să continuați?",
-      "discard_and_continue": "Renunță și continuă",
-      "title": "Renunțați la modificările nesalvate ale notei?"
-    },
-    "load_failed": "Nu s-a reușit încărcarea notei",
-    "load_failed_description": "Fișierul nu a putut fi citit. Editarea este dezactivată pentru a proteja conținutul notei.",
-    "metadata_sync_failed": "Fișier actualizat, dar rețineți că sincronizarea stării a eșuat. Vă rugăm să reîncercați operațiunea.",
-    "metadata_update_failed": "Nu s-a reușit actualizarea stării notei",
-    "move_failed": "Nu s-a reușit mutarea notei",
-    "new_folder": "Dosar nou",
-    "new_note": "Creează o notiță nouă",
-    "no_content_to_copy": "Niciun conținut de copiat",
-    "no_content_to_export": "Niciun conținut de exportat",
-    "no_file_selected": "Te rugăm să selectezi fișierul de încărcat",
-    "no_note_selected": "Te rog selectează mai întâi o notă",
-    "no_valid_files": "Nu a fost încărcat niciun fișier valid",
-    "open_folder": "Deschide un dosar extern",
-    "open_outside": "Deschide extern",
-    "print": "Tipărire",
-    "print_failed": "Nu s-a putut imprima nota",
-    "rename": "Redenumește",
-    "rename_changed": "Din cauza politicilor de securitate, numele fișierului a fost schimbat din {{original}} în {{final}}",
-    "rename_failed": "Nu s-a putut redenumi nota",
-    "save": "Salvează în Notițe",
-    "save_blocked_load_failed": "Salvarea a fost blocată deoarece nota nu a putut fi încărcată",
-    "save_failed": "Nu s-a reușit salvarea notei",
-    "save_failure": {
-      "description": "Această notă nu a putut fi salvată. Editările tale rămân în editor și salvarea automată este întreruptă.",
-      "metadata_pending": "Nota a fost salvată, dar metadatele fișierului sale sunt încă în curs de recuperare. Nu reîncercați această salvare."
-    },
-    "search": {
-      "both": "Nume+Conținut",
-      "content": "Conținut",
-      "found_results": "S-au găsit {{count}} rezultate (Nume: {{nameCount}}, Conținut: {{contentCount}})",
-      "more_matches": "mai multe potriviri",
-      "searching": "Se caută...",
-      "show_less": "Afișează mai puțin"
-    },
-    "settings": {
-      "data": {
-        "apply": "Aplică",
-        "apply_path_failed": "Nu s-a putut aplica calea",
-        "current_work_directory": "Director de lucru curent",
-        "invalid_directory": "Directorul selectat este invalid sau accesul este refuzat",
-        "path_required": "Te rugăm să selectezi un director de lucru",
-        "path_updated": "Directorul de lucru a fost actualizat cu succes",
-        "reset_failed": "Resetarea a eșuat",
-        "reset_to_default": "Resetează la implicit",
-        "select": "Selectează",
-        "select_directory_failed": "Nu s-a putut selecta directorul",
-        "title": "Setări date",
-        "work_directory_description": "Directorul de lucru este locul unde sunt stocate toate fișierele notițelor. Schimbarea directorului de lucru nu va muta fișierele existente; te rugăm să migrezi fișierele manual.",
-        "work_directory_placeholder": "Selectează directorul de lucru pentru notițe"
-      },
-      "display": {
-        "compress_content": "Compresie conținut",
-        "compress_content_description": "Când este activat, va limita numărul de caractere pe linie, reducând conținutul afișat pe ecran, dar făcând paragrafele lungi mai ușor de citit.",
-        "default_font": "Font implicit",
-        "font_size": "Dimensiune font",
-        "font_size_description": "Ajustează dimensiunea fontului pentru o experiență de citire mai bună (10-30px)",
-        "font_size_large": "Mare",
-        "font_size_medium": "Mediu",
-        "font_size_small": "Mic",
-        "font_title": "Setări font",
-        "serif_font": "Font cu serife",
-        "show_table_of_contents": "Afișează cuprinsul",
-        "show_table_of_contents_description": "Afișează o bară laterală cu cuprinsul pentru o navigare ușoară în documente",
-        "title": "Setări afișare"
-      },
-      "editor": {
-        "edit_mode": {
-          "description": "În Vizualizarea Editare, modul de editare implicit pentru notițe noi",
-          "preview_mode": "Previzualizare live",
-          "source_mode": "Mod cod sursă",
-          "title": "Vizualizare editare implicită"
-        },
-        "title": "Setări editor",
-        "view_mode": {
-          "description": "Mod vizualizare implicit notițe noi",
-          "edit_mode": "Mod editare",
-          "read_mode": "Mod citire",
-          "title": "Vizualizare implicită"
-        },
-        "view_mode_description": "Setează modul de vizualizare implicit pentru pagina filă nouă."
-      },
-      "save_failed": "Nu s-au putut salva setările notițelor",
-      "title": "Notițe"
-    },
-    "show_starred": "Afișează notițele favorite",
-    "sort_a2z": "Nume fișier (A-Z)",
-    "sort_created_asc": "Ora creării (cele mai vechi întâi)",
-    "sort_created_desc": "Ora creării (cele mai noi întâi)",
-    "sort_updated_asc": "Ora actualizării (cele mai vechi întâi)",
-    "sort_updated_desc": "Ora actualizării (cele mai noi întâi)",
-    "sort_z2a": "Nume fișier (Z-A)",
-    "spell_check": "Verificare ortografică",
-    "spell_check_tooltip": "Activează/Dezactivează verificarea ortografică",
-    "star": "Notiță favorită",
-    "starred_notes": "Notițe colectate",
-    "target_name_exists": "O notă sau un dosar cu acest nume există deja",
-    "title": "Notițe",
-    "tree_load_failed": "Nu s-a putut încărca directorul de note",
-    "unsaved_changes": "Ai conținut nesalvat, ești sigur că vrei să pleci?",
-    "unstar": "Elimină de la favorite",
-    "untitled_folder": "Dosar nou",
-    "untitled_note": "Notiță fără titlu",
-    "upload_all_failed": "Nu s-au putut încărca {{failed}} notițe",
-    "upload_failed": "Încărcarea notiței a eșuat",
-    "upload_files": "Încarcă fișiere",
-    "upload_folder": "Încarcă dosar",
-    "upload_partial_failed": "Încărcate {{uploaded}} notițe, {{failed}} eșuate",
-    "upload_success": "Notiță încărcată cu succes",
-    "uploading_files": "Se încarcă {{count}} fișiere..."
-  },
   "notification": {
     "assistant": "Răspuns asistent",
     "knowledge": {
@@ -4692,22 +4476,19 @@
     },
     "skip": "Sariți",
     "toast": {
-      "complete_failed": "Nu s-a putut finaliza configurarea. Vă rugăm să încercați din nou.",
-      "connected": "Conectat cu succes la CherryIN"
+      "complete_failed": "Nu s-a putut finaliza configurarea. Vă rugăm să încercați din nou."
     },
     "welcome": {
-      "login_cherryin": "Conectare cu CherryIN",
       "or_continue_with": "SAU CONTINUAȚI CU",
-      "other_provider": "Alegeți alți furnizori",
       "select_other_provider": "Selectați alt furnizor",
       "setup_hint": "Vă rugăm să configurați cel puțin un furnizor pentru cea mai bună experiență",
       "subtitle": "Conectați un furnizor pentru a vă activa stația de lucru AI all-in-one",
-      "title": "Bun venit la Cherry Studio"
+      "title": "Bun venit la Cherry Studio Lite"
     }
   },
   "openclaw": {
     "checking_installation": "Verificare instalare OpenClaw...",
-    "description": "Integrează furnizorii Cherry Studio cu Gateway-ul OpenClaw pentru a permite agenților de codificare AI precum Claude Code, Qwen-Coder și alții.",
+    "description": "Integrează furnizorii Cherry Studio Lite cu Gateway-ul OpenClaw pentru a permite agenților de codificare AI precum Claude Code, Qwen-Coder și alții.",
     "error": {
       "select_provider_model": "Vă rugăm să selectați mai întâi un furnizor și un model"
     },
@@ -5231,7 +5012,6 @@
     "baidu-cloud": "Baidu Cloud",
     "burncloud": "BurnCloud",
     "cerebras": "Cerebras AI",
-    "cherryai": "CherryAI",
     "cherryin": "CherryIN",
     "claude-code": "Claude Code",
     "copilot": "GitHub Copilot",
@@ -5352,221 +5132,6 @@
     },
     "title": "Restaurare date"
   },
-  "richEditor": {
-    "action": {
-      "table": {
-        "deleteColumn": "Șterge coloane",
-        "deleteRow": "Șterge rânduri",
-        "insertColumnAfter": "Inserează după",
-        "insertColumnBefore": "Inserează înainte",
-        "insertRowAfter": "Inserează dedesubt",
-        "insertRowBefore": "Inserează deasupra"
-      }
-    },
-    "commands": {
-      "blockMath": {
-        "description": "Inserează formulă matematică",
-        "title": "Bloc matematic"
-      },
-      "blockquote": {
-        "description": "Capturează un citat",
-        "title": "Citat"
-      },
-      "bold": {
-        "description": "Marcat cu aldine",
-        "title": "Aldine"
-      },
-      "bulletList": {
-        "description": "Creează o listă simplă cu marcatori",
-        "title": "Listă cu marcatori"
-      },
-      "calloutInfo": {
-        "description": "Adaugă o casetă de informații",
-        "title": "Casetă informații"
-      },
-      "calloutWarning": {
-        "description": "Adaugă o casetă de avertizare",
-        "title": "Casetă avertizare"
-      },
-      "code": {
-        "description": "Inserează fragment de cod",
-        "title": "Cod"
-      },
-      "codeBlock": {
-        "description": "Capturează un fragment de cod",
-        "title": "Cod"
-      },
-      "columns": {
-        "description": "Creează aspect pe coloane",
-        "title": "Coloane"
-      },
-      "date": {
-        "description": "Inserează data curentă",
-        "title": "Dată"
-      },
-      "divider": {
-        "description": "Adaugă o linie orizontală",
-        "title": "Divizor"
-      },
-      "hardBreak": {
-        "description": "Inserează o întrerupere de linie",
-        "title": "Întrerupere de linie"
-      },
-      "heading1": {
-        "description": "Titlu secțiune mare",
-        "title": "Titlu 1"
-      },
-      "heading2": {
-        "description": "Titlu secțiune mediu",
-        "title": "Titlu 2"
-      },
-      "heading3": {
-        "description": "Titlu secțiune mic",
-        "title": "Titlu 3"
-      },
-      "heading4": {
-        "description": "Titlu secțiune mai mic",
-        "title": "Titlu 4"
-      },
-      "heading5": {
-        "description": "Titlu secțiune și mai mic",
-        "title": "Titlu 5"
-      },
-      "heading6": {
-        "description": "Cel mai mic titlu de secțiune",
-        "title": "Titlu 6"
-      },
-      "image": {
-        "description": "Inserează o imagine",
-        "title": "Imagine"
-      },
-      "inlineCode": {
-        "description": "Adaugă cod în linie",
-        "title": "Cod în linie"
-      },
-      "inlineMath": {
-        "description": "Inserează formule matematice în linie",
-        "title": "Matematică în linie"
-      },
-      "italic": {
-        "description": "Marcat ca italic",
-        "title": "Italic"
-      },
-      "link": {
-        "description": "Adaugă un link",
-        "title": "Link"
-      },
-      "noCommandsFound": "Nicio comandă găsită",
-      "orderedList": {
-        "description": "Creează o listă numerotată",
-        "title": "Listă numerotată"
-      },
-      "paragraph": {
-        "description": "Începe să scrii cu text simplu",
-        "title": "Text"
-      },
-      "redo": {
-        "description": "Refă ultima acțiune",
-        "title": "Refă"
-      },
-      "strike": {
-        "description": "Marchează ca tăiat",
-        "title": "Tăiat"
-      },
-      "table": {
-        "description": "Inserează un tabel",
-        "title": "Tabel"
-      },
-      "taskList": {
-        "description": "Creează o listă de sarcini",
-        "title": "Listă de sarcini"
-      },
-      "underline": {
-        "description": "Marchează ca subliniat",
-        "title": "Subliniat"
-      },
-      "undo": {
-        "description": "Anulează ultima acțiune",
-        "title": "Anulează"
-      }
-    },
-    "dragHandle": "Trage pentru a muta",
-    "frontMatter": {
-      "addProperty": "Adaugă o proprietate",
-      "addTag": "Adaugă etichetă",
-      "changeToBoolean": "Casetă de bifare",
-      "changeToDate": "Dată",
-      "changeToNumber": "Număr",
-      "changeToTags": "Etichete",
-      "changeToText": "Text",
-      "changeType": "Schimbă tipul",
-      "deleteProperty": "Șterge proprietatea",
-      "editValue": "Editează valoarea",
-      "empty": "Gol",
-      "moreActions": "Mai multe acțiuni",
-      "propertyName": "Nume proprietate"
-    },
-    "image": {
-      "placeholder": "Adaugă o poză"
-    },
-    "imageUploader": {
-      "embedImage": "Încorporează imagine",
-      "embedLink": "Încorporează link",
-      "embedSuccess": "Imagine încorporată cu succes",
-      "invalidType": "Te rugăm să selectezi un fișier imagine",
-      "invalidUrl": "URL imagine invalid",
-      "processing": "Se procesează imaginea...",
-      "title": "Adaugă o imagine",
-      "tooLarge": "Dimensiunea imaginii nu poate depăși 10MB",
-      "upload": "Încarcă",
-      "uploadError": "Încărcarea imaginii a eșuat",
-      "uploadFile": "Încarcă fișier",
-      "uploadHint": "Suportă JPG, PNG, GIF și alte formate, max 10MB",
-      "uploadSuccess": "Imagine încărcată cu succes",
-      "uploadText": "Fă clic sau trage imaginea aici pentru a încărca",
-      "uploading": "Se încarcă imaginea",
-      "urlPlaceholder": "Lipește linkul imaginii",
-      "urlRequired": "Te rugăm să introduci URL-ul imaginii"
-    },
-    "link": {
-      "remove": "Elimină linkul",
-      "text": "Titlu link",
-      "textPlaceholder": "Te rugăm să introduci titlul linkului",
-      "url": "URL link"
-    },
-    "math": {
-      "placeholder": "Introdu formula LaTeX"
-    },
-    "placeholder": "Scrie '/' pentru comenzi",
-    "plusButton": "Fă clic pentru a adăuga dedesubt",
-    "toolbar": {
-      "blockMath": "Bloc matematic",
-      "blockquote": "Citat",
-      "bold": "Aldine",
-      "bulletList": "Listă cu marcatori",
-      "clearMarks": "Șterge formatarea",
-      "code": "Cod în linie",
-      "codeBlock": "Bloc de cod",
-      "heading1": "Titlu 1",
-      "heading2": "Titlu 2",
-      "heading3": "Titlu 3",
-      "heading4": "Titlu 4",
-      "heading5": "Titlu 5",
-      "heading6": "Titlu 6",
-      "image": "Imagine",
-      "inlineMath": "Ecuație în linie",
-      "italic": "Italic",
-      "link": "Link",
-      "orderedList": "Listă ordonată",
-      "paragraph": "Paragraf",
-      "redo": "Refă",
-      "strike": "Tăiat",
-      "table": "Tabel",
-      "taskList": "Listă de sarcini",
-      "underline": "Subliniat",
-      "undo": "Anulează"
-    }
-  },
   "selection": {
     "action": {
       "builtin": {
@@ -5642,7 +5207,7 @@
           },
           "description": {
             "0": "Asistentul de selecție necesită <strong>Permisiune de accesibilitate</strong> pentru a funcționa corect.",
-            "1": "Te rugăm să faci clic pe \"<strong>Mergi la Setări</strong>\" și să apeși butonul \"<strong>Deschide setările de sistem</strong>\" în fereastra pop-up de solicitare a permisiunii care apare ulterior. Apoi găsește \"<strong>Cherry Studio</strong>\" în lista de aplicații și activează comutatorul de permisiune.",
+            "1": "Te rugăm să faci clic pe \"<strong>Mergi la Setări</strong>\" și să apeși butonul \"<strong>Deschide setările de sistem</strong>\" în fereastra pop-up de solicitare a permisiunii care apare ulterior. Apoi găsește \"<strong>Cherry Studio Lite</strong>\" în lista de aplicații și activează comutatorul de permisiune.",
             "2": "După finalizarea setărilor, te rugăm să redeschizi asistentul de selecție."
           },
           "title": "Permisiune de accesibilitate"
@@ -5666,7 +5231,7 @@
         "wayland_checklist_subtitle": "Asigurați-vă că sunt îndeplinite următoarele condiții pentru a optimiza experiența Wayland:",
         "wayland_description": "Vă aflați într-o sesiune Wayland. Din cauza limitărilor sistemului, bara de instrumente poate apărea doar în centrul ecranului în loc să urmărească textul selectat pe unele medii desktop. Se recomandă să treceți la o sesiune X11 pentru o experiență completă.",
         "wayland_title": "Notificare sesiune Wayland",
-        "xwayland_fail": "Nu este activat, vă rugăm să lansați Cherry Studio cu steagul `--ozone-platform=x11`",
+        "xwayland_fail": "Nu este activat, vă rugăm să lansați Cherry Studio Lite cu steagul `--ozone-platform=x11`",
         "xwayland_label": "Mod XWayland:",
         "xwayland_pass": "Activat"
       },
@@ -5815,28 +5380,13 @@
   },
   "settings": {
     "about": {
-      "careers": {
-        "button": "Vedere",
-        "title": "Carieră"
-      },
       "checkUpdate": {
         "available": "Actualizare",
         "label": "Verifică actualizări"
       },
       "checkingUpdate": "Se verifică actualizările...",
-      "contact": {
-        "button": "E-mail",
-        "title": "Contact"
-      },
-      "debug": {
-        "open": "Deschide",
-        "title": "Depanare"
-      },
       "description": "Un asistent AI puternic pentru producători",
       "downloading": "Se descarcă...",
-      "enterprise": {
-        "title": "Enterprise"
-      },
       "feedback": {
         "agent": {
           "description": "Discută cu Asistentul Cherry pentru a împărtăși feedback-ul tău.",
@@ -5845,7 +5395,7 @@
         "agent_error": "Nu se poate deschide Cherry Assistant pentru feedback. Vă rugăm să încercați din nou.",
         "button": "Feedback",
         "dialog": {
-          "description": "Alege cum să partajezi feedback-ul și ajută-ne să facem Cherry Studio mai bun.",
+          "description": "Alege cum să partajezi feedback-ul și ajută-ne să facem Cherry Studio Lite mai bun.",
           "title": "Alege un canal de feedback"
         },
         "github": {
@@ -5871,11 +5421,7 @@
       "title": "Despre",
       "updateAvailable": "S-a găsit o nouă versiune {{version}}",
       "updateError": "Eroare actualizare",
-      "updateNotAvailable": "Utilizezi cea mai recentă versiune",
-      "website": {
-        "button": "Site web",
-        "title": "Site oficial"
-      }
+      "updateNotAvailable": "Utilizezi cea mai recentă versiune"
     },
     "advanced": {
       "auto_switch_to_topics": "Comutare automată la subiect",
@@ -5927,7 +5473,7 @@
         "select": "Modifică directorul",
         "select_error": "Schimbarea directorului de date a eșuat",
         "select_error_in_app_path": "Noua cale este aceeași cu calea de instalare a aplicației, te rugăm să selectezi o altă cale",
-        "select_error_protected_path": "Calea selectată este protejată de sistemul de operare sau de Cherry Studio. Vă rugăm să alegeți un alt folder.",
+        "select_error_protected_path": "Calea selectată este protejată de sistemul de operare sau de Cherry Studio Lite. Vă rugăm să alegeți un alt folder.",
         "select_error_root_path": "Noua cale nu poate fi calea rădăcină",
         "select_error_same_path": "Noua cale este aceeași cu vechea cale, te rugăm să selectezi o altă cale",
         "select_error_write_permission": "Noua cale nu are permisiuni de scriere",
@@ -6516,31 +6062,6 @@
       "installing": "Se instalează...",
       "installingHint": "Prima instalare poate descărca un runtime și dura câteva minute",
       "invalidTool": "Nume de instrument sau cheie invalid",
-      "localModels": {
-        "cancel": "Anulare",
-        "description": "Modele care rulează local pe dispozitivul tău — descarcă o dată, apoi folosește offline fără cheie API.",
-        "download": "Descărcare",
-        "embedding": {
-          "name": "Încorporare locală",
-          "subtitle": "Qwen3 Embedding 0.6B · ~614 MB"
-        },
-        "notice": {
-          "downloadFailed": "Descărcarea a eșuat. Verificați conexiunea și încercați din nou.",
-          "inUse": "Încă utilizat de o bază de cunoștințe; greutățile au fost păstrate.",
-          "removeFailed": "Eliminarea a eșuat. Verificați jurnalele pentru detalii."
-        },
-        "ocr": {
-          "name": "OCR local",
-          "subtitle": "PaddleOCR PP-OCRv6 · ~140 MB"
-        },
-        "remove": "Elimină",
-        "status": {
-          "downloading": "Se descarcă…",
-          "ready": "Gata"
-        },
-        "title": "Modele Locale",
-        "unsupported": "Modelele locale nu sunt acceptate pe această platformă."
-      },
       "notInstalled": "Neinstalat",
       "openBinariesDir": "Open binaries directory",
       "remove": "Remove tool",
@@ -6578,7 +6099,7 @@
         "uv": "Python package manager for MCP services and dependency installation."
       },
       "uninstall": "Dezinstalare",
-      "uninstallConfirmMessage": "Sigur doriți să dezinstalați \"{{name}}\"? Copia de backend a Cherry Studio va fi ștearsă.",
+      "uninstallConfirmMessage": "Sigur doriți să dezinstalați \"{{name}}\"? Copia de backend a Cherry Studio Lite va fi ștearsă.",
       "uninstallConfirmTitle": "Instrument de dezinstalare",
       "uninstallFailed": "Nu s-a putut dezinstala instrumentul",
       "uninstallSuccess": "Instrument dezinstalat",
@@ -7444,10 +6965,6 @@
     "power": {
       "prevent_sleep_when_busy": "Menține sistemul activ cât timp rulează sarcinile"
     },
-    "privacy": {
-      "enable_privacy_mode": "Raportare anonimă a erorilor și statisticilor",
-      "title": "Setări confidențialitate"
-    },
     "prompts": {
       "add": "Adaugă Prompt",
       "contentLabel": "Conținut",
@@ -7586,8 +7103,7 @@
       "base_url": {
         "invalid": "Introduceți o adresă URL HTTP sau HTTPS validă",
         "label": "URL de bază",
-        "placeholder": "https://api.example.com",
-        "required": "Vă rugăm să introduceți URL-ul de bază"
+        "placeholder": "https://api.example.com"
       },
       "basic_auth": {
         "label": "Autentificare HTTP",
@@ -7687,13 +7203,6 @@
           "text_endpoint_required": "Configurați cel puțin un endpoint de text",
           "url_help": "Introduceți URL-ul rădăcină al API-ului pentru a previzualiza calea finală a cererii"
         },
-        "preset_instance": {
-          "description": "Pentru serviciile Coding Plan, conturi multiple sau izolarea proiectelor; configurați fiecare URL de bază și cheie API în mod independent",
-          "empty": "Nicio presetare de furnizor care să se potrivească",
-          "placeholder": "Creează dintr-un preset al furnizorului…",
-          "search_placeholder": "Presetări furnizor căutare",
-          "title": "Începe de la o presetare (opțional)"
-        },
         "request_preview": "Calea cererii: {{path}}",
         "title": "Adaugă furnizor personalizat"
       },
@@ -7709,12 +7218,6 @@
       },
       "docs_check": "Verifică",
       "docs_more_details": "pentru mai multe detalii",
-      "duplicate": {
-        "add_another": "Adaugă instanță {{name}}",
-        "drawer_title": "Adaugă instanță {{name}}",
-        "fill_after_create": "Câmpurile de autentificare pot fi completate după creare",
-        "menu_label": "Adaugă instanță"
-      },
       "enable_failed_after_connection": "Conexiunea a reușit, dar furnizorul nu a putut fi activat.",
       "filter": {
         "agent": "Asistat de agent",
@@ -7751,8 +7254,7 @@
         "anthropic": "Mesaje Anthropic",
         "gemini": "Google Gemini",
         "openai_chat": "Completări de chat OpenAI",
-        "openai_responses": "Răspunsuri OpenAI",
-        "toggle": "Mai multe puncte finale"
+        "openai_responses": "Răspunsuri OpenAI"
       },
       "no_models_for_check": "Nu există modele disponibile pentru verificare (de ex. modele chat)",
       "not_checked": "Neverificat",
@@ -8079,13 +7581,6 @@
           "doc2x": {
             "description": "Motor avansat de restaurare a fișierelor.",
             "name": "Doc2x"
-          },
-          "local_paddleocr": {
-            "description": "PaddleOCR (PP-OCRv6 medium) rulează în proces — complet offline, fără cheie API, cu recunoaștere pe un fir de execuție în fundal astfel încât interfața să rămână receptivă. Descărcați modelul (~140MB) în Dependențe de Mediu înainte de prima utilizare.",
-            "name": "PaddleOCR local",
-            "status": {
-              "local": "Rulează complet pe dispozitivul tău"
-            }
           },
           "mineru": {
             "description": "Instrumentul open-source de extracție PDF de înaltă calitate al OpenDataLab.",

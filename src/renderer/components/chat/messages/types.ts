@@ -339,9 +339,7 @@ export interface MessageListActions {
   saveCodeBlock?: (data: { msgBlockId: string; codeBlockId: string; newContent: string }) => void | Promise<void>
   saveTextFile?: (fileName: string, content: string) => string | null | void | Promise<string | null | void>
   saveImage?: (fileName: string, dataUrl: string) => boolean | Promise<boolean>
-  saveToKnowledge?: (message: MessageExportView) => void | Promise<void>
   exportMessageAsMarkdown?: (message: MessageExportView, includeReasoning?: boolean) => void | Promise<void>
-  exportToNotes?: (message: MessageExportView) => void | Promise<void>
   exportToWord?: (markdown: string, title: string) => void | Promise<void>
   exportToNotion?: (message: MessageExportView) => void | Promise<void>
   exportToYuque?: (message: MessageExportView) => void | Promise<void>

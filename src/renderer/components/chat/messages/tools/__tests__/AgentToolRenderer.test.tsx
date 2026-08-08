@@ -168,7 +168,7 @@ describe('AgentToolRenderer', () => {
     'message.tools.sections.input': 'Input',
     'agent.askUserQuestion.title': 'Questions from Agent',
     'agent.askUserQuestion.answered': 'answered',
-    'agent.sidebar_title': 'Agents',
+    'agent.session.group.conversation': 'Conversation',
     'settings.tool.file_processing.features.document_to_markdown.title': 'Document Processing',
     'message.tools.status.done': 'Done',
     'message.tools.units.item_one': '{{count}} item',
@@ -820,20 +820,20 @@ describe('AgentToolRenderer', () => {
         },
         status: 'done',
         arguments: {
-          path: '/app/agents',
-          query: { sessionId: 'session-1' }
+          path: '/app/chat',
+          query: { topicId: 'topic-1' }
         },
-        response: 'Navigate link created: /app/agents'
+        response: 'Navigate link created: /app/chat'
       })
 
       render(<AgentToolRenderer toolResponse={toolResponse} />)
 
-      expect(screen.getByText(/Agents/)).toBeInTheDocument()
+      expect(screen.getByText(/Conversation/)).toBeInTheDocument()
       fireEvent.click(screen.getByRole('button'))
 
       expect(navigateToRoute).toHaveBeenCalledWith({
-        path: '/app/agents',
-        query: { sessionId: 'session-1' }
+        path: '/app/chat',
+        query: { topicId: 'topic-1' }
       })
     })
 

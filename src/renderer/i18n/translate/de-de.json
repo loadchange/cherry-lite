@@ -33,7 +33,7 @@
     },
     "builtin": {
       "cherry_assistant": {
-        "description": "Integrierter Cherry Studio Berater. Diagnose von Problemen, Anleitung bei Bedienung, Sammlung von FAQs, Einreichung von Fehlern/Feature-Anfragen sowie Suche/Erstellung von Skills"
+        "description": "Integrierter Cherry Studio Lite Berater. Diagnose von Problemen, Anleitung bei Bedienung, Sammlung von FAQs, Einreichung von Fehlern/Feature-Anfragen sowie Suche/Erstellung von Skills"
       }
     },
     "channels": {
@@ -1085,55 +1085,6 @@
       "server_not_running_description": "Der API-Server muss laufen, damit die Agents funktionieren. Sie können ihn direkt starten oder die Einstellungen überprüfen."
     }
   },
-  "apiGateway": {
-    "actions": {
-      "regenerate": "Neu generieren",
-      "restart": {
-        "button": "Neustarten",
-        "tooltip": "Server neustarten"
-      },
-      "start": "Starten",
-      "stop": "Stoppen"
-    },
-    "authHeader": {
-      "title": "Autorisierungs-Header"
-    },
-    "description": "Stellen Sie die KI-Funktionen von Cherry Studio über eine OpenAI-kompatible HTTP-API bereit",
-    "documentation": {
-      "title": "API-Dokumentation"
-    },
-    "fields": {
-      "apiKey": {
-        "copyTooltip": "API-Schlüssel kopieren",
-        "label": "API-Schlüssel",
-        "placeholder": "API-Schlüssel wird automatisch generiert"
-      },
-      "port": {
-        "label": "Port"
-      },
-      "url": {
-        "copyTooltip": "URL kopieren",
-        "label": "URL"
-      }
-    },
-    "messages": {
-      "apiKeyRegenerated": "API-Schlüssel wurde neu generiert",
-      "notEnabled": "API server is not enabled.",
-      "operationFailed": "API-Server-Operation fehlgeschlagen:",
-      "restartError": "API-Server-Neustart fehlgeschlagen:",
-      "restartFailed": "API-Server-Neustart fehlgeschlagen:",
-      "restartSuccess": "API-Server erfolgreich neu gestartet",
-      "startError": "API-Server starten fehlgeschlagen:",
-      "startSuccess": "API-Server erfolgreich gestartet",
-      "stopError": "API-Server stoppen fehlgeschlagen:",
-      "stopSuccess": "API-Server erfolgreich gestoppt"
-    },
-    "status": {
-      "running": "Läuft",
-      "stopped": "Gestoppt"
-    },
-    "title": "API-Server"
-  },
   "assistants": {
     "abbr": "Assistent",
     "clear": {
@@ -2137,11 +2088,6 @@
       },
       "select_placeholder": "Auswählen…"
     },
-    "api_gateway": {
-      "description": "Jede CLI, jedes Modell",
-      "requires_running": "Lassen Sie Cherry Studio nach der Aktivierung weiterlaufen — die externe CLI verbindet sich mit dem von ihr gehosteten Gateway.",
-      "title": "Einheitliches Gateway"
-    },
     "apply_failed": "Fehler beim Schreiben der CLI-Konfiguration in die Systemdatei",
     "auto_update_to_latest": "Updates prüfen und neueste Version installieren",
     "bun_required_message": "Bun-Umgebung erforderlich zum Ausführen von CLI-Tools",
@@ -2448,9 +2394,6 @@
     "yesterday": "Gestern",
     "you": "Sie"
   },
-  "docs": {
-    "title": "Hilfedokumentation"
-  },
   "emoji_picker": {
     "categories": {
       "activities": "Aktivitäten",
@@ -2519,12 +2462,12 @@
       "content": "Inhalt wurde vom Sicherheitssystem blockiert, bitte ändern und erneut versuchen",
       "context_length": "Unterhaltung zu lang, bitte Verlauf löschen oder einen neuen Chat beginnen",
       "deprecated": "Dieses Modell wurde außer Betrieb genommen, bitte wechseln Sie zu einem anderen Modell",
-      "free_model_unavailable": "Die KI-Diagnose ist vorübergehend nicht verfügbar.",
       "go_to_settings": "Zu Einstellungen",
       "knowledge": "Vektorisierung der Wissensdatenbank fehlgeschlagen",
       "mcp": "Verbindung zum MCP-Server fehlgeschlagen, prüfen Sie ob der Dienst läuft",
       "model": "Modell nicht gefunden oder kein Zugriff",
       "model_conflict": "Diagnosemodell ist identisch mit dem fehlerhaften Modell",
+      "model_unavailable": "Die KI-Diagnose ist vorübergehend nicht verfügbar.",
       "network": "Verbindung zum Server nicht möglich, Netzwerk- oder Proxy-Einstellungen prüfen",
       "ocr": "OCR-Engine nicht initialisiert, OCR-Einstellungen prüfen",
       "parse": "Die KI hat eine ungültige Antwort zurückgegeben, bitte versuchen Sie es erneut oder wechseln Sie das Modell.",
@@ -3986,9 +3929,6 @@
           "specified": "Export der Markdown-Datei fehlgeschlagen"
         }
       },
-      "notes": {
-        "export": "Notizen exportieren fehlgeschlagen"
-      },
       "notion": {
         "export": "Export nach Notion fehlgeschlagen. Bitte überprüfen Sie den Verbindungsstatus und die Konfiguration gemäß Dokumentation",
         "no_api_key": "Notion API Key oder Notion Database ID nicht konfiguriert",
@@ -4092,9 +4032,6 @@
           "preconf": "Markdown-Datei erfolgreich in vorkonfigurierten Pfad exportiert",
           "specified": "Markdown-Datei erfolgreich exportiert"
         }
-      },
-      "notes": {
-        "export": "Erfolgreich in Notizen exportiert"
       },
       "notion": {
         "export": "Erfolgreich nach Notion exportiert"
@@ -4493,159 +4430,6 @@
   "navigate": {
     "provider_settings": "Zu Anbietereinstellungen navigieren"
   },
-  "notes": {
-    "auto_rename": {
-      "empty_note": "Notiz ist leer, kann keinen Namen generieren",
-      "failed": "Notizname generieren fehlgeschlagen",
-      "label": "Notizname generieren",
-      "success": "Notizname erfolgreich generiert"
-    },
-    "characters": "Zeichen",
-    "collapse": "Einklappen",
-    "conflict": {
-      "description": "Diese Notiz wurde außerhalb des Editors geändert. Laden Sie neu, um die neueste Version zu laden (Ihre nicht gespeicherten Änderungen werden verworfen), oder fahren Sie mit der Bearbeitung fort.",
-      "keep_draft": "Weiter bearbeiten",
-      "reload": "Neu laden",
-      "title": "Notiz auf dem Datenträger geändert"
-    },
-    "content_placeholder": "Bitte Notizinhalt eingeben...",
-    "copyContent": "Inhalt kopieren",
-    "create_folder_failed": "Ordner konnte nicht erstellt werden",
-    "create_note_failed": "Fehler beim Erstellen der Notiz",
-    "crossPlatformRestoreWarning": "Plattformübergreifende Konfiguration wiederhergestellt, aber das Notizenverzeichnis ist leer. Bitte kopieren Sie Ihre Notizdateien nach: {{path}}",
-    "delete": "Löschen",
-    "delete_confirm": "Möchten Sie diesen {{type}} wirklich löschen?",
-    "delete_failed": "Fehler beim Löschen der Notiz",
-    "delete_folder_confirm": "Möchten Sie Ordner \"{{name}}\" und alle seine Inhalte wirklich löschen?",
-    "delete_note_confirm": "Möchten Sie Notiz \"{{name}}\" wirklich löschen?",
-    "drop_markdown_hint": ".md-Datei oder Verzeichnis hierher ziehen zum Importieren",
-    "empty": "Keine Notizen vorhanden",
-    "expand": "Ausklappen",
-    "exportToPDF": "In PDF exportieren",
-    "exportToWord": "In Word exportieren",
-    "export_failed": "Export in Wissensdatenbank fehlgeschlagen",
-    "export_knowledge": "Notiz in Wissensdatenbank exportieren",
-    "export_success": "Erfolgreich in Wissensdatenbank exportiert",
-    "export_to_pdf_failed": "Fehler beim Exportieren als PDF",
-    "export_to_pdf_success": "Exportiert nach PDF",
-    "export_to_word_failed": "Export nach Word fehlgeschlagen",
-    "file_removed_draft": "Diese Notiz wurde vom Datenträger entfernt. Ihr ungespeicherter Entwurf ist weiterhin im Editor verfügbar.",
-    "folder": "Ordner",
-    "leave": {
-      "description": "Das Verlassen dieser Notiz wird Ihre nicht gespeicherten Änderungen verwerfen. Möchten Sie fortfahren?",
-      "discard_and_continue": "Verwerfen und fortfahren",
-      "title": "Änderungen der Notiz verwerfen?"
-    },
-    "load_failed": "Fehler beim Laden der Notiz",
-    "load_failed_description": "Die Datei konnte nicht gelesen werden. Die Bearbeitung ist deaktiviert, um den Inhalt der Notiz zu schützen.",
-    "metadata_sync_failed": "Datei aktualisiert, aber beachte: Status-Synchronisierung fehlgeschlagen. Bitte versuche die Operation erneut.",
-    "metadata_update_failed": "Fehler beim Aktualisieren des Notizstatus",
-    "move_failed": "Fehler beim Verschieben der Notiz",
-    "new_folder": "Neuer Ordner",
-    "new_note": "Neue Notiz",
-    "no_content_to_copy": "Kein Inhalt zum Kopieren",
-    "no_content_to_export": "Kein Inhalt zum Exportieren",
-    "no_file_selected": "Bitte Datei zum Hochladen auswählen",
-    "no_note_selected": "Bitte wählen Sie zuerst eine Notiz aus",
-    "no_valid_files": "Keine gültigen Dateien hochgeladen",
-    "open_folder": "Externen Ordner öffnen",
-    "open_outside": "Extern öffnen",
-    "print": "Drucken",
-    "print_failed": "Drucken der Notiz fehlgeschlagen",
-    "rename": "Umbenennen",
-    "rename_changed": "Aus Sicherheitsgründen wurde der Dateiname von {{original}} zu {{final}} geändert",
-    "rename_failed": "Fehler beim Umbenennen der Notiz",
-    "save": "In Notizen speichern",
-    "save_blocked_load_failed": "Speichern blockiert, da die Notiz nicht geladen werden konnte",
-    "save_failed": "Fehler beim Speichern der Notiz",
-    "save_failure": {
-      "description": "Diese Notiz konnte nicht gespeichert werden. Ihre Bearbeitungen bleiben im Editor erhalten und die automatische Speicherung ist pausiert.",
-      "metadata_pending": "Die Notiz wurde gespeichert, aber ihre Dateimetadaten werden noch wiederhergestellt. Wiederholen Sie diesen Speichervorgang nicht."
-    },
-    "search": {
-      "both": "Name + Inhalt",
-      "content": "Inhalt",
-      "found_results": "{{count}} Ergebnisse gefunden (Name: {{nameCount}}, Inhalt: {{contentCount}})",
-      "more_matches": " Treffer",
-      "searching": "Searching...",
-      "show_less": "Weniger anzeigen"
-    },
-    "settings": {
-      "data": {
-        "apply": "Anwenden",
-        "apply_path_failed": "Pfad anwenden fehlgeschlagen",
-        "current_work_directory": "Aktuelles Arbeitsverzeichnis",
-        "invalid_directory": "Ausgewähltes Verzeichnis ist ungültig oder keine Berechtigung",
-        "path_required": "Bitte Arbeitsverzeichnis auswählen",
-        "path_updated": "Arbeitsverzeichnis erfolgreich aktualisiert",
-        "reset_failed": "Zurücksetzen fehlgeschlagen",
-        "reset_to_default": "Auf Standard zurücksetzen",
-        "select": "Auswählen",
-        "select_directory_failed": "Verzeichnis auswählen fehlgeschlagen",
-        "title": "Dateneinstellungen",
-        "work_directory_description": "Das Arbeitsverzeichnis ist der Speicherort für alle Notizdateien. Das Ändern des Arbeitsverzeichnisses verschiebt vorhandene Dateien nicht. Bitte migrieren Sie Dateien manuell.",
-        "work_directory_placeholder": "Notizen-Arbeitsverzeichnis auswählen"
-      },
-      "display": {
-        "compress_content": "Spaltenbreite reduzieren",
-        "compress_content_description": "Aktiviert begrenzt die Anzahl der Zeichen pro Zeile, wodurch weniger Inhalt auf dem Bildschirm angezeigt wird",
-        "default_font": "Standardschrift",
-        "font_size": "Schriftgröße",
-        "font_size_description": "Schriftgröße anpassen für besseres Leseerlebnis (10-30px)",
-        "font_size_large": "Groß",
-        "font_size_medium": "Mittel",
-        "font_size_small": "Klein",
-        "font_title": "Schrifteinstellungen",
-        "serif_font": "Serifenschrift",
-        "show_table_of_contents": "Inhaltsverzeichnis anzeigen",
-        "show_table_of_contents_description": "Inhaltsverzeichnis-Seitenleiste anzeigen für einfache Navigation im Dokument",
-        "title": "Anzeigeeinstellungen"
-      },
-      "editor": {
-        "edit_mode": {
-          "description": "Standard-Bearbeitungsmodus für neue Notizen in der Bearbeitungsansicht",
-          "preview_mode": "Live-Vorschau",
-          "source_mode": "Quellcode-Modus",
-          "title": "Standard-Bearbeitungsansicht"
-        },
-        "title": "Editor-Einstellungen",
-        "view_mode": {
-          "description": "Standard-Ansichtsmodus für neue Notizen",
-          "edit_mode": "Bearbeitungsmodus",
-          "read_mode": "Lesemodus",
-          "title": "Standardansicht"
-        },
-        "view_mode_description": "Legen Sie den Standard-Ansichtsmodus für neue Tabs fest."
-      },
-      "save_failed": "Fehler beim Speichern der Notiz-Einstellungen",
-      "title": "Notizen"
-    },
-    "show_starred": "Markierte Notizen anzeigen",
-    "sort_a2z": "Dateiname (A-Z)",
-    "sort_created_asc": "Erstellungszeit (alt nach neu)",
-    "sort_created_desc": "Erstellungszeit (neu nach alt)",
-    "sort_updated_asc": "Änderungszeit (alt nach neu)",
-    "sort_updated_desc": "Änderungszeit (neu nach alt)",
-    "sort_z2a": "Dateiname (Z-A)",
-    "spell_check": "Rechtschreibprüfung",
-    "spell_check_tooltip": "Rechtschreibprüfung aktivieren/deaktivieren",
-    "star": "Notiz markieren",
-    "starred_notes": "Markierte Notizen",
-    "target_name_exists": "Eine Notiz oder ein Ordner mit diesem Namen existiert bereits",
-    "title": "Notizen",
-    "tree_load_failed": "Fehler beim Laden des Notizenverzeichnisses",
-    "unsaved_changes": "Sie haben ungespeicherte Änderungen. Möchten Sie wirklich gehen?",
-    "unstar": "Markierung aufheben",
-    "untitled_folder": "Neuer Ordner",
-    "untitled_note": "Unbenannte Notiz",
-    "upload_all_failed": "Fehler beim Hochladen von {{failed}} Notizen",
-    "upload_failed": "Notizen-Upload fehlgeschlagen",
-    "upload_files": "Dateien hochladen",
-    "upload_folder": "Ordner hochladen",
-    "upload_partial_failed": "{{uploaded}} Notizen hochgeladen, {{failed}} fehlgeschlagen",
-    "upload_success": "Notizen erfolgreich hochgeladen",
-    "uploading_files": "Lade {{count}} Dateien hoch..."
-  },
   "notification": {
     "assistant": "Assistenten-Antwort",
     "knowledge": {
@@ -4692,22 +4476,19 @@
     },
     "skip": "Überspringen",
     "toast": {
-      "complete_failed": "Einrichtung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
-      "connected": "Erfolgreich mit CherryIN verbunden"
+      "complete_failed": "Einrichtung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut."
     },
     "welcome": {
-      "login_cherryin": "Mit CherryIN anmelden",
       "or_continue_with": "ODER WEITER MIT",
-      "other_provider": "Andere Anbieter auswählen",
       "select_other_provider": "Wählen Sie einen anderen Anbieter",
       "setup_hint": "Bitte konfigurieren Sie mindestens einen Anbieter für die beste Erfahrung.",
       "subtitle": "Verbinden Sie einen Anbieter, um Ihre All-in-One-KI-Workstation zu aktivieren",
-      "title": "Willkommen bei Cherry Studio"
+      "title": "Willkommen bei Cherry Studio Lite"
     }
   },
   "openclaw": {
     "checking_installation": "Überprüfe OpenClaw-Installation...",
-    "description": "Integriere Cherry Studio-Anbieter mit OpenClaw Gateway, um KI-Coding-Agenten wie Claude Code, Qwen-Coder und weitere zu ermöglichen.",
+    "description": "Integriere Cherry Studio Lite-Anbieter mit OpenClaw Gateway, um KI-Coding-Agenten wie Claude Code, Qwen-Coder und weitere zu ermöglichen.",
     "error": {
       "select_provider_model": "Bitte wählen Sie zuerst einen Anbieter und ein Modell aus."
     },
@@ -5231,7 +5012,6 @@
     "baidu-cloud": "Baidu Cloud Qianfan",
     "burncloud": "BurnCloud",
     "cerebras": "Cerebras AI",
-    "cherryai": "CherryAI",
     "cherryin": "CherryIN",
     "claude-code": "Claude Code",
     "copilot": "GitHub Copilot",
@@ -5352,221 +5132,6 @@
     },
     "title": "Datenwiederherstellung"
   },
-  "richEditor": {
-    "action": {
-      "table": {
-        "deleteColumn": "Spalte löschen",
-        "deleteRow": "Zeile löschen",
-        "insertColumnAfter": "Rechts einfügen",
-        "insertColumnBefore": "Links einfügen",
-        "insertRowAfter": "Unten einfügen",
-        "insertRowBefore": "Oben einfügen"
-      }
-    },
-    "commands": {
-      "blockMath": {
-        "description": "Mathematische Formel einfügen",
-        "title": "Mathematische Formel"
-      },
-      "blockquote": {
-        "description": "Zitattext einfügen",
-        "title": "Zitat"
-      },
-      "bold": {
-        "description": "Als fett markieren",
-        "title": "Fett"
-      },
-      "bulletList": {
-        "description": "Einfache Aufzählungsliste erstellen",
-        "title": "Ungeordnete Liste"
-      },
-      "calloutInfo": {
-        "description": "Infobox hinzufügen",
-        "title": "Infobox"
-      },
-      "calloutWarning": {
-        "description": "Warnbox hinzufügen",
-        "title": "Warnbox"
-      },
-      "code": {
-        "description": "Code-Snippet einfügen",
-        "title": "Code"
-      },
-      "codeBlock": {
-        "description": "Code-Snippet einfügen",
-        "title": "Codeblock"
-      },
-      "columns": {
-        "description": "Mehrspaltiges Layout erstellen",
-        "title": "Spalten"
-      },
-      "date": {
-        "description": "Aktuelles Datum einfügen",
-        "title": "Datum"
-      },
-      "divider": {
-        "description": "Horizontale Trennlinie hinzufügen",
-        "title": "Trennlinie"
-      },
-      "hardBreak": {
-        "description": "Zeilenumbruch einfügen",
-        "title": "Zeilenumbruch"
-      },
-      "heading1": {
-        "description": "Große Abschnittsüberschrift",
-        "title": "Überschrift 1"
-      },
-      "heading2": {
-        "description": "Mittlere Abschnittsüberschrift",
-        "title": "Überschrift 2"
-      },
-      "heading3": {
-        "description": "Kleine Abschnittsüberschrift",
-        "title": "Überschrift 3"
-      },
-      "heading4": {
-        "description": "Kleinere Abschnittsüberschrift",
-        "title": "Überschrift 4"
-      },
-      "heading5": {
-        "description": "Noch kleinere Abschnittsüberschrift",
-        "title": "Überschrift 5"
-      },
-      "heading6": {
-        "description": "Kleinste Abschnittsüberschrift",
-        "title": "Überschrift 6"
-      },
-      "image": {
-        "description": "Bild einfügen",
-        "title": "Bild"
-      },
-      "inlineCode": {
-        "description": "Inline-Code hinzufügen",
-        "title": "Inline-Code"
-      },
-      "inlineMath": {
-        "description": "Inline-Mathematikformel einfügen",
-        "title": "Inline-Mathematikformel"
-      },
-      "italic": {
-        "description": "Als kursiv markieren",
-        "title": "Kursiv"
-      },
-      "link": {
-        "description": "Link hinzufügen",
-        "title": "Link"
-      },
-      "noCommandsFound": "Kein Befehl gefunden",
-      "orderedList": {
-        "description": "Nummerierte Liste erstellen",
-        "title": "Geordnete Liste"
-      },
-      "paragraph": {
-        "description": "Normalen Text schreiben",
-        "title": "Fließtext"
-      },
-      "redo": {
-        "description": "Letzten Schritt wiederholen",
-        "title": "Wiederholen"
-      },
-      "strike": {
-        "description": "Als durchgestrichen markieren",
-        "title": "Durchgestrichen"
-      },
-      "table": {
-        "description": "Tabelle einfügen",
-        "title": "Tabelle"
-      },
-      "taskList": {
-        "description": "To-Do-Liste erstellen",
-        "title": "Aufgabenliste"
-      },
-      "underline": {
-        "description": "Als unterstrichen markieren",
-        "title": "Unterstrichen"
-      },
-      "undo": {
-        "description": "Letzten Schritt rückgängig machen",
-        "title": "Rückgängig"
-      }
-    },
-    "dragHandle": "Block ziehen",
-    "frontMatter": {
-      "addProperty": "Eigenschaft hinzufügen",
-      "addTag": "Tag hinzufügen",
-      "changeToBoolean": "Kontrollkästchen",
-      "changeToDate": "Datum",
-      "changeToNumber": "Zahl",
-      "changeToTags": "Tags",
-      "changeToText": "Text",
-      "changeType": "Typ ändern",
-      "deleteProperty": "Eigenschaft löschen",
-      "editValue": "Wert bearbeiten",
-      "empty": "Leer",
-      "moreActions": "Weitere Aktionen",
-      "propertyName": "Eigenschaftsname"
-    },
-    "image": {
-      "placeholder": "Bild hinzufügen"
-    },
-    "imageUploader": {
-      "embedImage": "Bild einbetten",
-      "embedLink": "Link einbetten",
-      "embedSuccess": "Bild erfolgreich eingebettet",
-      "invalidType": "Bitte Bilddatei auswählen",
-      "invalidUrl": "Ungültiger Bildlink",
-      "processing": "Bild wird verarbeitet...",
-      "title": "Bild hinzufügen",
-      "tooLarge": "Bildgröße darf 10 MB nicht überschreiten",
-      "upload": "Hochladen",
-      "uploadError": "Bild-Upload fehlgeschlagen",
-      "uploadFile": "Datei hochladen",
-      "uploadHint": "Unterstützt JPG, PNG, GIF usw., maximal 10 MB",
-      "uploadSuccess": "Bild erfolgreich hochgeladen",
-      "uploadText": "Klicken oder Bild hierher ziehen zum Hochladen",
-      "uploading": "Bild wird hochgeladen",
-      "urlPlaceholder": "Bildlink-Adresse einfügen",
-      "urlRequired": "Bitte Bildlink-Adresse eingeben"
-    },
-    "link": {
-      "remove": "Link entfernen",
-      "text": "Link-Titel",
-      "textPlaceholder": "Bitte Link-Titel eingeben",
-      "url": "Link-Adresse"
-    },
-    "math": {
-      "placeholder": "LaTeX-Formel eingeben"
-    },
-    "placeholder": "'/' eingeben um Befehl aufzurufen",
-    "plusButton": "Klicken um unten hinzufügen",
-    "toolbar": {
-      "blockMath": "Mathematikformelblock",
-      "blockquote": "Zitat",
-      "bold": "Fett",
-      "bulletList": "Ungeordnete Liste",
-      "clearMarks": "Format löschen",
-      "code": "Inline-Code",
-      "codeBlock": "Codeblock",
-      "heading1": "Überschrift 1",
-      "heading2": "Überschrift 2",
-      "heading3": "Überschrift 3",
-      "heading4": "Überschrift 4",
-      "heading5": "Überschrift 5",
-      "heading6": "Überschrift 6",
-      "image": "Bild",
-      "inlineMath": "Inline-Mathematikformel",
-      "italic": "Kursiv",
-      "link": "Link",
-      "orderedList": "Geordnete Liste",
-      "paragraph": "Fließtext",
-      "redo": "Wiederholen",
-      "strike": "Durchgestrichen",
-      "table": "Tabelle",
-      "taskList": "Aufgabenliste",
-      "underline": "Unterstrichen",
-      "undo": "Rückgängig"
-    }
-  },
   "selection": {
     "action": {
       "builtin": {
@@ -5642,7 +5207,7 @@
           },
           "description": {
             "0": "Der Textauswahl-Assistent benötigt <strong>Bedienungshilfen-Berechtigungen</strong>, um ordnungsgemäß zu funktionieren.",
-            "1": "Klicken Sie auf <strong>Zu Einstellungen</strong> und anschließend im Berechtigungsdialog auf <strong>Systemeinstellungen öffnen</strong>. Suchen Sie danach in der App-Liste <strong>Cherry Studio</strong> und aktivieren Sie den Schalter.",
+            "1": "Klicken Sie auf <strong>Zu Einstellungen</strong> und anschließend im Berechtigungsdialog auf <strong>Systemeinstellungen öffnen</strong>. Suchen Sie danach in der App-Liste <strong>Cherry Studio Lite</strong> und aktivieren Sie den Schalter.",
             "2": "Nach Abschluss der Einrichtung Textauswahl-Assistent erneut aktivieren."
           },
           "title": "Bedienungshilfen-Berechtigung"
@@ -5666,7 +5231,7 @@
         "wayland_checklist_subtitle": "Stellen Sie sicher, dass die folgenden Bedingungen erfüllt sind, um das Wayland-Erlebnis zu optimieren:",
         "wayland_description": "Sie befinden sich in einer Wayland-Sitzung. Aufgrund von Systemeinschränkungen kann die Symbolleiste auf einigen Desktop-Umgebungen nur in der Bildschirmmitte erscheinen, anstatt dem ausgewählten Text zu folgen. Es wird empfohlen, zu einer X11-Sitzung zu wechseln, um die volle Funktionalität zu erhalten.",
         "wayland_title": "Wayland-Sitzungshinweis",
-        "xwayland_fail": "Nicht aktiviert, bitte starten Sie Cherry Studio mit dem Flag `--ozone-platform=x11`",
+        "xwayland_fail": "Nicht aktiviert, bitte starten Sie Cherry Studio Lite mit dem Flag `--ozone-platform=x11`",
         "xwayland_label": "XWayland-Modus:",
         "xwayland_pass": "Aktiviert"
       },
@@ -5815,28 +5380,13 @@
   },
   "settings": {
     "about": {
-      "careers": {
-        "button": "Ansicht",
-        "title": "Karriere"
-      },
       "checkUpdate": {
         "available": "Jetzt aktualisieren",
         "label": "Auf Updates prüfen"
       },
       "checkingUpdate": "Sucht nach Updates...",
-      "contact": {
-        "button": "E-Mail",
-        "title": "E-Mail-Kontakt"
-      },
-      "debug": {
-        "open": "Öffnen",
-        "title": "Debug-Panel"
-      },
       "description": "Ein KI-Assistent für Kreative",
       "downloading": "Update wird heruntergeladen...",
-      "enterprise": {
-        "title": "Unternehmen"
-      },
       "feedback": {
         "agent": {
           "description": "Chatte mit dem Cherry Assistant, um Feedback zu teilen.",
@@ -5845,7 +5395,7 @@
         "agent_error": "Cherry Assistant für Feedback kann nicht geöffnet werden. Bitte versuchen Sie es erneut.",
         "button": "Feedback",
         "dialog": {
-          "description": "Wählen Sie, wie Sie Feedback geben möchten, und helfen Sie uns, Cherry Studio zu verbessern.",
+          "description": "Wählen Sie, wie Sie Feedback geben möchten, und helfen Sie uns, Cherry Studio Lite zu verbessern.",
           "title": "Wählen Sie einen Feedback-Kanal"
         },
         "github": {
@@ -5871,11 +5421,7 @@
       "title": "Über uns",
       "updateAvailable": "Neue Version {{version}} gefunden",
       "updateError": "Aktualisierungsfehler",
-      "updateNotAvailable": "Ihre Software ist bereits auf dem neuesten Stand",
-      "website": {
-        "button": "Anzeigen",
-        "title": "Offizielle Website"
-      }
+      "updateNotAvailable": "Ihre Software ist bereits auf dem neuesten Stand"
     },
     "advanced": {
       "auto_switch_to_topics": "Automatisch zu Themenansicht wechseln",
@@ -5927,7 +5473,7 @@
         "select": "Verzeichnis ändern",
         "select_error": "Datenverzeichnis-Änderung fehlgeschlagen",
         "select_error_in_app_path": "Neuer Pfad identisch mit Installationspfad, bitte anderen wählen",
-        "select_error_protected_path": "Der ausgewählte Pfad ist durch das Betriebssystem oder Cherry Studio geschützt. Bitte wählen Sie einen anderen Ordner.",
+        "select_error_protected_path": "Der ausgewählte Pfad ist durch das Betriebssystem oder Cherry Studio Lite geschützt. Bitte wählen Sie einen anderen Ordner.",
         "select_error_root_path": "Neuer Pfad darf nicht Root-Verzeichnis sein",
         "select_error_same_path": "Neuer Pfad identisch mit altem Pfad, bitte anderen wählen",
         "select_error_write_permission": "Neuer Pfad hat keine Schreibberechtigung",
@@ -6516,31 +6062,6 @@
       "installing": "Installiere...",
       "installingHint": "Die erste Installation kann eine Laufzeitumgebung herunterladen und einige Minuten dauern",
       "invalidTool": "Ungültiger Tool-Name oder Schlüssel",
-      "localModels": {
-        "cancel": "Abbrechen",
-        "description": "Modelle, die lokal auf Ihrem Gerät laufen — einmal herunterladen, dann offline ohne API-Schlüssel nutzbar.",
-        "download": "Herunterladen",
-        "embedding": {
-          "name": "Lokale Einbettung",
-          "subtitle": "Qwen3 Embedding 0.6B · ~614 MB"
-        },
-        "notice": {
-          "downloadFailed": "Download fehlgeschlagen. Überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-          "inUse": "Wird weiterhin von einer Wissensbasis verwendet; die Gewichte wurden beibehalten.",
-          "removeFailed": "Entfernen fehlgeschlagen. Überprüfen Sie die Protokolle für Details."
-        },
-        "ocr": {
-          "name": "Lokale OCR",
-          "subtitle": "PaddleOCR PP-OCRv6 · ~140 MB"
-        },
-        "remove": "Entfernen",
-        "status": {
-          "downloading": "Herunterladen…",
-          "ready": "Bereit"
-        },
-        "title": "Lokale Modelle",
-        "unsupported": "Lokale Modelle werden auf dieser Plattform nicht unterstützt."
-      },
       "notInstalled": "Nicht installiert",
       "openBinariesDir": "Open binaries directory",
       "remove": "Remove tool",
@@ -6578,7 +6099,7 @@
         "uv": "Python package manager for MCP services and dependency installation."
       },
       "uninstall": "Deinstallieren",
-      "uninstallConfirmMessage": "Sind Sie sicher, dass Sie \"{{name}}\" deinstallieren möchten? Die Backend-Kopie von Cherry Studio wird gelöscht.",
+      "uninstallConfirmMessage": "Sind Sie sicher, dass Sie \"{{name}}\" deinstallieren möchten? Die Backend-Kopie von Cherry Studio Lite wird gelöscht.",
       "uninstallConfirmTitle": "Deinstallations-Tool",
       "uninstallFailed": "Fehler beim Deinstallieren des Tools",
       "uninstallSuccess": "Tool deinstalliert",
@@ -7444,10 +6965,6 @@
     "power": {
       "prevent_sleep_when_busy": "Halten Sie das System wach, während Aufgaben ausgeführt werden"
     },
-    "privacy": {
-      "enable_privacy_mode": "Fehlerberichte und Statistiken anonym senden",
-      "title": "Datenschutzeinstellungen"
-    },
     "prompts": {
       "add": "Prompt hinzufügen",
       "contentLabel": "Inhalt",
@@ -7586,8 +7103,7 @@
       "base_url": {
         "invalid": "Geben Sie eine gültige HTTP- oder HTTPS-URL ein",
         "label": "Basis-URL",
-        "placeholder": "https://api.example.com",
-        "required": "Bitte geben Sie die Basis-URL ein"
+        "placeholder": "https://api.example.com"
       },
       "basic_auth": {
         "label": "HTTP-Authentifizierung",
@@ -7687,13 +7203,6 @@
           "text_endpoint_required": "Konfigurieren Sie mindestens einen Text-Endpunkt",
           "url_help": "Geben Sie die API-Root-URL ein, um den endgültigen Anfragepfad in der Vorschau anzuzeigen"
         },
-        "preset_instance": {
-          "description": "Für Coding Plan-Dienste, mehrere Konten oder Projekttrennung; konfigurieren Sie jede Basis-URL und jeden API-Schlüssel unabhängig",
-          "empty": "Keine passenden Anbieter-Voreinstellungen",
-          "placeholder": "Aus einer Anbieter-Voreinstellung erstellen…",
-          "search_placeholder": "Suchanbieter-Voreinstellungen",
-          "title": "Von einer Voreinstellung ausgehen (optional)"
-        },
         "request_preview": "Anfragepfad: {{path}}",
         "title": "Benutzerdefinierten Anbieter hinzufügen"
       },
@@ -7709,12 +7218,6 @@
       },
       "docs_check": "Anzeigen",
       "docs_more_details": "Weitere Details anzeigen",
-      "duplicate": {
-        "add_another": "{{name}}-Instanz hinzufügen",
-        "drawer_title": "{{name}}-Instanz hinzufügen",
-        "fill_after_create": "Authentifizierungsfelder können nach der Erstellung ausgefüllt werden",
-        "menu_label": "Instanz hinzufügen"
-      },
       "enable_failed_after_connection": "Verbindung erfolgreich, aber der Anbieter konnte nicht aktiviert werden.",
       "filter": {
         "agent": "Vom Agenten unterstützt",
@@ -7751,8 +7254,7 @@
         "anthropic": "Anthropic Nachrichten",
         "gemini": "Google Gemini",
         "openai_chat": "OpenAI Chat Completions",
-        "openai_responses": "OpenAI-Antworten",
-        "toggle": "Weitere Endpunkte"
+        "openai_responses": "OpenAI-Antworten"
       },
       "no_models_for_check": "Keine testbaren Modelle (z.B. Chat-Modelle)",
       "not_checked": "Nicht getestet",
@@ -8079,13 +7581,6 @@
           "doc2x": {
             "description": "Erweiterte Dateiwiederherstellungs-Engine.",
             "name": "Doc2x"
-          },
-          "local_paddleocr": {
-            "description": "PaddleOCR (PP-OCRv6 medium) läuft im Prozess — vollständig offline, kein API-Key, mit Erkennung in einem Hintergrundthread, damit die Benutzeroberfläche reaktionsfähig bleibt. Laden Sie das Modell (~140MB) in den Umgebungsabhängigkeiten vor dem ersten Gebrauch herunter.",
-            "name": "Lokales PaddleOCR",
-            "status": {
-              "local": "Läuft vollständig auf Ihrem Gerät"
-            }
           },
           "mineru": {
             "description": "OpenDataLabs quelloffenes, hochwertiges PDF-Extraktionswerkzeug.",

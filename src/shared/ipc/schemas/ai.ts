@@ -1,4 +1,3 @@
-import { imageParamsSchema } from '@cherrystudio/provider-registry'
 import type {
   AiStreamAttachResponse,
   AiStreamOpenResponse,
@@ -9,18 +8,8 @@ import type {
   StreamDonePayload,
   StreamErrorPayload
 } from '@shared/ai/transport'
-import {
-  AgentBaseSchema,
-  AgentEntitySchema,
-  AgentSkillIdSetSchema,
-  ScheduledTaskEntitySchema,
-  TimeoutMinutesAtomSchema
-} from '@shared/data/api/schemas/agents'
-import { AgentSessionWorkspaceSourceSchema } from '@shared/data/api/schemas/agentWorkspaces'
-import { JobScheduleNameAtomSchema, TriggerSchema } from '@shared/data/api/schemas/jobs'
-import { CleanupPolicySchema, type FileEntry, FileEntrySchema } from '@shared/data/types/file'
 import type { CherryMessagePart } from '@shared/data/types/message'
-import { ImageGenerationModeSchema, ModelSchema, UniqueModelIdSchema } from '@shared/data/types/model'
+import { ModelSchema, UniqueModelIdSchema } from '@shared/data/types/model'
 import { ReasoningEffortOptionSchema } from '@shared/types/aiSdk'
 import type { EmbeddingModelUsage, LanguageModelUsage, ModelMessage } from 'ai'
 import * as z from 'zod'
@@ -28,16 +17,15 @@ import * as z from 'zod'
 import { defineRoute } from '../define'
 
 /**
- * AI IPC schemas — `AiService`'s non-streaming model operations (text/embedding/image
+ * AI IPC schemas — `AiService`'s non-streaming model operations (text/embedding
  * generation, model probe, model listing) plus the `AiStreamManager` streaming-chat
  * link (open/attach/detach/abort requests + chunk/done/error events). Each route
  * delegates to a stateful service method in main.
  *
  * Routes are namespaced `ai.<subdomain>[.<resource>].<verb>` — the subtree groups by
- * domain, not by owning service: `text` / `embedding` / `image` (one-shot calls by
+ * domain, not by owning service: `text` / `embedding` (one-shot calls by
  * output modality), `provider.model` (catalog + probe), `stream` (chat link and its
- * events), `tool` (deferred results, approvals), `agent.session` / `agent.task`,
- * and `topic` (auto-naming events).
+ * events), `tool` (deferred results, approvals), and `topic` (auto-naming events).
  *
  * Inputs mirror the **wire shape** the renderer actually sends, i.e. the
  * clone-safe subset of the in-process request types: the in-process-only
@@ -49,48 +37,6 @@ import { defineRoute } from '../define'
  * (see ipc-migration-guide.md).
  */
 
-export const CreateAgentCommandSchema = AgentBaseSchema.extend({
-  type: z.literal('claude-code'),
-  /**
-   * Create-only: ids of pre-existing global skills to enable for the new
-   * Agent. Join rows are written in the same DB transaction as the Agent.
-   */
-  skillIds: AgentSkillIdSetSchema.optional()
-})
-export type CreateAgentCommand = z.infer<typeof CreateAgentCommandSchema>
-
-/**
- * Agent scheduled-task command DTOs. The task *command* surface lives here on
- * IpcApi (`ai.agent.task.*` → AgentJobsService); the read surface stays on
- * DataApi (`GET /agents/:agentId/tasks…`). Entity/read-model schemas remain in
- * `@shared/data/api/schemas/agents` — only the command inputs are owned here.
- */
-const agentTaskFormSchema = z.strictObject({
-  name: JobScheduleNameAtomSchema,
-  prompt: z.string().min(1),
-  trigger: TriggerSchema,
-  workspace: AgentSessionWorkspaceSourceSchema,
-  timeoutMinutes: TimeoutMinutesAtomSchema,
-  /**
-   * Continue one sticky session across fires instead of creating a fresh one.
-   * Defaults to off. To start a clean conversation, disable and save, then
-   * enable and save in a separate update.
-   */
-  reuseSession: z.boolean().optional(),
-  channelIds: z.array(z.string()).optional()
-})
-export type AgentTaskForm = z.infer<typeof agentTaskFormSchema>
-
-/** Edit-save patch: form fields only — pause/resume are separate commands, so no `enabled` here. */
-const agentTaskPatchSchema = agentTaskFormSchema.partial()
-export type AgentTaskPatch = z.infer<typeof agentTaskPatchSchema>
-
-/** Task identity carried by every by-id command; `agentId` doubles as the ownership guard input. */
-const agentTaskRefSchema = z.strictObject({
-  agentId: z.string().min(1),
-  taskId: z.string().min(1)
-})
-
 /** Clone-safe subset of `AiTransportOptions` (no signal). */
 const aiTransportOptionsSchema = z.object({
   headers: z.record(z.string(), z.string().optional()).optional(),
@@ -98,7 +44,7 @@ const aiTransportOptionsSchema = z.object({
   maxRetries: z.number().optional()
 })
 
-/** Clone-safe subset of `AiBaseRequest` shared by text / embed / image routes. */
+/** Clone-safe subset of `AiBaseRequest` shared by the text / embed routes. */
 const aiBaseRequestShape = {
   assistantId: z.string().optional(),
   // Strict `providerId::modelId` validation (separator at a real position, both
@@ -109,32 +55,6 @@ const aiBaseRequestShape = {
   mcpToolIds: z.array(z.string()).optional(),
   requestOptions: aiTransportOptionsSchema.optional()
 }
-
-const aiImagePayloadSchema = z.strictObject({
-  ...aiBaseRequestShape,
-  prompt: z.string(),
-  /**
-   * The image-generation mode (which tab). A request property — NOT a param — so
-   * main can derive per-model transport routing (`vendorTransport` → descriptor)
-   * from the registry itself. Defaults to `generate` when absent.
-   */
-  mode: ImageGenerationModeSchema.optional(),
-  /**
-   * The canonical param bag, validated + coerced at the IPC boundary by the
-   * catalog value schema — the router's `safeParse` yields a typed `ParamValues`
-   * (non-catalog keys stripped). Per-model option/range constraints already ran
-   * in the renderer's `buildParamsSchema`; this is the value-type gate.
-   */
-  paramValues: imageParamsSchema,
-  /** Attached images / mask are encoded file bytes (data URLs), not form params. */
-  inputImages: z.array(z.string()).optional(),
-  mask: z.string().optional(),
-  // Required: the calling business feature decides the cleanup intent for the
-  // generated OUTPUT entries (file-entry-cleanup.md §4.1) — main never defaults it.
-  // It does not reach the job path's input / mask copies: those are transport
-  // scratch owned by the job, pinned to `delete_when_unreferenced`.
-  cleanupPolicy: CleanupPolicySchema
-})
 
 export const aiRequestSchemas = {
   // ── One-shot model calls, grouped by output modality (AiService) ──
@@ -151,19 +71,6 @@ export const aiRequestSchemas = {
     input: z.strictObject({ ...aiBaseRequestShape, values: z.array(z.string()) }),
     output: z.object({ embeddings: z.array(z.array(z.number())), usage: z.custom<EmbeddingModelUsage>().optional() })
   }),
-  'ai.image.generate': defineRoute({
-    // requestId pairs the request with `ai.image.abort` (the abort registry lives in AiService).
-    input: z.strictObject({ requestId: z.string().min(1), payload: aiImagePayloadSchema }),
-    // Pin the output to the named `FileEntry` so declaration-emit references the alias
-    // instead of trying to name FileEntry's module-private phantom path brand (TS4023).
-    output: z.object({ files: z.array(FileEntrySchema) }) as z.ZodType<{ files: FileEntry[] }>
-  }),
-  'ai.image.abort': defineRoute({
-    // Was a one-way `ipcOn`; per the migration guide a one-off becomes a `void` request.
-    input: z.strictObject({ requestId: z.string().min(1) }),
-    output: z.void()
-  }),
-
   // ── Provider model catalog & reachability probe (AiService) ──
   'ai.provider.model.list': defineRoute({
     input: z.strictObject({
@@ -247,70 +154,6 @@ export const aiRequestSchemas = {
       anchorId: z.string().optional()
     }) satisfies z.ZodType<AiToolApprovalRespondRequest>,
     output: z.object({ ok: z.boolean() })
-  }),
-
-  // ── Agent session warm-connection lifecycle ──
-  'ai.agent.create': defineRoute({
-    input: CreateAgentCommandSchema,
-    output: AgentEntitySchema
-  }),
-  'ai.agent.feedback_session.create': defineRoute({
-    input: z.void(),
-    output: z.strictObject({ sessionId: z.string().min(1) })
-  }),
-  'ai.agent.session.prewarm': defineRoute({
-    input: z.strictObject({ sessionId: z.string().min(1) }),
-    output: z.void()
-  }),
-  'ai.agent.session.close_warm': defineRoute({
-    input: z.strictObject({ sessionId: z.string().min(1) }),
-    output: z.void()
-  }),
-
-  // ── Agent session runtime queries & commands ──
-  // Takes a fresh context-usage reading for a UI about to show it. Best-effort and throttled in main:
-  // a session with no live connection keeps its last published value. The result arrives on the
-  // session's shared-cache key, not here.
-  'ai.agent.session.refresh_context_usage': defineRoute({
-    input: z.strictObject({ sessionId: z.string().min(1) }),
-    output: z.void()
-  }),
-  // Stops one background task, not the turn. False when the session has no live connection or its
-  // runtime cannot stop tasks; the outcome itself arrives as a `task_notification`.
-  'ai.agent.session.stop_background_task': defineRoute({
-    input: z.strictObject({ sessionId: z.string().min(1), taskId: z.string().min(1) }),
-    output: z.boolean()
-  }),
-
-  // ── Agent scheduled-task commands (AgentJobsService is the sole command owner) ──
-  // Mixed-effect mutations (schedule row + channel subscriptions + timer) belong on
-  // IpcApi, not DataApi — the Job DataApi is GET-only (api-design-guidelines.md).
-  'ai.agent.task.create': defineRoute({
-    input: agentTaskFormSchema.extend({ agentId: z.string().min(1) }),
-    // Commands return the authoritative committed read model so the caller
-    // never has to re-read through DataApi to learn what was persisted.
-    output: ScheduledTaskEntitySchema
-  }),
-  'ai.agent.task.update': defineRoute({
-    input: agentTaskRefSchema.extend({ patch: agentTaskPatchSchema }),
-    output: ScheduledTaskEntitySchema
-  }),
-  'ai.agent.task.pause': defineRoute({
-    input: agentTaskRefSchema,
-    output: ScheduledTaskEntitySchema
-  }),
-  'ai.agent.task.resume': defineRoute({
-    input: agentTaskRefSchema,
-    output: ScheduledTaskEntitySchema
-  }),
-  'ai.agent.task.delete': defineRoute({
-    input: agentTaskRefSchema,
-    output: z.void()
-  }),
-  'ai.agent.task.run': defineRoute({
-    // No caller reads the trigger result, so the route is void (see ipc-migration-guide.md).
-    input: agentTaskRefSchema,
-    output: z.void()
   })
 }
 
@@ -324,10 +167,9 @@ export type AiEventSchemas = {
   'ai.stream.chunk': StreamChunkPayload
   'ai.stream.done': StreamDonePayload
   'ai.stream.error': StreamErrorPayload
-  // Auto-rename push (broadcast): a background job renamed a topic / agent session; any
-  // window showing it should invalidate its cache.
+  // Auto-rename push (broadcast): a background job renamed a topic; any window
+  // showing it should invalidate its cache.
   'ai.topic.auto_renamed': { topicId: string }
-  'ai.agent.session.auto_renamed': { sessionId: string }
   // Auto-rename failure (broadcastToType Main): a background naming job's summarization call
   // failed (e.g. the naming model returned an auth error). Delivered to the main window only
   // — the job has no origin window — which surfaces it as a toast so the failure isn't silent.

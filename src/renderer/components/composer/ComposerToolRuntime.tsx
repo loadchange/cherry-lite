@@ -22,7 +22,6 @@ import type { QuickPanelInputAdapter } from '@renderer/components/QuickPanel'
 import { useQuickPanel } from '@renderer/components/QuickPanel'
 import type { Assistant } from '@renderer/types/assistant'
 import type { ComposerAttachment } from '@renderer/utils/message/composerAttachment'
-import type { KnowledgeBase } from '@shared/data/types/knowledge'
 import type { Model } from '@shared/data/types/model'
 import { Plus } from 'lucide-react'
 import React, { createContext, use, useCallback, useEffect, useMemo, useRef } from 'react'
@@ -42,7 +41,6 @@ interface ComposerToolRuntimeProviderProps {
   initialState?: Partial<{
     files: ComposerAttachment[]
     mentionedModels: Model[]
-    selectedKnowledgeBases: KnowledgeBase[]
     isExpanded: boolean
     couldAddImageFile: boolean
     extensions: string[]
@@ -77,8 +75,7 @@ const ComposerToolRuntimeSlot = ({ tool, context }: { tool: AnyToolDefinition; c
 export const ComposerToolRuntimeHost = ({ scope, assistant, model, session }: ComposerToolRuntimeBootstrapProps) => {
   const { t } = useTranslation()
   const toolState = useComposerToolProviderState()
-  const { addNewTopic, onTextChange, setFiles, setMentionedModels, setSelectedKnowledgeBases, toolsRegistry } =
-    useComposerToolProviderDispatch()
+  const { addNewTopic, onTextChange, setFiles, setMentionedModels, toolsRegistry } = useComposerToolProviderDispatch()
   const launcherApiCacheRef = useRef(new Map<string, ToolRenderContext<any, any>['launcher']>())
 
   const toolActions = useMemo<ToolActionMap>(
@@ -86,10 +83,9 @@ export const ComposerToolRuntimeHost = ({ scope, assistant, model, session }: Co
       addNewTopic,
       onTextChange,
       setFiles,
-      setMentionedModels,
-      setSelectedKnowledgeBases
+      setMentionedModels
     }),
-    [addNewTopic, onTextChange, setFiles, setMentionedModels, setSelectedKnowledgeBases]
+    [addNewTopic, onTextChange, setFiles, setMentionedModels]
   )
 
   const availableTools = useMemo(() => {
@@ -233,8 +229,7 @@ interface ComposerTokenReconcileInputs {
 
 /**
  * Returns a stable `reconcileTokens(draft)` callback that drives editor→state reconciliation
- * through the tools that own each token kind (attachment→file, knowledgeBase→knowledge,
- * skill→skill). Called by a variant from `ComposerSurface.onTokensChange`. Reads the latest
+ * through the tools that own each token kind (attachment→file, skill→skill). Called by a variant from `ComposerSurface.onTokensChange`. Reads the latest
  * provider state/dispatch + inputs via a ref, so the callback is stable yet never stale, and
  * each tool's `reconcile` uses functional `setState` updates.
  *

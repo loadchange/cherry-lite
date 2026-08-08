@@ -6,28 +6,18 @@ import { act, render, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  agent: undefined as { mcps?: string[] } | undefined,
-  agentIds: [] as Array<string | null>,
   loggerError: vi.fn(),
   mcpServers: [] as McpServer[],
   mcpServerOptions: [] as Array<{ enabled?: boolean } | undefined>,
   open: vi.fn(),
   registerLaunchers: vi.fn<(launchers: unknown[]) => () => void>(() => () => undefined),
   toastError: vi.fn(),
-  updateAgent: vi.fn(),
   updateAssistant: vi.fn(),
   updateList: vi.fn()
 }))
 
 vi.mock('@logger', () => ({
   loggerService: { withContext: () => ({ error: mocks.loggerError }) }
-}))
-
-vi.mock('@renderer/hooks/agent/useAgent', () => ({
-  useAgent: (id: string | null) => {
-    mocks.agentIds.push(id)
-    return { agent: mocks.agent }
-  }
 }))
 
 vi.mock('@renderer/hooks/useMcpRuntimeStatus', () => ({
@@ -42,7 +32,6 @@ vi.mock('@renderer/hooks/useMcpServer', () => ({
 }))
 
 vi.mock('@renderer/hooks/resourceCatalog', () => ({
-  useAgentMutationsById: () => ({ updateAgent: mocks.updateAgent }),
   useAssistantMutationsById: () => ({ updateAssistant: mocks.updateAssistant })
 }))
 
@@ -128,11 +117,8 @@ function openLatestRegisteredPanel() {
 describe('mcpStatusTool', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.agent = undefined
-    mocks.agentIds = []
     mocks.mcpServers = []
     mocks.mcpServerOptions = []
-    mocks.updateAgent.mockResolvedValue({})
     mocks.updateAssistant.mockResolvedValue({})
   })
 
@@ -147,7 +133,6 @@ describe('mcpStatusTool', () => {
         server({ id: 'inactive', name: 'search', isActive: false })
       ],
       mcpStatuses: { active: status('connected') },
-      scope: TopicType.Chat,
       t
     })
 
@@ -173,7 +158,6 @@ describe('mcpStatusTool', () => {
       mcpStatuses: { active: status('connecting'), inactive: status('connected') },
       canEditBindings: true,
       onToggleBinding,
-      scope: TopicType.Chat,
       t
     })
 
@@ -204,7 +188,6 @@ describe('mcpStatusTool', () => {
       } as Assistant,
       mcpServers: [server({ id: 'active', name: 'filesystem', isActive: true })],
       mcpStatuses: {},
-      scope: TopicType.Chat,
       t
     })
 
@@ -219,7 +202,6 @@ describe('mcpStatusTool', () => {
       } as Assistant,
       mcpServers: [],
       mcpStatuses: {},
-      scope: TopicType.Chat,
       t
     })
     expect(autoItems[0].description).toBeUndefined()
@@ -231,38 +213,13 @@ describe('mcpStatusTool', () => {
       } as Assistant,
       mcpServers: [],
       mcpStatuses: {},
-      scope: TopicType.Chat,
       t
     })
     expect(manualItems[0].description).toBeUndefined()
   })
 
-  it('builds session rows from all installed servers even when the current agent has no bindings', () => {
-    const onToggleBinding = vi.fn()
-    const items = buildMcpStatusItems({
-      agent: { mcps: [] },
-      mcpServers: [
-        server({ id: 'active', name: 'filesystem', isActive: true }),
-        server({ id: 'inactive', name: 'search', isActive: false })
-      ],
-      mcpStatuses: { active: status('error') },
-      canEditBindings: true,
-      onToggleBinding,
-      scope: TopicType.Session,
-      t
-    })
-
-    expect(items.map((item) => item.label)).toEqual(['filesystem', 'search'])
-    expect(items[0]).toMatchObject({ description: 'Error', disabled: false, isSelected: false })
-    expect(items[1]).toMatchObject({ description: 'Disabled', disabled: true, isSelected: false })
-
-    items[0].action?.({} as any)
-    expect(onToggleBinding).toHaveBeenCalledWith('active', true)
-  })
-
-  it('updates only the assistant or agent MCP binding field for the active scope', async () => {
+  it('updates the assistant MCP binding field in manual mode', async () => {
     const updateAssistant = vi.fn().mockResolvedValue({})
-    const updateAgent = vi.fn().mockResolvedValue({})
     const assistant = {
       settings: { mcpMode: 'manual' },
       mcpServerIds: ['existing']
@@ -272,45 +229,25 @@ describe('mcpStatusTool', () => {
       updateMcpBinding({
         assistant,
         enabled: true,
-        scope: TopicType.Chat,
         serverId: 'new-server',
-        updateAgent,
         updateAssistant
       })
     ).resolves.toBe(true)
     expect(updateAssistant).toHaveBeenCalledWith({ mcpServerIds: ['existing', 'new-server'] })
-    expect(updateAgent).not.toHaveBeenCalled()
-
-    await expect(
-      updateMcpBinding({
-        agent: { mcps: ['existing', 'remove-me'] },
-        enabled: false,
-        scope: TopicType.Session,
-        serverId: 'remove-me',
-        updateAgent,
-        updateAssistant
-      })
-    ).resolves.toBe(true)
-    expect(updateAgent).toHaveBeenCalledWith({ mcps: ['existing'] })
-    expect(updateAssistant).toHaveBeenCalledTimes(1)
   })
 
   it.each(['auto', 'disabled'] as const)('does not mutate chat bindings in %s mode', async (mcpMode) => {
     const updateAssistant = vi.fn().mockResolvedValue({})
-    const updateAgent = vi.fn().mockResolvedValue({})
 
     await expect(
       updateMcpBinding({
         assistant: { settings: { mcpMode }, mcpServerIds: [] } as unknown as Assistant,
         enabled: true,
-        scope: TopicType.Chat,
         serverId: 'server',
-        updateAgent,
         updateAssistant
       })
     ).resolves.toBe(false)
     expect(updateAssistant).not.toHaveBeenCalled()
-    expect(updateAgent).not.toHaveBeenCalled()
   })
 
   it('registers a root-panel-only launcher that opens a read-only MCP panel and clears typed query text', () => {
@@ -404,19 +341,23 @@ describe('mcpStatusTool', () => {
     expect(quickPanel.open).toHaveBeenCalledWith(expect.objectContaining({ readOnly: true, list: [footer] }))
   })
 
-  it('defers MCP server and session-agent reads until the launcher opens', async () => {
-    renderMcpRuntime({ scope: TopicType.Session, session: { agentId: 'agent-1' } })
+  it('defers MCP server reads until the launcher opens', async () => {
+    const assistant = {
+      id: 'assistant-1',
+      settings: { mcpMode: 'manual' },
+      mcpServerIds: []
+    } as unknown as Assistant
+
+    renderMcpRuntime({ assistant, scope: TopicType.Chat })
     await waitFor(() => expect(mocks.registerLaunchers).toHaveBeenCalled())
 
     expect(mocks.mcpServerOptions.at(-1)).toEqual({ enabled: false })
-    expect(mocks.agentIds.at(-1)).toBeNull()
 
     act(() => {
       openLatestRegisteredPanel()
     })
 
     await waitFor(() => expect(mocks.mcpServerOptions.at(-1)).toEqual({ enabled: true }))
-    expect(mocks.agentIds.at(-1)).toBe('agent-1')
   })
 
   it('shows saving state and ignores rapid repeated binding toggles', async () => {
@@ -483,7 +424,7 @@ describe('mcpStatusTool', () => {
     expect(mocks.loggerError).toHaveBeenCalledWith(
       'Failed to update MCP binding from the composer',
       expect.any(Error),
-      expect.objectContaining({ scope: TopicType.Chat, serverId: 'filesystem' })
+      expect.objectContaining({ serverId: 'filesystem' })
     )
 
     const settledItems = openLatestRegisteredPanel()
@@ -491,26 +432,20 @@ describe('mcpStatusTool', () => {
     expect(settledItems[0].suffix).toBeUndefined()
   })
 
-  it('resolves the MCP config target from the conversation scope', () => {
-    expect(resolveMcpConfigTarget({ scope: TopicType.Session, agentId: 'agent-1' })).toEqual({
-      kind: 'agent',
-      id: 'agent-1',
-      initialTab: 'tools.mcp'
-    })
-    expect(resolveMcpConfigTarget({ scope: TopicType.Chat, assistantId: 'assistant-1' })).toEqual({
+  it('resolves the MCP config target from the active assistant', () => {
+    expect(resolveMcpConfigTarget({ assistantId: 'assistant-1' })).toEqual({
       kind: 'assistant',
       id: 'assistant-1',
       initialTab: 'tools.mcp'
     })
-    // Session ignores the assistant id and vice versa; missing id yields no target.
-    expect(resolveMcpConfigTarget({ scope: TopicType.Session, assistantId: 'assistant-1' })).toBeNull()
-    expect(resolveMcpConfigTarget({ scope: TopicType.Chat })).toBeNull()
+    // A missing assistant id yields no target.
+    expect(resolveMcpConfigTarget({})).toBeNull()
   })
 
   it('builds a pinned MCP config footer that opens the edit dialog', () => {
     expect(buildMcpConfigFooterItem(null, t)).toBeNull()
 
-    const target = { kind: 'agent', id: 'agent-1', initialTab: 'tools.mcp' } as const
+    const target = { kind: 'assistant', id: 'assistant-1', initialTab: 'tools.mcp' } as const
     const footer = buildMcpConfigFooterItem(target, t)
     expect(footer).toMatchObject({ id: 'mcp-status:open-config', fixedToBottom: true })
 

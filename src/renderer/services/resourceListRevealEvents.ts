@@ -1,6 +1,6 @@
 import { EVENT_NAMES, EventEmitter } from '@renderer/services/EventService'
 
-export type ResourceListRevealSource = 'agents' | 'assistants'
+export type ResourceListRevealSource = 'assistants'
 
 export type ResourceListRevealPayload = {
   source: ResourceListRevealSource

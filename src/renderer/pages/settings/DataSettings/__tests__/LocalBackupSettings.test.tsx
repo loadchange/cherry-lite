@@ -28,7 +28,6 @@ const appInfo = {
   isPackaged: true,
   appPath: '/mock/app',
   homePath: '/mock/home',
-  notesPath: '/mock/notes',
   configPath: '/mock/config',
   appDataPath: '/mock/userData',
   resourcesPath: '/mock/resources',

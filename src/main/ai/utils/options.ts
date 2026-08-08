@@ -32,7 +32,6 @@ import { merge } from 'es-toolkit/compat'
 import type { AppProviderId } from '../types'
 import type { ProviderCapabilities } from '../types'
 import { addAnthropicHeaders } from './anthropicHeaders'
-import { buildGeminiGenerateImageParams } from './image'
 import { encodeReasoningInvocation, type ResolvedReasoningInvocation } from './reasoningSerializers'
 import { getWebSearchParams } from './websearch'
 
@@ -146,7 +145,7 @@ export function extractAiSdkStandardParams(customParams: Record<string, any>): {
 export function buildCapabilityProviderOptions(
   model: Model,
   actualProvider: Provider,
-  capabilities: Pick<ProviderCapabilities, 'enableReasoning' | 'enableWebSearch' | 'enableGenerateImage'>,
+  capabilities: Pick<ProviderCapabilities, 'enableReasoning' | 'enableWebSearch'>,
   context: {
     aiSdkProviderId: AppProviderId
     runtimeProviderId: AppProviderId
@@ -194,10 +193,10 @@ export function buildCapabilityProviderOptions(
       providerSpecificOptions = buildAnthropicProviderOptions(reasoningOptions.options, providerOptionsKey)
       break
     case 'google':
-      providerSpecificOptions = buildGeminiProviderOptions(capabilities, reasoningOptions.options)
+      providerSpecificOptions = buildGeminiProviderOptions(reasoningOptions.options)
       break
     case 'google-vertex':
-      providerSpecificOptions = buildGeminiProviderOptions(capabilities, reasoningOptions.options, providerOptionsKey)
+      providerSpecificOptions = buildGeminiProviderOptions(reasoningOptions.options, providerOptionsKey)
       break
     case 'xai':
     case 'xai-responses':
@@ -363,7 +362,7 @@ function normalizeOpenAICompatibleParams(params: Record<string, any>): Record<st
 
 function buildOpenAIProviderOptions(
   model: Model,
-  capabilities: Pick<ProviderCapabilities, 'enableReasoning' | 'enableWebSearch' | 'enableGenerateImage'>,
+  capabilities: Pick<ProviderCapabilities, 'enableReasoning' | 'enableWebSearch'>,
   provider: Provider,
   serviceTier: OpenAIServiceTier,
   textVerbosity: OpenAIVerbosity | undefined,
@@ -412,11 +411,9 @@ function buildAnthropicProviderOptions(
 }
 
 function buildGeminiProviderOptions(
-  capabilities: Pick<ProviderCapabilities, 'enableReasoning' | 'enableWebSearch' | 'enableGenerateImage'>,
   reasoningOptions: Record<string, unknown>,
   providerOptionsKey = 'google'
 ): Record<string, GoogleGenerativeAIProviderOptions> {
-  const { enableGenerateImage } = capabilities
   let providerOptions: GoogleGenerativeAIProviderOptions = {
     safetySettings: [
       {
@@ -442,9 +439,6 @@ function buildGeminiProviderOptions(
     ]
   }
   providerOptions = { ...providerOptions, ...reasoningOptions }
-  if (enableGenerateImage) {
-    providerOptions = { ...providerOptions, ...buildGeminiGenerateImageParams() }
-  }
   return { [providerOptionsKey]: { ...providerOptions } }
 }
 
@@ -485,7 +479,7 @@ function buildGenericProviderOptions(
   providerId: string,
   model: Model,
   provider: Provider,
-  capabilities: Pick<ProviderCapabilities, 'enableReasoning' | 'enableWebSearch' | 'enableGenerateImage'>,
+  capabilities: Pick<ProviderCapabilities, 'enableReasoning' | 'enableWebSearch'>,
   reasoningOptions: Record<string, unknown>
 ): Record<string, any> {
   const { enableWebSearch } = capabilities
@@ -502,7 +496,7 @@ function buildGenericProviderOptions(
 
 function buildAIGatewayOptions(
   model: Model,
-  capabilities: Pick<ProviderCapabilities, 'enableReasoning' | 'enableWebSearch' | 'enableGenerateImage'>,
+  capabilities: Pick<ProviderCapabilities, 'enableReasoning' | 'enableWebSearch'>,
   provider: Provider,
   serviceTier: OpenAIServiceTier,
   textVerbosity: OpenAIVerbosity | undefined,
@@ -519,7 +513,7 @@ function buildAIGatewayOptions(
     case ENDPOINT_TYPE.ANTHROPIC_MESSAGES:
       return buildAnthropicProviderOptions(reasoning.options)
     case ENDPOINT_TYPE.GOOGLE_GENERATE_CONTENT:
-      return buildGeminiProviderOptions(capabilities, reasoning.options)
+      return buildGeminiProviderOptions(reasoning.options)
     case ENDPOINT_TYPE.OPENAI_RESPONSES:
       return buildOpenAIProviderOptions(model, capabilities, provider, serviceTier, textVerbosity, reasoning.options)
     case ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS:

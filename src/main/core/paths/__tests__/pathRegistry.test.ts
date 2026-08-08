@@ -39,10 +39,8 @@ describe('buildPathRegistry', () => {
 
   it('keeps the Claude config under the Agents data directory', () => {
     const registry = buildPathRegistry()
-    const claudeRoot = path.join('/mock/userData', 'Data', 'Agents', '.claude')
 
-    expect(registry['feature.agents.claude.root']).toBe(claudeRoot)
-    expect(registry['feature.agents.claude.skills']).toBe(path.join(claudeRoot, 'skills'))
+    expect(registry['feature.agents.claude.root']).toBe(path.join('/mock/userData', 'Data', 'Agents', '.claude'))
   })
 
   it('keeps the isolated mise tree under the userData toolchain', () => {
@@ -104,10 +102,6 @@ describe('pathRegistry.shouldAutoEnsure', () => {
       expect(shouldAutoEnsure('app.session.cache')).toBe(true)
     })
 
-    it('returns true for feature.notes.data', () => {
-      expect(shouldAutoEnsure('feature.notes.data')).toBe(true)
-    })
-
     it('returns true for feature.files.data', () => {
       expect(shouldAutoEnsure('feature.files.data')).toBe(true)
     })
@@ -120,16 +114,8 @@ describe('pathRegistry.shouldAutoEnsure', () => {
       expect(shouldAutoEnsure('feature.file_processing.temp')).toBe(true)
     })
 
-    it('returns true for the Agent data root', () => {
-      expect(shouldAutoEnsure('feature.agents.data')).toBe(true)
-    })
-
-    it('returns true for feature.agents.skills (now that its value is fixed)', () => {
-      // Value was corrected from CHERRY_HOME/skills (the old orphan value)
-      // to appUserDataData/Skills. The shouldAutoEnsure rule itself is
-      // unchanged — it's not in NO_ENSURE — but exercising it here makes
-      // the rename visible in the test suite.
-      expect(shouldAutoEnsure('feature.agents.skills')).toBe(true)
+    it('returns true for the migrated v1 Claude config root', () => {
+      expect(shouldAutoEnsure('feature.agents.claude.root')).toBe(true)
     })
   })
 
@@ -183,10 +169,6 @@ describe('pathRegistry.shouldAutoEnsure', () => {
   })
 
   describe('external.* prefix — never auto-ensure (third-party tool dirs)', () => {
-    it('returns false for external.openclaw.config', () => {
-      expect(shouldAutoEnsure('external.openclaw.config')).toBe(false)
-    })
-
     it('returns false for the new external.obsidian.config_file key', () => {
       // Obsidian's config file lives in a directory that Cherry must
       // never create — Obsidian itself owns it. This is the canonical
@@ -196,10 +178,6 @@ describe('pathRegistry.shouldAutoEnsure', () => {
   })
 
   describe('NO_ENSURE exact keys — read-only build artifacts', () => {
-    it('returns false for the system-workspace root so DataApi can store paths without creating directories', () => {
-      expect(shouldAutoEnsure('feature.agents.system_workspaces')).toBe(false)
-    })
-
     it('returns false for app.exe_file', () => {
       expect(shouldAutoEnsure('app.exe_file')).toBe(false)
     })

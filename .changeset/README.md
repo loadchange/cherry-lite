@@ -49,7 +49,6 @@ See `config.json` for the changeset configuration:
 | --- | --- |
 | `@cherrystudio/ai-core` | Unified AI Provider Interface |
 | `@cherrystudio/ai-sdk-provider` | AI SDK provider bundle with CherryIN routing |
-| `@cherrystudio/extension-table-plus` | Table extension for Tiptap |
 
 ### Dependency relationships
 

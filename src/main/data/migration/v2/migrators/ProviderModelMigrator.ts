@@ -22,7 +22,6 @@ import type { InsertUserModelRow } from '@data/db/schemas/userModel'
 import { userModelTable } from '@data/db/schemas/userModel'
 import type { InsertUserProviderRow, StoredEndpointConfigOverride } from '@data/db/schemas/userProvider'
 import { userProviderTable } from '@data/db/schemas/userProvider'
-import { ensureCherryAiDefaultProviderAndModelTx } from '@data/db/seeding/seeders/cherryaiDefaultModelSeeder'
 import { assignOrderKeysByScope, assignOrderKeysInSequence } from '@data/migration/v2/utils/orderKey'
 import {
   diffApiFeatures,
@@ -33,11 +32,10 @@ import { generateOrderKeySequenceBetween } from '@data/services/utils/orderKey'
 import { loggerService } from '@logger'
 import type { Model as LegacyModel, Provider as LegacyProvider } from '@main/data/migration/legacyTypes'
 import type { ExecuteResult, PrepareResult, ValidateResult } from '@shared/data/migration/v2/types'
-import { CHERRYAI_DEFAULT_UNIQUE_MODEL_ID, CHERRYAI_PROVIDER_ID } from '@shared/data/presets/cherryai'
 import { providerLogoRef } from '@shared/data/types/file'
 import { createUniqueModelId, isUniqueModelId, type UniqueModelId } from '@shared/data/types/model'
 import type { ApiFeatures } from '@shared/data/types/provider'
-import { desc, eq, ne, sql } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { isEqual } from 'es-toolkit/compat'
 
 import type { MigrationContext } from '../core/MigrationContext'
@@ -49,7 +47,7 @@ import {
   transformProvider
 } from './mappings/ProviderModelMappings'
 import v1ProviderModelBaselineJson from './mappings/v1-provider-model-baseline.json'
-import { legacyChatModelToUniqueId } from './transformers/ModelTransformers'
+import { legacyModelToUniqueId } from './transformers/ModelTransformers'
 import {
   type EntityImageRef,
   insertPreparedImageEntryTx,
@@ -151,7 +149,7 @@ function createModelId(providerId: string, modelId: string): UniqueModelId | nul
 }
 
 function normalizePinnedProviderModelId(providerId: string, modelId: string): UniqueModelId | null {
-  return legacyChatModelToUniqueId({ provider: providerId, id: modelId })
+  return legacyModelToUniqueId({ provider: providerId, id: modelId })
 }
 
 function normalizePinnedModelObject(value: unknown): UniqueModelId | null {
@@ -172,7 +170,7 @@ function normalizePinnedModelId(value: unknown): UniqueModelId | null {
   const trimmed = value.trim()
   if (!trimmed) return null
   if (isUniqueModelId(trimmed)) {
-    return legacyChatModelToUniqueId(undefined, trimmed)
+    return legacyModelToUniqueId(undefined, trimmed)
   }
 
   if (trimmed.startsWith('{')) {
@@ -424,7 +422,6 @@ export class ProviderModelMigrator extends BaseMigrator {
       const seenIds = new Set<string>()
       const dedupedProviders: LegacyProvider[] = []
       let skippedProviders = 0
-      let skippedManagedProviders = 0
       let skippedRetiredProviders = 0
       let skippedInvalidId = 0
       let skippedInvalidModels = 0
@@ -454,10 +451,6 @@ export class ProviderModelMigrator extends BaseMigrator {
           logger.warn('Provider with missing or empty id skipped', { name: provider?.name })
           continue
         }
-        if (provider.id === CHERRYAI_PROVIDER_ID) {
-          skippedManagedProviders++
-          continue
-        }
         if (RETIRED_PROVIDER_IDS.has(provider.id)) {
           skippedRetiredProviders++
           continue
@@ -477,19 +470,15 @@ export class ProviderModelMigrator extends BaseMigrator {
         const uniqueModelIds = new Set((provider.models ?? []).map((model) => model.id))
         return count + uniqueModelIds.size
       }, 0)
-      const validModelIds = new Set<UniqueModelId>([
-        CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
-        ...this.providers.flatMap((provider) =>
+      const validModelIds = new Set<UniqueModelId>(
+        this.providers.flatMap((provider) =>
           Array.from(new Set((provider.models ?? []).map((model) => model.id)))
             .map((modelId) => createModelId(provider.id, modelId))
             .filter((modelId): modelId is UniqueModelId => Boolean(modelId))
         )
-      ])
+      )
       this.pinnedModelIds = normalizePinnedModelIds(ctx.sources.dexieSettings.get('pinned:models'), validModelIds)
 
-      if (skippedManagedProviders > 0) {
-        warnings.push(`Skipped ${skippedManagedProviders} managed CherryAI provider(s)`)
-      }
       if (skippedRetiredProviders > 0) {
         warnings.push(`Skipped ${skippedRetiredProviders} retired provider(s)`)
       }
@@ -508,7 +497,6 @@ export class ProviderModelMigrator extends BaseMigrator {
 
       logger.info('Preparation completed', {
         providerCount: this.providers.length,
-        skippedManagedProviders,
         skippedRetiredProviders,
         skippedProviders,
         modelCount: this.totalModelCount,
@@ -572,8 +560,6 @@ export class ProviderModelMigrator extends BaseMigrator {
       }
 
       ctx.db.transaction((tx) => {
-        ensureCherryAiDefaultProviderAndModelTx(tx)
-
         // Insert file_entries before the ref rows (their `file_entry_id` FK
         // needs them); the ref rows themselves go in after the owner rows exist
         // (their `source_id` FK needs the provider), below.
@@ -679,16 +665,8 @@ export class ProviderModelMigrator extends BaseMigrator {
     try {
       const errors: { key: string; message: string }[] = []
 
-      const providerResult = ctx.db
-        .select({ count: sql<number>`count(*)` })
-        .from(userProviderTable)
-        .where(ne(userProviderTable.providerId, CHERRYAI_PROVIDER_ID))
-        .get()
-      const modelResult = ctx.db
-        .select({ count: sql<number>`count(*)` })
-        .from(userModelTable)
-        .where(ne(userModelTable.providerId, CHERRYAI_PROVIDER_ID))
-        .get()
+      const providerResult = ctx.db.select({ count: sql<number>`count(*)` }).from(userProviderTable).get()
+      const modelResult = ctx.db.select({ count: sql<number>`count(*)` }).from(userModelTable).get()
       const pinResult = ctx.db
         .select({ count: sql<number>`count(*)` })
         .from(pinTable)

@@ -20,7 +20,7 @@ export function AuthenticationSectionContent({
   const connectionCheck = useProviderConnectionCheck(providerId)
   const { provider } = useProvider(providerId)
 
-  // Login-based providers (claude-code CLI login, codex/grok OAuth) accept no API
+  // Login-based providers accept no API
   // key — their sign-in panels render through the provider-specific registry, so
   // suppress the generic api-key/host UI. Derived from registry `authMethods`.
   if (provider && isLoginBasedProvider(provider)) {

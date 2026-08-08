@@ -1,9 +1,4 @@
-import {
-  AGENT_SESSION_MESSAGE_SEARCH_ROLES,
-  type AgentSessionMessageSearchRole,
-  TOPIC_MESSAGE_SEARCH_ROLES,
-  type TopicMessageSearchRole
-} from '@shared/data/types/message'
+import { TOPIC_MESSAGE_SEARCH_ROLES, type TopicMessageSearchRole } from '@shared/data/types/message'
 import { describe, expect, expectTypeOf, it } from 'vitest'
 
 import {
@@ -15,7 +10,6 @@ import {
   type EntitySearchGroup,
   type EntitySearchItem,
   EntitySearchQuerySchema,
-  type SessionMessageContentSearchItem,
   type TopicMessageContentSearchItem
 } from '../search'
 
@@ -30,13 +24,13 @@ describe('EntitySearchQuerySchema', () => {
     expect(
       EntitySearchQuerySchema.parse({
         q: 'agent',
-        types: ['agent', 'session'],
+        types: ['assistant', 'topic'],
         updatedAtFrom: '2026-05-01T00:00:00.000Z',
         limitPerType: ENTITY_SEARCH_MAX_LIMIT_PER_TYPE
       })
     ).toEqual({
       q: 'agent',
-      types: ['agent', 'session'],
+      types: ['assistant', 'topic'],
       updatedAtFrom: '2026-05-01T00:00:00.000Z',
       limitPerType: ENTITY_SEARCH_MAX_LIMIT_PER_TYPE
     })
@@ -60,9 +54,6 @@ describe('EntitySearchQuerySchema', () => {
       if (item.type === 'topic') {
         expectTypeOf(item.target).toEqualTypeOf<{ topicId: string; assistantId?: string }>()
       }
-      if (item.type === 'session') {
-        expectTypeOf(item.target).toEqualTypeOf<{ sessionId: string; agentId: string | null }>()
-      }
     }
 
     const assertGroupNarrowing = (group: EntitySearchGroup) => {
@@ -71,9 +62,6 @@ describe('EntitySearchQuerySchema', () => {
       }
       if (group.type === 'topic') {
         expectTypeOf(group.items).toEqualTypeOf<Array<Extract<EntitySearchItem, { type: 'topic' }>>>()
-      }
-      if (group.type === 'session') {
-        expectTypeOf(group.items).toEqualTypeOf<Array<Extract<EntitySearchItem, { type: 'session' }>>>()
       }
     }
 
@@ -93,22 +81,20 @@ describe('ContentSearchQuerySchema', () => {
     expect(
       ContentSearchQuerySchema.parse({
         q: 'needle',
-        sources: ['topic-message', 'session-message'],
+        sources: ['topic-message'],
         cursors: { 'topic-message': '200:message-1' },
         filters: {
-          'topic-message': { topicId: 'topic-1' },
-          'session-message': { sessionId: 'session-1' }
+          'topic-message': { topicId: 'topic-1' }
         },
         createdAtFrom: '2026-05-01T00:00:00.000Z',
         limitPerSource: CONTENT_SEARCH_MAX_LIMIT_PER_SOURCE
       })
     ).toEqual({
       q: 'needle',
-      sources: ['topic-message', 'session-message'],
+      sources: ['topic-message'],
       cursors: { 'topic-message': '200:message-1' },
       filters: {
-        'topic-message': { topicId: 'topic-1' },
-        'session-message': { sessionId: 'session-1' }
+        'topic-message': { topicId: 'topic-1' }
       },
       createdAtFrom: '2026-05-01T00:00:00.000Z',
       limitPerSource: CONTENT_SEARCH_MAX_LIMIT_PER_SOURCE
@@ -137,14 +123,11 @@ describe('ContentSearchQuerySchema', () => {
   })
 
   it('keeps the source tuple and grouped response union in lockstep', () => {
-    expect(contentSearchSourceTypes).toEqual(['topic-message', 'session-message'])
+    expect(contentSearchSourceTypes).toEqual(['topic-message'])
 
     const assertNarrowing = (group: ContentSearchGroup) => {
       if (group.sourceType === 'topic-message') {
         expectTypeOf(group.items).toEqualTypeOf<TopicMessageContentSearchItem[]>()
-      }
-      if (group.sourceType === 'session-message') {
-        expectTypeOf(group.items).toEqualTypeOf<SessionMessageContentSearchItem[]>()
       }
     }
 
@@ -153,8 +136,6 @@ describe('ContentSearchQuerySchema', () => {
 
   it('derives result role types from shared search role allowlists', () => {
     expect(TOPIC_MESSAGE_SEARCH_ROLES).toEqual(['user', 'assistant'])
-    expect(AGENT_SESSION_MESSAGE_SEARCH_ROLES).toEqual(['user', 'assistant', 'system'])
     expectTypeOf<TopicMessageContentSearchItem['role']>().toEqualTypeOf<TopicMessageSearchRole | undefined>()
-    expectTypeOf<SessionMessageContentSearchItem['role']>().toEqualTypeOf<AgentSessionMessageSearchRole | undefined>()
   })
 })

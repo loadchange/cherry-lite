@@ -2441,18 +2441,6 @@
       "capabilities": ["embedding"],
       "contextWindow": 32768,
       "family": "qwen",
-      "id": "qwen3-embedding-0-6b",
-      "inputModalities": ["text"],
-      "maxOutputTokens": 32768,
-      "metadata": {},
-      "name": "Qwen3 Embedding 0.6B",
-      "outputModalities": ["vector"],
-      "ownedBy": "alibaba"
-    },
-    {
-      "capabilities": ["embedding"],
-      "contextWindow": 32768,
-      "family": "qwen",
       "id": "qwen3-embedding-4b",
       "inputModalities": ["text"],
       "maxOutputTokens": 32768,

@@ -88,20 +88,7 @@ export type TopicDisplayMode = 'time' | 'assistant'
 
 export type TopicTabPosition = 'left' | 'right'
 
-export type AgentSessionDisplayMode = 'time' | 'agent' | 'workdir'
-
-export const SIDEBAR_FAVORITES = [
-  'assistants',
-  'agents',
-  'paintings',
-  'translate',
-  'mini_app',
-  'knowledge',
-  'files',
-  'code_tools',
-  'notes',
-  'openclaw'
-] as const
+export const SIDEBAR_FAVORITES = ['assistants', 'translate'] as const
 
 export type SidebarFavorite = (typeof SIDEBAR_FAVORITES)[number]
 
@@ -113,15 +100,10 @@ export type SidebarFavorite = (typeof SIDEBAR_FAVORITES)[number]
  * `group` variant can then be added as another top-level item without migrating
  * existing flat `SidebarFavoriteItem[]` values.
  */
-export type SidebarFavoriteItem =
-  | {
-      type: 'app'
-      id: SidebarFavorite
-    }
-  | {
-      type: 'mini_app'
-      id: string
-    }
+export type SidebarFavoriteItem = {
+  type: 'app'
+  id: SidebarFavorite
+}
 
 export type AssistantIconType = 'model' | 'emoji' | 'none'
 
@@ -263,55 +245,6 @@ export interface WebSearchProvider {
 }
 
 // ============================================================================
-// CodeCLI Types
-// ============================================================================
-
-import type { UniqueModelId } from '@shared/data/types/model'
-import { CodeCli } from '@shared/types/codeCli'
-
-export const CODE_CLI_IDS = Object.values(CodeCli) as unknown as readonly [
-  'claude-code',
-  'openai-codex',
-  'opencode',
-  'openclaw',
-  'gemini-cli',
-  'qwen-code',
-  'kimi-code',
-  'qoder-cli',
-  'github-copilot-cli'
-]
-
-export type CodeCliId = (typeof CODE_CLI_IDS)[number]
-
-/** A per-tool provider entry, keyed by providerId in `CodeCliToolState.providers`. */
-export interface CliProviderConfig {
-  /**
-   * Unique model id ("providerId::modelId"), or null for the two legal
-   * model-less states: the own-login placeholder and a Claude detailed-models
-   * config with no common model.
-   */
-  modelId: UniqueModelId | null
-  /** User-edited tool-specific config blob. */
-  config?: Record<string, unknown>
-  /** Sort order in the provider list (lower = first). */
-  sortIndex?: number
-}
-
-/** Per-CLI-tool state: per-provider configs (keyed by providerId) + the active one. */
-export interface CodeCliToolState {
-  providers: Record<string, CliProviderConfig>
-  /** Currently enabled providerId (single-select). */
-  current: string | null
-  /** Terminal app — an id from `code_cli.get_available_terminals`. */
-  terminal?: string
-  /** Working directory for this CLI tool (shared across all its providers). */
-  directory?: string
-}
-
-/** Preference value for `feature.code_cli.configs`. */
-export type CodeCliConfigs = Partial<Record<CodeCliId, CodeCliToolState>>
-
-// ============================================================================
 // WebSearch Compression Types (v2 - Flattened)
 // ============================================================================
 
@@ -337,7 +270,6 @@ export const FILE_PROCESSOR_IDS = [
   'tesseract',
   'system',
   'paddleocr',
-  'local-paddleocr',
   'ovocr',
   'mineru',
   'doc2x',
@@ -365,11 +297,6 @@ export type FileProcessorOverride = {
 }
 
 export type FileProcessorOverrides = Partial<Record<FileProcessorId, FileProcessorOverride>>
-
-/** Region types for miniApps visibility */
-export type MiniAppRegion = 'CN' | 'Global'
-
-export type MiniAppRegionFilter = 'auto' | MiniAppRegion
 
 /** User-configurable settings for BinaryManager's isolated mise install environment. */
 export type BinaryInstallSettings = {

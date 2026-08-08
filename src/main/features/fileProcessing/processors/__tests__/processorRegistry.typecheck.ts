@@ -33,10 +33,6 @@ const validRegistry = {
     isAvailable: () => true,
     capabilities: {}
   },
-  'local-paddleocr': {
-    isAvailable: () => true,
-    capabilities: {}
-  },
   ovocr: {
     isAvailable: () => true,
     capabilities: {}

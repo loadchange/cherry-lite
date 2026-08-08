@@ -16,7 +16,6 @@ function createAssistant(overrides: Partial<Assistant> = {}): Assistant {
     groupId: null,
     orderKey: 'a0',
     mcpServerIds: [],
-    knowledgeBaseIds: [],
     createdAt: '2026-04-20T00:00:00.000Z',
     updatedAt: '2026-04-20T00:00:00.000Z',
     modelName: null,
@@ -25,39 +24,6 @@ function createAssistant(overrides: Partial<Assistant> = {}): Assistant {
 }
 
 describe('initialAssistantFormState', () => {
-  it('copies columns + flattens settings into the form state', () => {
-    const assistant = createAssistant({
-      name: 'Demo',
-      emoji: '🧠',
-      description: 'd',
-      prompt: 'hello',
-      modelId: 'openai::gpt-5',
-      settings: {
-        ...DEFAULT_ASSISTANT_SETTINGS,
-        temperature: 0.7,
-        enableTemperature: true,
-        mcpMode: 'manual'
-      } as AssistantSettings,
-      knowledgeBaseIds: ['kb-1'],
-      mcpServerIds: ['mcp-1']
-    })
-
-    const form = initialAssistantFormState(assistant)
-
-    expect(form).toMatchObject({
-      name: 'Demo',
-      emoji: '🧠',
-      description: 'd',
-      prompt: 'hello',
-      modelId: 'openai::gpt-5',
-      temperature: 0.7,
-      enableTemperature: true,
-      mcpMode: 'manual',
-      knowledgeBaseIds: ['kb-1'],
-      mcpServerIds: ['mcp-1']
-    })
-  })
-
   it('copies the canonical group id', () => {
     const groupId = '11111111-1111-4111-8111-111111111111'
     const assistant = createAssistant({ groupId })
@@ -162,18 +128,6 @@ describe('diffAssistantUpdate', () => {
 
     const result = diffAssistantUpdate(form, baseline, assistant)
     expect(result?.dto.groupId).toBeNull()
-  })
-
-  it('emits knowledgeBaseIds only when the set changes, ignoring order', () => {
-    const assistant = createAssistant({ knowledgeBaseIds: ['a', 'b'] })
-    const baseline = initialAssistantFormState(assistant)
-
-    const reordered = { ...baseline, knowledgeBaseIds: ['b', 'a'] }
-    expect(diffAssistantUpdate(reordered, baseline, assistant)).toBeNull()
-
-    const added = { ...baseline, knowledgeBaseIds: ['a', 'b', 'c'] }
-    const result = diffAssistantUpdate(added, baseline, assistant)
-    expect(result?.dto.knowledgeBaseIds).toEqual(['a', 'b', 'c'])
   })
 
   it('emits mcpServerIds independently of the columns block', () => {

@@ -286,7 +286,7 @@ function mapSqliteError(e: unknown, handlers: SqliteErrorHandlers): never {
  *   - NOT NULL   → `validation` with each violated column mapped to a
  *                   field-level error.
  *
- * @param resource   Plain resource name, no quotes (e.g. `'Tag'`, `'MiniApp'`).
+ * @param resource   Plain resource name, no quotes (e.g. `'Tag'`, `'Topic'`).
  * @param identifier Plain identifier value, no quotes (e.g. the name or id).
  *
  * @example

@@ -1,37 +1,10 @@
 import { getProviderLabelKey } from '@renderer/i18n/label'
 import i18n from '@renderer/i18n/resolver'
-import { ENDPOINT_TYPE, type EndpointType } from '@shared/data/types/model'
+import type { EndpointType } from '@shared/data/types/model'
 import type { EndpointConfig, Provider } from '@shared/data/types/provider'
-import { isLoginBasedProvider } from '@shared/utils/provider'
-
-export { isProviderSettingsListVisibleProvider } from '@renderer/utils/providerSettings'
 
 export function isCanonicalPresetProvider(provider: Provider): boolean {
   return provider.presetProviderId != null && provider.id === provider.presetProviderId
-}
-
-/**
- * Canonical presets that can safely create an independent, URL-based instance
- * through the generic duplicate form. Login-only, global-token, local-server,
- * and cloud-account presets need their provider-specific setup instead.
- */
-export function isProviderPresetInstanceSource(provider: Provider): boolean {
-  if (!isCanonicalPresetProvider(provider) || isLoginBasedProvider(provider) || provider.id === 'copilot') {
-    return false
-  }
-
-  if (provider.authType !== 'api-key' && provider.authType !== 'iam-azure') {
-    return false
-  }
-
-  const endpoint = provider.defaultChatEndpoint
-  if (endpoint != null) {
-    return provider.endpointConfigs?.[endpoint] != null
-  }
-
-  return (
-    provider.presetProviderId === 'new-api' && provider.endpointConfigs?.[ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS] != null
-  )
 }
 
 export function getFancyProviderName(provider: Provider): string {

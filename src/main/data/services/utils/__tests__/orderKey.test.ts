@@ -24,7 +24,7 @@ const fxTable = sqliteTable('fx_order_key_test', {
 })
 
 // Second fixture using a non-'id' primary-key column to mirror
-// `miniappTable.appId`-style schemas.
+// `userProviderTable.providerId`-style schemas.
 const fxAppTable = sqliteTable('fx_order_key_app_test', {
   appKey: text('app_key').primaryKey(),
   orderKey: text('order_key').notNull()

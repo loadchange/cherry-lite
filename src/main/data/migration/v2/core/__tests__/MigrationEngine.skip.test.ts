@@ -48,22 +48,13 @@ describe('MigrationEngine.skipMigration', () => {
     dbh.db.insert(preferenceTable).values({ key: 'ui.theme', value: 'dark' }).run()
     dbh.db
       .insert(jobScheduleTable)
-      .values([
-        {
-          type: 'agent.task',
-          name: 'daily-report',
-          trigger: { kind: 'once', at: 0 },
-          jobInputTemplate: {},
-          catchUpPolicy: { kind: 'skip-missed' }
-        },
-        {
-          type: 'other.job',
-          name: 'keep-me',
-          trigger: { kind: 'once', at: 0 },
-          jobInputTemplate: {},
-          catchUpPolicy: { kind: 'skip-missed' }
-        }
-      ])
+      .values({
+        type: 'other.job',
+        name: 'keep-me',
+        trigger: { kind: 'once', at: 0 },
+        jobInputTemplate: {},
+        catchUpPolicy: { kind: 'skip-missed' }
+      })
       .run()
   }
 
@@ -72,7 +63,7 @@ describe('MigrationEngine.skipMigration', () => {
     return row?.value as MigrationStatusValue | undefined
   }
 
-  it('clears migrated rows and agent.task schedules, keeps other schedules, and marks completed', async () => {
+  it('clears migrated rows, keeps job schedules, and marks completed', async () => {
     seedMigratedData()
 
     await engine.skipMigration()
@@ -102,7 +93,7 @@ describe('MigrationEngine.skipMigration', () => {
     await expect(engine.skipMigration()).rejects.toThrow('disk full')
 
     expect(dbh.db.select().from(preferenceTable).all()).toHaveLength(1)
-    expect(dbh.db.select().from(jobScheduleTable).all()).toHaveLength(2)
+    expect(dbh.db.select().from(jobScheduleTable).all()).toHaveLength(1)
     expect(readStatus()).toMatchObject({ status: 'failed' })
   })
 
@@ -118,7 +109,7 @@ describe('MigrationEngine.skipMigration', () => {
       await expect(engine.skipMigration()).rejects.toThrow('sabotage')
 
       expect(dbh.db.select().from(preferenceTable).all()).toHaveLength(1)
-      expect(dbh.db.select().from(jobScheduleTable).all()).toHaveLength(2)
+      expect(dbh.db.select().from(jobScheduleTable).all()).toHaveLength(1)
       expect(readStatus()).toBeUndefined()
     } finally {
       dbh.sqlite.exec('DROP TRIGGER skip_sabotage')

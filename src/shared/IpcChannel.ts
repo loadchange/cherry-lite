@@ -74,8 +74,6 @@ export enum IpcChannel {
   File_ListDirectory = 'file:listDirectory',
   File_ListDirectoryEntries = 'file:listDirectoryEntries',
   File_CheckFileName = 'file:checkFileName',
-  File_ValidateNotesDirectory = 'file:validateNotesDirectory',
-  File_BatchUploadMarkdown = 'file:batchUploadMarkdown',
   File_ShowInFolder = 'file:showInFolder',
   // FileManager v2 surface (Phase 2)
   File_CreateInternalEntry = 'file:createInternalEntry',
@@ -83,13 +81,6 @@ export enum IpcChannel {
   File_GetPhysicalPath = 'file:getPhysicalPath',
   File_PermanentDelete = 'file:permanentDelete',
   File_RunSweep = 'file:runSweep',
-  // DirectoryTreeBuilder primitive — top-level file-module surface, parallel
-  // to the FileEntry channels above. See docs/references/file/directory-tree.md.
-  File_TreeCreate = 'file:tree:create',
-  File_TreeDispose = 'file:tree:dispose',
-  File_TreeRename = 'file:tree:rename',
-  File_TreeMutation = 'file:tree:mutation',
-
   // backup
   Backup_Backup = 'backup:backup',
   Backup_Restore = 'backup:restore',
@@ -149,10 +140,6 @@ export enum IpcChannel {
 
   // ExternalApps
   ExternalApps_DetectInstalled = 'external-apps:detect-installed',
-
-  // Global Skills
-  Skill_ReadFile = 'skill:read-file',
-  Skill_ListFiles = 'skill:list-files',
 
   // LAN Transfer
   LanTransfer_StartScan = 'lan-transfer:start-scan',

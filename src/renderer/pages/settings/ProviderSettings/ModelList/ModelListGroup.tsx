@@ -72,7 +72,6 @@ const ModelListGroup: React.FC<ModelListGroupProps> = ({
         toast.error(
           getModelOperationErrorMessage(error, {
             fallback: t('settings.models.manage.operation_failed'),
-            modelInUseByKnowledgeBase: t('settings.models.manage.model_in_use_by_knowledge_base'),
             modelInUseAsDefault: t('settings.models.manage.sync_apply_default_in_use')
           })
         )

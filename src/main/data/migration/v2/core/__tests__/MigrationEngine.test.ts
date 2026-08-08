@@ -1,6 +1,5 @@
-import { miniAppLogoFileRefTable, providerLogoFileRefTable } from '@data/db/schemas/fileRelations'
+import { providerLogoFileRefTable } from '@data/db/schemas/fileRelations'
 import { groupTable } from '@data/db/schemas/group'
-import { jobScheduleTable } from '@data/db/schemas/job'
 import { entityTagTable, tagTable } from '@data/db/schemas/tagging'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -36,7 +35,6 @@ const mockPaths: MigrationPaths = {
   userData: '/tmp/test-userdata',
   cherryHome: '/tmp/test-cherryhome',
   databaseFile: '/tmp/test-userdata/Data/cherrystudio.sqlite',
-  knowledgeBaseDir: '/tmp/test-userdata/Data/KnowledgeBase',
   filesDataDir: '/tmp/test-userdata/Data/Files',
   versionLogFile: '/tmp/test-userdata/version.log',
   legacyAgentDbFile: '/tmp/test-userdata/Data/agents.db',
@@ -46,7 +44,6 @@ const mockPaths: MigrationPaths = {
   claudeConfigDir: '/tmp/test-userdata/Data/Agents/.claude',
   claudeProjectsDir: '/tmp/test-userdata/Data/Agents/.claude/projects',
   agentSystemWorkspacesDir: '/tmp/test-userdata/Data/Agents/system',
-  customMiniAppsFile: '/tmp/test-userdata/Data/Files/custom-minapps.json',
   legacyConfigFile: '/tmp/test-cherryhome/config/config.json',
   migrationsFolder: '/tmp/test-migrations'
 }
@@ -283,9 +280,8 @@ describe('MigrationEngine', () => {
     await (engine as any).verifyAndClearNewTables()
 
     expect(transactionFn).toHaveBeenCalledTimes(1)
-    // Every counted table is deleted, plus the filtered job_schedule delete
-    // (which is not part of the count loop).
-    expect(deleteFn).toHaveBeenCalledTimes(db.select.mock.calls.length + 1)
+    // Every counted table is deleted.
+    expect(deleteFn).toHaveBeenCalledTimes(db.select.mock.calls.length)
     expect(db).not.toHaveProperty('delete')
   })
 
@@ -312,10 +308,8 @@ describe('MigrationEngine', () => {
     await (engine as any).verifyAndClearNewTables()
 
     expect(deletedTables).toContain(providerLogoFileRefTable)
-    expect(deletedTables).toContain(miniAppLogoFileRefTable)
     expect(deletedTables).toContain(groupTable)
     expect(deletedTables).toContain(entityTagTable)
     expect(deletedTables).toContain(tagTable)
-    expect(deletedTables).toContain(jobScheduleTable)
   })
 })

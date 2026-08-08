@@ -87,17 +87,6 @@ describe('useProviderEditor', () => {
       expect(result.current.mode).toEqual({ kind: 'create-custom' })
     })
 
-    it('startAddFrom opens the editor in duplicate mode with the source provider', () => {
-      const { result } = renderHook(() => useProviderEditor(makeParams()))
-      const source = { ...provider, presetProviderId: 'openai', authType: 'api-key' }
-
-      act(() => result.current.startAddFrom(source))
-
-      expect(result.current.isOpen).toBe(true)
-      expect(result.current.editingProvider).toBeNull()
-      expect(result.current.mode).toEqual({ kind: 'duplicate', source })
-    })
-
     it('startEdit opens the editor in edit mode with the given provider', () => {
       const { result } = renderHook(() => useProviderEditor(makeParams()))
 
@@ -248,28 +237,43 @@ describe('useProviderEditor', () => {
       })
     })
 
-    it('forwards presetProviderId on duplicate-mode submit', async () => {
+    it('forwards apiKeys to createProvider', async () => {
       const { result } = renderHook(() => useProviderEditor(makeParams()))
-      const source = { ...provider, presetProviderId: 'azure-openai', authType: 'iam-azure' }
 
-      act(() => result.current.startAddFrom(source))
+      act(() => result.current.startAdd())
       await act(async () => {
         await result.current.submit({
           mode: 'create',
-          name: 'azure-2',
+          name: 'Custom OpenAI Proxy',
           defaultChatEndpoint: endpoint,
-          presetProviderId: 'azure-openai',
-          authConfig: { type: 'iam-azure', apiVersion: '' }
+          authConfig: { type: 'api-key' },
+          apiKeys: [{ id: 'key-1', key: 'sk-test', label: 'Primary', isEnabled: true }]
         })
       })
 
       expect(createProviderMock).toHaveBeenCalledWith({
         providerId: 'new-provider-id',
-        name: 'azure-2',
+        name: 'Custom OpenAI Proxy',
         defaultChatEndpoint: endpoint,
-        presetProviderId: 'azure-openai',
-        authConfig: { type: 'iam-azure', apiVersion: '' }
+        authConfig: { type: 'api-key' },
+        apiKeys: [{ id: 'key-1', key: 'sk-test', label: 'Primary', isEnabled: true }]
       })
+    })
+
+    it('omits apiKeys from the createProvider DTO when the list is empty', async () => {
+      const { result } = renderHook(() => useProviderEditor(makeParams()))
+
+      act(() => result.current.startAdd())
+      await act(async () => {
+        await result.current.submit({
+          mode: 'create',
+          name: 'Custom OpenAI Proxy',
+          defaultChatEndpoint: endpoint,
+          apiKeys: []
+        })
+      })
+
+      expect(createProviderMock.mock.calls[0][0]).not.toHaveProperty('apiKeys')
     })
   })
 

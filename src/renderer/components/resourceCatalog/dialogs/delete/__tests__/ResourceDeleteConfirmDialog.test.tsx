@@ -7,10 +7,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ResourceDeleteConfirmDialog } from '../ResourceDeleteConfirmDialog'
 
 const mocks = vi.hoisted(() => ({
-  deleteAgent: vi.fn(),
   deleteAssistant: vi.fn(),
-  deletePrompt: vi.fn(),
-  uninstallSkill: vi.fn()
+  deletePrompt: vi.fn()
 }))
 
 vi.mock('react-i18next', () => ({
@@ -22,11 +20,6 @@ vi.mock('react-i18next', () => ({
           'assistants.delete.title': 'Delete assistant',
           'common.cancel': 'Cancel',
           'common.delete': 'Delete',
-          'library.action.uninstall': 'Uninstall',
-          'library.delete.agent.content': 'Delete agent content',
-          'library.delete.agent.title': 'Delete agent',
-          'library.delete.skill.content': 'Uninstall skill content',
-          'library.delete.skill.title': 'Uninstall skill',
           'settings.prompts.delete': 'Delete prompt',
           'settings.prompts.deleteConfirm': 'Delete prompt content'
         }) satisfies Record<string, string>
@@ -69,17 +62,11 @@ vi.mock('@cherrystudio/ui', () => ({
 }))
 
 vi.mock('@renderer/hooks/resourceCatalog', () => ({
-  useAgentMutationsById: () => ({
-    deleteAgent: mocks.deleteAgent
-  }),
   useAssistantMutationsById: () => ({
     deleteAssistant: mocks.deleteAssistant
   }),
   usePromptMutationsById: () => ({
     deletePrompt: mocks.deletePrompt
-  }),
-  useSkillMutationsById: () => ({
-    uninstallSkill: mocks.uninstallSkill
   })
 }))
 
@@ -115,8 +102,6 @@ describe('ResourceDeleteConfirmDialog', () => {
 
   it.each([
     ['assistant', 'Delete assistant', 'Delete', mocks.deleteAssistant],
-    ['agent', 'Delete agent', 'Delete', mocks.deleteAgent],
-    ['skill', 'Uninstall skill', 'Uninstall', mocks.uninstallSkill],
     ['prompt', 'Delete prompt', 'Delete', mocks.deletePrompt]
   ] as const)('dispatches %s deletion through the matching mutation', async (type, title, confirmText, mutation) => {
     const user = userEvent.setup()

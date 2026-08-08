@@ -9,10 +9,6 @@ vi.mock('../onboarding/OnboardingPage', () => ({
   default: () => <div data-testid="onboarding-page">onboarding</div>
 }))
 
-vi.mock('../privacy/PrivacyPolicyUpdateGate', () => ({
-  PrivacyPolicyUpdateGate: () => <div data-testid="privacy-policy-gate">privacy-policy-gate</div>
-}))
-
 vi.mock('@renderer/components/layout/TabsProvider', () => ({
   TabsProvider: ({ children }: { children: ReactNode }) => <div data-testid="tabs-provider">{children}</div>
 }))
@@ -60,7 +56,6 @@ describe('MainWindowContent', () => {
 
     expect(screen.getByTestId('onboarding-page')).toBeInTheDocument()
     expect(screen.queryByTestId('app-shell')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('privacy-policy-gate')).not.toBeInTheDocument()
     expect(document.getElementById('spinner')).toBeNull()
   })
 
@@ -72,7 +67,6 @@ describe('MainWindowContent', () => {
     expect(screen.getByTestId('tabs-provider')).toBeInTheDocument()
     expect(screen.getByTestId('app-shell')).toBeInTheDocument()
     expect(screen.queryByTestId('onboarding-page')).not.toBeInTheDocument()
-    expect(screen.getByTestId('privacy-policy-gate')).toBeInTheDocument()
   })
 })
 

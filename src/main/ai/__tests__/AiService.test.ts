@@ -2,11 +2,9 @@ import { BaseService } from '@main/core/lifecycle/BaseService'
 import { MODEL_CAPABILITY } from '@shared/data/types/model'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const mockGenerateImage = vi.fn()
 const mockCreateAgent = vi.fn()
 const mockEmbedMany = vi.fn()
 const mockRerank = vi.fn()
-const mockDownloadImageAsBase64 = vi.fn()
 const mockApplicationGet = vi.fn()
 const mockAssistantGetById = vi.fn()
 const mockMessageGetById = vi.fn()
@@ -15,15 +13,11 @@ const mockMessageApplyApproval = vi.fn()
 const mockProviderGetByProviderId = vi.fn()
 const mockProviderGetRotatedApiKey = vi.fn()
 const mockModelGetByKey = vi.fn()
-const mockGetImageGenerationSupport = vi.fn()
 const mockListProviderRegistryModels = vi.fn()
 const mockListModelsFromProvider = vi.fn()
-const mockInstallBuiltinSkills = vi.fn()
-const mockReconcileSkills = vi.fn()
 const mockRegisterBuiltinTools = vi.fn()
 const mockInstallProviderUserAgentInterceptor = vi.fn(() => vi.fn())
 const mockRecordRequest = vi.fn()
-const mockAddFileRefsTx = vi.fn()
 
 vi.mock('@application', () => ({
   application: {
@@ -35,22 +29,6 @@ vi.mock('@application', () => ({
 vi.mock('@data/services/AssistantService', () => ({
   assistantDataService: {
     getById: (...args: unknown[]) => mockAssistantGetById(...args)
-  }
-}))
-
-vi.mock('@data/services/JobService', () => ({
-  jobService: {
-    addFileRefsTx: (...args: unknown[]) => mockAddFileRefsTx(...args)
-  }
-}))
-
-vi.mock('@main/utils/builtinSkills', () => ({
-  installBuiltinSkills: (...args: unknown[]) => mockInstallBuiltinSkills(...args)
-}))
-
-vi.mock('../skills/SkillService', () => ({
-  skillService: {
-    reconcileSkills: (...args: unknown[]) => mockReconcileSkills(...args)
   }
 }))
 
@@ -77,7 +55,6 @@ vi.mock('@main/data/services/ModelService', () => ({
 
 vi.mock('@data/services/ProviderRegistryService', () => ({
   providerRegistryService: {
-    getImageGenerationSupport: (...args: unknown[]) => mockGetImageGenerationSupport(...args),
     listProviderRegistryModels: (...args: unknown[]) => mockListProviderRegistryModels(...args)
   }
 }))
@@ -85,10 +62,6 @@ vi.mock('@data/services/ProviderRegistryService', () => ({
 vi.mock('../provider/listModels', () => ({
   listModels: (...args: unknown[]) => mockListModelsFromProvider(...args)
 }))
-vi.mock('@main/utils/downloadAsBase64', () => ({
-  downloadImageAsBase64: (...args: unknown[]) => mockDownloadImageAsBase64(...args)
-}))
-
 vi.mock('@main/data/services/MessageService', () => ({
   messageService: {
     getById: mockMessageGetById,
@@ -108,20 +81,6 @@ vi.mock('@cherrystudio/ai-core', () => ({
       providerId: args[0],
       modelId: 'test-embedding-model',
       usage: result.usage,
-      metrics: { timeCompletionMs: 10 },
-      completedAt: 100
-    })
-    return result
-  },
-  generateImage: async (...args: unknown[]) => {
-    const result = await mockGenerateImage(...args)
-    const params = args[2] as { onProviderCall?: (event: unknown) => void }
-    params.onProviderCall?.({
-      modality: 'image',
-      requestId: 'ai-core:image:test',
-      providerId: args[0],
-      modelId: 'test-model',
-      imageCount: result.images?.length ?? 0,
       metrics: { timeCompletionMs: 10 },
       completedAt: 100
     })
@@ -152,7 +111,7 @@ vi.mock('@main/data/services/AiUsageRecordService', async (importActual) => {
   }
 })
 
-const { AiService, imageInputEntryParams } = await import('../AiService')
+const { AiService } = await import('../AiService')
 const { messageService } = await import('@main/data/services/MessageService')
 
 /**
@@ -200,376 +159,6 @@ describe('AiService', () => {
     mockRecordRequest.mockResolvedValue(undefined)
   })
 
-  it('routes agent-session runtime requests directly to the runtime service', async () => {
-    const service = createService()
-    const stream = new ReadableStream()
-    const openTurnStream = vi.fn(() => stream)
-    mockApplicationGet.mockReturnValue({ openTurnStream })
-
-    await expect(
-      service.streamText({
-        chatId: 'agent-session:session-1',
-        trigger: 'submit-message',
-        runtime: { kind: 'agent-session', sessionId: 'session-1', turnId: 'turn-1' },
-        requestOptions: { signal: new AbortController().signal }
-      } as any)
-    ).resolves.toBe(stream)
-
-    expect(mockApplicationGet).toHaveBeenCalledWith('AgentSessionRuntimeService')
-    expect(openTurnStream).toHaveBeenCalledWith({
-      sessionId: 'session-1',
-      turnId: 'turn-1',
-      signal: expect.any(AbortSignal)
-    })
-  })
-
-  it('rejects agent-session streams that do not carry a runtime request', async () => {
-    const service = createService()
-    const buildAgentParamsFor = vi.spyOn(service as any, 'buildAgentParamsFor')
-
-    await expect(
-      service.streamText({
-        chatId: 'agent-session:session-1',
-        trigger: 'submit-message',
-        requestOptions: { signal: new AbortController().signal }
-      } as any)
-    ).rejects.toThrow('requires an agent-session runtime request')
-
-    expect(buildAgentParamsFor).not.toHaveBeenCalled()
-    expect(mockApplicationGet).not.toHaveBeenCalled()
-  })
-
-  it('flushes accumulated token analytics once when an agent run errors', async () => {
-    const service = createService()
-    const trackTokenUsage = vi.fn()
-    mockApplicationGet.mockReturnValue({ trackTokenUsage })
-    const hooks = (service as any).analyticsHookPart({
-      id: 'test-model',
-      providerId: 'test-provider',
-      apiModelId: 'test-api-model'
-    })
-
-    await hooks.onStepFinish({
-      usage: {
-        inputTokens: 3,
-        outputTokens: 5,
-        totalTokens: 8,
-        inputTokenDetails: {},
-        outputTokenDetails: {}
-      }
-    })
-    await hooks.onError({ error: new Error('terminal tool failure') })
-    await hooks.onFinish()
-
-    expect(mockApplicationGet).toHaveBeenCalledWith('AnalyticsService')
-    expect(trackTokenUsage).toHaveBeenCalledOnce()
-    expect(trackTokenUsage).toHaveBeenCalledWith({
-      provider: 'test-provider',
-      model: 'test-api-model',
-      input_tokens: 3,
-      output_tokens: 5
-    })
-  })
-
-  it('flushes accumulated token analytics when a completed step is followed by cancellation', async () => {
-    const service = createService()
-    const trackTokenUsage = vi.fn()
-    mockApplicationGet.mockReturnValue({ trackTokenUsage })
-    const hooks = (service as any).analyticsHookPart({
-      id: 'test-model',
-      providerId: 'test-provider',
-      apiModelId: 'test-api-model'
-    })
-
-    await hooks.onStepFinish({
-      usage: {
-        inputTokens: 3,
-        outputTokens: 5,
-        totalTokens: 8,
-        inputTokenDetails: {},
-        outputTokenDetails: {}
-      }
-    })
-    await hooks.onAbort()
-    await hooks.onFinish()
-
-    expect(mockApplicationGet).toHaveBeenCalledWith('AnalyticsService')
-    expect(trackTokenUsage).toHaveBeenCalledOnce()
-    expect(trackTokenUsage).toHaveBeenCalledWith({
-      provider: 'test-provider',
-      model: 'test-api-model',
-      input_tokens: 3,
-      output_tokens: 5
-    })
-  })
-
-  it('normalizes base64 and url images from ai-core generateImage', async () => {
-    const service = createService()
-    vi.spyOn(service as never, 'buildAgentParamsFor').mockResolvedValue({
-      sdkConfig: {
-        providerId: 'test-provider',
-        providerSettings: {},
-        modelId: 'test-model'
-      },
-      model: {
-        id: 'test-provider::test-model',
-        providerId: 'test-provider',
-        modelId: 'test-model',
-        pricing: { input: { perMillionTokens: null }, output: { perMillionTokens: null }, perImage: { price: 0.05 } }
-      }
-    } as never)
-
-    mockGenerateImage.mockResolvedValue({
-      images: [{ base64: 'abc123', mediaType: 'image/png' }, { nonsense: true }],
-      providerMetadata: {
-        testProvider: {
-          images: [{ url: 'https://example.com/image.png' }]
-        }
-      }
-    })
-
-    mockDownloadImageAsBase64.mockResolvedValue({
-      data: 'url-base64',
-      media_type: 'image/jpeg'
-    })
-
-    const fileEntry = { id: 'file-1', origin: 'internal', ext: 'png', name: 'img', size: 3, createdAt: 0 }
-    const createInternalEntry = vi.fn().mockResolvedValue(fileEntry)
-    mockApplicationGet.mockImplementation((name: string) =>
-      name === 'FileManager' ? { createInternalEntry } : undefined
-    )
-
-    const result = await service.generateImage({
-      uniqueModelId: 'test-provider::test-model',
-      cleanupPolicy: 'delete_when_unreferenced',
-      prompt: 'draw a cat',
-      // Canonical paramValues bag (`numImages`, not `n`); main re-derives the
-      // wire shape. Only n/size/seed/aspectRatio are AI SDK native options; the
-      // knobs (negativePrompt/quality/…) ride in `providerOptions[id]` (wire-named).
-      paramValues: {
-        numImages: 2,
-        size: '1024x1024',
-        aspectRatio: '9:19.5',
-        negativePrompt: 'blurry',
-        seed: 7,
-        quality: 'high',
-        numInferenceSteps: 30,
-        guidanceScale: 4.5,
-        promptEnhancement: true
-      },
-      requestOptions: { signal: new AbortController().signal }
-    })
-
-    expect(mockGenerateImage).toHaveBeenCalledWith(
-      'test-provider',
-      {},
-      expect.objectContaining({
-        model: 'test-model',
-        prompt: 'draw a cat',
-        n: 2,
-        size: '1024x1024',
-        aspectRatio: '9:19.5',
-        seed: 7,
-        providerOptions: {
-          'test-provider': {
-            negative_prompt: 'blurry',
-            seed: 7,
-            quality: 'high',
-            num_inference_steps: 30,
-            guidance_scale: 4.5,
-            prompt_enhancement: true
-          }
-        }
-      })
-    )
-
-    const callOptions = mockGenerateImage.mock.calls[0]?.[2]
-    expect(callOptions.experimental_download).toBeTypeOf('function')
-
-    const downloaded = await callOptions.experimental_download([
-      {
-        url: new URL('https://example.com/image.png'),
-        isUrlSupportedByModel: false
-      }
-    ])
-
-    expect(mockDownloadImageAsBase64).toHaveBeenCalledWith('https://example.com/image.png')
-    expect(downloaded).toEqual([
-      {
-        data: Buffer.from('url-base64', 'base64'),
-        mediaType: 'image/jpeg'
-      }
-    ])
-
-    expect(createInternalEntry).toHaveBeenCalledWith({
-      source: 'base64',
-      data: 'data:image/png;base64,abc123',
-      cleanupPolicy: 'delete_when_unreferenced'
-    })
-    expect(result).toEqual({ files: [fileEntry] })
-  })
-
-  it("omits the SDK size for the 'auto' sentinel AND when no size is given (no 1024x1024 default)", async () => {
-    const service = createService()
-    vi.spyOn(service as never, 'buildAgentParamsFor').mockResolvedValue({
-      sdkConfig: {
-        providerId: 'test-provider',
-        providerSettings: {},
-        modelId: 'test-model'
-      }
-    } as never)
-
-    mockGenerateImage.mockResolvedValue({ images: [] })
-    mockApplicationGet.mockImplementation((name: string) =>
-      name === 'FileManager' ? { createInternalEntry: vi.fn() } : undefined
-    )
-
-    await service.generateImage({
-      uniqueModelId: 'test-provider::test-model',
-      cleanupPolicy: 'delete_when_unreferenced',
-      prompt: 'draw a cat',
-      paramValues: { size: 'auto' }
-    })
-    expect(mockGenerateImage.mock.calls[0]?.[2] as Record<string, unknown>).not.toHaveProperty('size')
-
-    // No size at all → omitted too (the provider/server applies its own default),
-    // rather than the old forced 1024x1024.
-    await service.generateImage({
-      uniqueModelId: 'test-provider::test-model',
-      cleanupPolicy: 'delete_when_unreferenced',
-      prompt: 'draw a cat',
-      paramValues: {}
-    })
-    expect(mockGenerateImage.mock.calls[1]?.[2] as Record<string, unknown>).not.toHaveProperty('size')
-  })
-
-  it('routes silicon through the WireProfile engine, producing the same providerOptions.silicon', async () => {
-    const service = createService()
-    vi.spyOn(service as never, 'buildAgentParamsFor').mockResolvedValue({
-      sdkConfig: { providerId: 'silicon', providerSettings: {}, modelId: 'Kwai-Kolors/Kolors' }
-    } as never)
-
-    mockGenerateImage.mockResolvedValue({ images: [] })
-    mockApplicationGet.mockImplementation((name: string) =>
-      name === 'FileManager' ? { createInternalEntry: vi.fn() } : undefined
-    )
-
-    await service.generateImage({
-      uniqueModelId: 'silicon::Kwai-Kolors/Kolors',
-      cleanupPolicy: 'delete_when_unreferenced',
-      prompt: 'a fox',
-      // numImages is native (→ imageParams.n); the rest form the silicon vendor body.
-      paramValues: {
-        numImages: 2,
-        seed: 42,
-        negativePrompt: 'low quality',
-        numInferenceSteps: 25,
-        guidanceScale: 4.5,
-        cfg: 7.5
-      }
-    })
-
-    expect(mockGenerateImage).toHaveBeenCalledWith(
-      'silicon',
-      {},
-      expect.objectContaining({
-        n: 2,
-        // Byte-identical to the old buildImageProviderOptions diffusion bag.
-        providerOptions: {
-          silicon: { negative_prompt: 'low quality', seed: 42, num_inference_steps: 25, guidance_scale: 4.5, cfg: 7.5 }
-        }
-      })
-    )
-  })
-
-  // The direct (non-job) image path observes the actual ImageModel doGenerate
-  // call in aiCore. These tests pin both the usage payload and the fact that
-  // local persistence happens after the provider output has been recorded.
-  describe('generateImage — AI usage record (direct path)', () => {
-    function stubDirectImage(service: InstanceType<typeof AiService>) {
-      vi.spyOn(service as never, 'buildAgentParamsFor').mockResolvedValue({
-        sdkConfig: { providerId: 'test-provider', providerSettings: {}, modelId: 'test-model' },
-        model: { id: 'test-provider::test-model', providerId: 'test-provider' }
-      } as never)
-      mockGenerateImage.mockResolvedValue({ images: [{ base64: 'abc123', mediaType: 'image/png' }] })
-      const fileEntry = { id: 'file-1', origin: 'internal', ext: 'png', name: 'img', size: 3, createdAt: 0 }
-      mockApplicationGet.mockImplementation((name: string) =>
-        name === 'FileManager' ? { createInternalEntry: vi.fn().mockResolvedValue(fileEntry) } : undefined
-      )
-      return fileEntry
-    }
-
-    it('records the provider output count with modality "image"', async () => {
-      const service = createService()
-      stubDirectImage(service)
-
-      await service.generateImage({
-        uniqueModelId: 'test-provider::test-model',
-        prompt: 'draw a cat',
-        cleanupPolicy: 'delete_when_unreferenced',
-        paramValues: {}
-      })
-
-      expect(mockRecordRequest).toHaveBeenCalledWith(
-        expect.objectContaining({
-          context: expect.objectContaining({ modelId: 'test-model' }),
-          modality: 'image',
-          imageCount: 1
-        })
-      )
-    })
-
-    it('records the provider output before local file persistence can fail', async () => {
-      const service = createService()
-      mockAssistantGetById.mockReturnValue({
-        id: 'assistant-1',
-        name: 'Image Assistant',
-        emoji: '🎨'
-      })
-      vi.spyOn(service as never, 'buildAgentParamsFor').mockResolvedValue({
-        sdkConfig: { providerId: 'test-provider', providerSettings: {}, modelId: 'test-model' },
-        model: { id: 'test-provider::test-model', providerId: 'test-provider' },
-        assistant: { id: 'assistant-1', name: 'Image Assistant', emoji: '🎨' }
-      } as never)
-      mockGenerateImage.mockResolvedValue({
-        images: [
-          { base64: 'first', mediaType: 'image/png' },
-          { base64: 'second', mediaType: 'image/png' }
-        ]
-      })
-      const createInternalEntry = vi.fn().mockRejectedValue(new Error('disk full'))
-      mockApplicationGet.mockImplementation((name: string) =>
-        name === 'FileManager' ? { createInternalEntry } : undefined
-      )
-
-      await expect(
-        service.generateImage({
-          uniqueModelId: 'test-provider::test-model',
-          assistantId: 'assistant-1',
-          prompt: 'draw a cat',
-          cleanupPolicy: 'delete_when_unreferenced',
-          paramValues: {}
-        })
-      ).rejects.toThrow('disk full')
-
-      expect(mockRecordRequest).toHaveBeenCalledWith(
-        expect.objectContaining({
-          modality: 'image',
-          imageCount: 2,
-          context: expect.objectContaining({
-            source: { type: 'assistant', id: 'assistant-1', name: 'Image Assistant', icon: '🎨' }
-          })
-        })
-      )
-      expect(mockRecordRequest.mock.invocationCallOrder[0]).toBeLessThan(
-        createInternalEntry.mock.invocationCallOrder[0]
-      )
-    })
-  })
-
-  // `embedMany`'s usage-record write had zero coverage before this: neither the payload
-  // shape (modality/token count) nor the failure-must-not-disrupt-the-request
-  // contract was tested.
   describe('embedMany — AI usage record', () => {
     function stubEmbedding(service: InstanceType<typeof AiService>) {
       vi.spyOn(service as never, 'buildAgentParamsFor').mockResolvedValue({
@@ -642,32 +231,14 @@ describe('AiService.onInit', () => {
     mockApplicationGet.mockImplementation((name: string) =>
       name === 'JobManager' ? { registerHandler: vi.fn() } : undefined
     )
-    mockReconcileSkills.mockResolvedValue(undefined)
   })
 
-  it('installs built-in skills before reconciling skills, without blocking init', async () => {
-    const calls: string[] = []
-    mockInstallBuiltinSkills.mockImplementation(async () => {
-      calls.push('installBuiltinSkills')
-    })
-    mockReconcileSkills.mockImplementation(async () => {
-      calls.push('reconcileSkills')
-    })
-    const service = createService()
-
-    // Fire-and-forget: _doInit resolves without waiting on this chain.
-    await service._doInit()
-    await vi.waitFor(() => expect(mockReconcileSkills).toHaveBeenCalled())
-
-    expect(calls).toEqual(['installBuiltinSkills', 'reconcileSkills'])
-  })
-
-  it('logs and continues to reconcile when installBuiltinSkills rejects', async () => {
-    mockInstallBuiltinSkills.mockRejectedValue(new Error('disk full'))
+  it('registers the builtin AI SDK tools', async () => {
     const service = createService()
 
     await expect(service._doInit()).resolves.toBeUndefined()
-    await vi.waitFor(() => expect(mockReconcileSkills).toHaveBeenCalled())
+
+    expect(mockRegisterBuiltinTools).toHaveBeenCalledOnce()
   })
 })
 
@@ -727,42 +298,8 @@ describe('AiService tool approval', () => {
     vi.clearAllMocks()
   })
 
-  it('takes the Claude-Agent fast-path when the live registry dispatches the decision', async () => {
-    const respondToolApproval = vi.fn(() => true)
-    const dispatch = vi.fn()
-    mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'AgentSessionRuntimeService') return { respondToolApproval }
-      if (name === 'AiStreamManager') return { dispatch, hasLiveStream: () => false }
-      return undefined
-    })
-    const getById = vi.spyOn(messageService, 'getById')
-
-    const handler = getApprovalHandler()
-    const result = await handler(fakeEvent(), {
-      approvalId: 'agent-approval-1',
-      approved: true
-    })
-
-    expect(result).toEqual({ ok: true })
-    expect(respondToolApproval).toHaveBeenCalledWith(
-      'agent-approval-1',
-      {
-        approved: true,
-        reason: undefined,
-        updatedInput: undefined
-      },
-      undefined
-    )
-    // Fast-path short-circuits before any DB read or continue dispatch.
-    expect(getById).not.toHaveBeenCalled()
-    expect(dispatch).not.toHaveBeenCalled()
-  })
-
   it('returns { ok: false } when there is no live entry and no anchor context', async () => {
-    const respondToolApproval = vi.fn(() => false)
-    mockApplicationGet.mockImplementation((name: string) =>
-      name === 'AgentSessionRuntimeService' ? { respondToolApproval } : undefined
-    )
+    mockApplicationGet.mockImplementation(() => undefined)
     const getById = vi.spyOn(messageService, 'getById')
 
     const handler = getApprovalHandler()
@@ -777,10 +314,8 @@ describe('AiService tool approval', () => {
   })
 
   it('applies the decision atomically and dispatches continue-conversation when nothing is left pending', async () => {
-    const respondToolApproval = vi.fn(() => false)
     const dispatch = vi.fn().mockResolvedValue(undefined)
     mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'AgentSessionRuntimeService') return { respondToolApproval }
       if (name === 'AiStreamManager') return { dispatch, hasLiveStream: () => false }
       return undefined
     })
@@ -823,10 +358,8 @@ describe('AiService tool approval', () => {
   })
 
   it('skips the continuation (ok:false) when there is no caller window to stream it to', async () => {
-    const respondToolApproval = vi.fn(() => false)
     const dispatch = vi.fn().mockResolvedValue(undefined)
     mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'AgentSessionRuntimeService') return { respondToolApproval }
       if (name === 'AiStreamManager') return { dispatch, hasLiveStream: () => false }
       return undefined
     })
@@ -853,11 +386,9 @@ describe('AiService tool approval', () => {
     // land while a sibling exec / another continuation is still live. Dispatching continue-conversation
     // then would hit send()'s inject path and silently swallow the approved turn. Gate it: refuse
     // before touching the row, so the card stays actionable and the renderer can retry post-settle.
-    const respondToolApproval = vi.fn(() => false)
     const dispatch = vi.fn().mockResolvedValue(undefined)
     const hasLiveStream = vi.fn(() => true)
     mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'AgentSessionRuntimeService') return { respondToolApproval }
       if (name === 'AiStreamManager') return { dispatch, hasLiveStream }
       return undefined
     })
@@ -879,10 +410,8 @@ describe('AiService tool approval', () => {
   })
 
   it('still dispatches when the committed parts report nothing pending (overlay-only decision)', async () => {
-    const respondToolApproval = vi.fn(() => false)
     const dispatch = vi.fn().mockResolvedValue(undefined)
     mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'AgentSessionRuntimeService') return { respondToolApproval }
       if (name === 'AiStreamManager') return { dispatch, hasLiveStream: () => false }
       return undefined
     })
@@ -914,10 +443,8 @@ describe('AiService tool approval', () => {
   })
 
   it('does not finalize while another approval on the turn is still pending', async () => {
-    const respondToolApproval = vi.fn(() => false)
     const dispatch = vi.fn().mockResolvedValue(undefined)
     mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'AgentSessionRuntimeService') return { respondToolApproval }
       if (name === 'AiStreamManager') return { dispatch, hasLiveStream: () => false }
       return undefined
     })
@@ -947,10 +474,8 @@ describe('AiService tool approval', () => {
   })
 
   it('ignores duplicate already-settled approval responses without dispatching another continuation', async () => {
-    const respondToolApproval = vi.fn(() => false)
     const dispatch = vi.fn().mockResolvedValue(undefined)
     mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'AgentSessionRuntimeService') return { respondToolApproval }
       if (name === 'AiStreamManager') return { dispatch, hasLiveStream: () => false }
       return undefined
     })
@@ -979,10 +504,8 @@ describe('AiService tool approval', () => {
   })
 
   it('returns { ok: false } when the anchor message is missing or deleted', async () => {
-    const respondToolApproval = vi.fn(() => false)
     const dispatch = vi.fn().mockResolvedValue(undefined)
     mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'AgentSessionRuntimeService') return { respondToolApproval }
       if (name === 'AiStreamManager') return { dispatch, hasLiveStream: () => false }
       return undefined
     })
@@ -1183,389 +706,6 @@ describe('AiService tool approval', () => {
         uniqueModelId: 'test-provider::test-reranker'
       })
     ).rejects.toThrow('Rerank health check returned empty ranking')
-  })
-})
-
-describe('imageInputEntryParams', () => {
-  it('maps a base64 data URL to a base64 entry', () => {
-    expect(imageInputEntryParams('data:image/png;base64,AAAA')).toEqual({
-      source: 'base64',
-      data: 'data:image/png;base64,AAAA',
-      cleanupPolicy: 'delete_when_unreferenced'
-    })
-  })
-
-  it('maps an http(s) URL to a url entry (preserves the inputImages URL contract)', () => {
-    expect(imageInputEntryParams('https://cdn.example.com/in.png')).toEqual({
-      source: 'url',
-      url: 'https://cdn.example.com/in.png',
-      cleanupPolicy: 'delete_when_unreferenced'
-    })
-  })
-})
-
-describe('AiService.generateImage — custom async transport (job path)', () => {
-  beforeEach(() => {
-    mockAddFileRefsTx.mockReset()
-  })
-
-  // Force the job branch by resolving to a custom-transport provider id; real
-  // hasImageTransport('ppio', …) routes through generateImageViaJob before
-  // buildAgentParamsFor can select and rotate a serving key.
-  function stubResolution(service: InstanceType<typeof AiService>) {
-    mockProviderGetByProviderId.mockReturnValue({ id: 'ppio' })
-    mockModelGetByKey.mockReturnValue({
-      id: 'ppio::qwen-image',
-      providerId: 'ppio',
-      apiModelId: 'qwen-image'
-    })
-    mockAssistantGetById.mockReturnValue({
-      id: 'assistant-1',
-      name: 'Image Assistant',
-      emoji: '🎨'
-    })
-    return vi
-      .spyOn(service as never, 'buildAgentParamsFor')
-      .mockRejectedValue(new Error('job path must not select a serving key before execution'))
-  }
-
-  it('forwards the vendor knobs to the transport via providerParams (camelCase)', async () => {
-    // Regression guard: negativePrompt / numInferenceSteps / guidanceScale are NOT
-    // AI SDK native options — they must reach the transport in `providerParams`
-    // (the canonical camelCase vendorBag), not get dropped into `structured`.
-    // The boundary tests hand-build providerParams, so only this split→transport
-    // assertion catches a mis-classified native binding.
-    const service = createService()
-    stubResolution(service)
-    const enqueue = vi.fn().mockReturnValue({
-      id: 'job-1',
-      snapshot: {},
-      finished: Promise.resolve({ status: 'completed', output: { files: [] }, error: null })
-    })
-    mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'FileManager') return { createInternalEntry: vi.fn(), permanentDelete: vi.fn() }
-      if (name === 'JobManager') return { enqueue, enqueueTx: (...a: any[]) => enqueue(...a.slice(1)), cancel: vi.fn() }
-      if (name === 'DbService')
-        return { withWriteTx: (fn: any) => fn({ insert: () => ({ values: () => ({ run: vi.fn() }) }) }) }
-      return undefined
-    })
-
-    await service.generateImage({
-      uniqueModelId: 'ppio::qwen-image',
-      cleanupPolicy: 'delete_when_unreferenced',
-      prompt: 'a cat',
-      paramValues: {
-        numImages: 1,
-        size: '1024x1024',
-        seed: 9,
-        negativePrompt: 'blurry',
-        numInferenceSteps: 30,
-        guidanceScale: 4.5,
-        promptExtend: true
-      },
-      requestOptions: { signal: new AbortController().signal }
-    })
-
-    expect(enqueue).toHaveBeenCalledWith(
-      'image-generation.generate',
-      expect.objectContaining({
-        n: 1,
-        size: '1024x1024',
-        seed: 9,
-        // native n/size/seed travel as payload fields; the knobs ride the bag
-        providerParams: { negativePrompt: 'blurry', numInferenceSteps: 30, guidanceScale: 4.5, promptExtend: true }
-      })
-    )
-  })
-
-  it('derives modelDescriptor { id, endpoint, isSync, mode } from the registry vendorTransport (non-default mode)', async () => {
-    // Async PPIO/DashScope jobs resume against the endpoint / response-family carried
-    // in the payload; guard that a non-default mode routes through ITS OWN
-    // vendorTransport and the derived descriptor reaches the enqueued job. Without
-    // this, a restart-resume (or an edit-mode job) would hit the wrong endpoint.
-    const service = createService()
-    stubResolution(service)
-    mockGetImageGenerationSupport.mockReturnValueOnce({
-      modes: {
-        edit: { vendorTransport: { endpoint: '/v1/models/qianfan/qwen-image-edit/predictions', isSync: false } }
-      }
-    })
-    const enqueue = vi.fn().mockReturnValue({
-      id: 'job-1',
-      snapshot: {},
-      finished: Promise.resolve({ status: 'completed', output: { files: [] }, error: null })
-    })
-    mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'FileManager') return { createInternalEntry: vi.fn(), permanentDelete: vi.fn() }
-      if (name === 'JobManager') return { enqueue, enqueueTx: (...a: any[]) => enqueue(...a.slice(1)), cancel: vi.fn() }
-      if (name === 'DbService')
-        return { withWriteTx: (fn: any) => fn({ insert: () => ({ values: () => ({ run: vi.fn() }) }) }) }
-      return undefined
-    })
-
-    await service.generateImage({
-      uniqueModelId: 'ppio::qwen-image',
-      cleanupPolicy: 'delete_when_unreferenced',
-      prompt: 'a cat',
-      mode: 'edit',
-      paramValues: {},
-      requestOptions: { signal: new AbortController().signal }
-    })
-
-    // The descriptor is derived from the registry (main-hosted), keyed by the
-    // resolved mode — NOT laundered through paramValues.
-    expect(mockGetImageGenerationSupport).toHaveBeenCalledWith('ppio', 'qwen-image')
-    expect(enqueue).toHaveBeenCalledWith(
-      'image-generation.generate',
-      expect.objectContaining({
-        modelDescriptor: {
-          id: 'qwen-image',
-          endpoint: '/v1/models/qianfan/qwen-image-edit/predictions',
-          isSync: false,
-          mode: 'edit'
-        }
-      })
-    )
-  })
-
-  it('maps a failed job snapshot to a thrown error', async () => {
-    const service = createService()
-    stubResolution(service)
-    mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'FileManager')
-        return { createInternalEntry: vi.fn(), permanentDelete: vi.fn().mockResolvedValue(undefined) }
-      if (name === 'JobManager') {
-        return {
-          enqueueTx: () => ({
-            id: 'job-1',
-            snapshot: {},
-            finished: Promise.resolve({ status: 'failed', output: null, error: { message: 'vendor exploded' } })
-          }),
-          cancel: vi.fn()
-        }
-      }
-      if (name === 'DbService')
-        return { withWriteTx: (fn: any) => fn({ insert: () => ({ values: () => ({ run: vi.fn() }) }) }) }
-      return undefined
-    })
-
-    await expect(
-      service.generateImage({
-        uniqueModelId: 'ppio::qwen-image',
-        prompt: 'a cat',
-        paramValues: {},
-        cleanupPolicy: 'delete_when_unreferenced'
-      })
-    ).rejects.toThrow('vendor exploded')
-  })
-
-  it('cancels the job and throws AbortError when the request is aborted', async () => {
-    const service = createService()
-    stubResolution(service)
-    const controller = new AbortController()
-    controller.abort()
-    const cancel = vi.fn().mockResolvedValue({ outcome: 'cancelled' })
-    mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'FileManager')
-        return { createInternalEntry: vi.fn(), permanentDelete: vi.fn().mockResolvedValue(undefined) }
-      if (name === 'JobManager') {
-        return {
-          enqueueTx: () => ({
-            id: 'job-1',
-            snapshot: {},
-            finished: Promise.resolve({ status: 'cancelled', output: null, error: null })
-          }),
-          cancel
-        }
-      }
-      if (name === 'DbService')
-        return { withWriteTx: (fn: any) => fn({ insert: () => ({ values: () => ({ run: vi.fn() }) }) }) }
-      return undefined
-    })
-
-    await expect(
-      service.generateImage({
-        uniqueModelId: 'ppio::qwen-image',
-        cleanupPolicy: 'delete_when_unreferenced',
-        prompt: 'a cat',
-        paramValues: {},
-        requestOptions: { signal: controller.signal }
-      })
-    ).rejects.toThrow(/abort/i)
-    expect(cancel).toHaveBeenCalledWith('job-1', expect.any(String))
-  })
-
-  it('enqueues the job, returns its output files, and classifies the temp input copy for GC reclaim', async () => {
-    const service = createService()
-    stubResolution(service)
-
-    // Distinct ids per create so the input and mask rows are told apart below.
-    const createInternalEntry = vi.fn().mockResolvedValueOnce({ id: 'in-1' }).mockResolvedValueOnce({ id: 'mask-1' })
-    const outputFiles = [{ id: 'out-1', origin: 'internal', ext: 'png', name: 'img', size: 3, createdAt: 0 }]
-    const enqueue = vi.fn().mockReturnValue({
-      id: 'job-1',
-      snapshot: {},
-      finished: Promise.resolve({ status: 'completed', output: { files: outputFiles }, error: null })
-    })
-    const tx = {}
-    mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'FileManager') return { createInternalEntry }
-      if (name === 'JobManager') return { enqueue, enqueueTx: (...a: any[]) => enqueue(...a.slice(1)), cancel: vi.fn() }
-      if (name === 'DbService') return { withWriteTx: (fn: any) => fn(tx) }
-      return undefined
-    })
-
-    const result = await service.generateImage({
-      uniqueModelId: 'ppio::qwen-image',
-      // Carries the assistant so the payload's `source` snapshot resolves — the
-      // job path must still attribute usage to its caller.
-      assistantId: 'assistant-1',
-      prompt: 'a cat',
-      paramValues: {},
-      inputImages: ['data:image/png;base64,AAAA'],
-      mask: 'data:image/png;base64,BBBB',
-      cleanupPolicy: 'delete_when_unreferenced',
-      requestOptions: { signal: new AbortController().signal }
-    })
-
-    expect(enqueue).toHaveBeenCalledWith(
-      'image-generation.generate',
-      expect.objectContaining({
-        uniqueModelId: 'ppio::qwen-image',
-        prompt: 'a cat',
-        inputFileIds: ['in-1'],
-        maskFileId: 'mask-1',
-        source: { type: 'assistant', id: 'assistant-1', name: 'Image Assistant', icon: '🎨' }
-      })
-    )
-    expect(result).toEqual({ files: outputFiles })
-    // No FileManager ref holds the temp input copy — it must be classified
-    // 'delete_when_unreferenced' so the cleanup pass reclaims it instead of
-    // relying on an ad-hoc delete.
-    expect(createInternalEntry).toHaveBeenCalledWith(
-      expect.objectContaining({ cleanupPolicy: 'delete_when_unreferenced' })
-    )
-    // AiService owns the image job's scratch-input resource semantics. It uses
-    // the handle id returned by enqueueTx and writes both roles through
-    // JobService in the exact same transaction.
-    expect(mockAddFileRefsTx).toHaveBeenCalledWith(tx, [
-      { fileEntryId: 'in-1', sourceId: 'job-1', role: 'input' },
-      { fileEntryId: 'mask-1', sourceId: 'job-1', role: 'mask' }
-    ])
-  })
-
-  it('never stamps the caller output policy on the temp input / mask copies', async () => {
-    // Regression: the builtin chat tool sends cleanupPolicy 'manual' for its *outputs*
-    // (they carry no ref yet — #17169). That must not reach the job's input/mask scratch
-    // copies: a zero-ref 'manual' entry is skipped by findCleanupCandidates and only
-    // reported (never deleted) by the orphan sweep, so pruning the job row would strand
-    // one copy per generation forever.
-    const service = createService()
-    stubResolution(service)
-
-    const createInternalEntry = vi.fn().mockResolvedValue({ id: 'in-1' })
-    const enqueue = vi.fn().mockReturnValue({
-      id: 'job-1',
-      snapshot: {},
-      finished: Promise.resolve({ status: 'completed', output: { files: [] }, error: null })
-    })
-    mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'FileManager') return { createInternalEntry }
-      if (name === 'JobManager') return { enqueue, enqueueTx: (...a: any[]) => enqueue(...a.slice(1)), cancel: vi.fn() }
-      if (name === 'DbService')
-        return { withWriteTx: (fn: any) => fn({ insert: () => ({ values: () => ({ run: vi.fn() }) }) }) }
-      return undefined
-    })
-
-    await service.generateImage({
-      uniqueModelId: 'ppio::qwen-image',
-      prompt: 'edit',
-      paramValues: {},
-      inputImages: ['data:image/png;base64,AAAA'],
-      mask: 'data:image/png;base64,BBBB',
-      cleanupPolicy: 'manual'
-    })
-
-    // Both scratch copies (input + mask) stay reclaimable once the job row is pruned.
-    expect(createInternalEntry).toHaveBeenCalledTimes(2)
-    for (const [params] of createInternalEntry.mock.calls) {
-      expect(params).toMatchObject({ cleanupPolicy: 'delete_when_unreferenced' })
-    }
-    // The caller's policy still governs the outputs the handler persists.
-    expect(enqueue).toHaveBeenCalledWith(
-      'image-generation.generate',
-      expect.objectContaining({ cleanupPolicy: 'manual' })
-    )
-  })
-
-  it('cleans up already-created temp input entries when setup fails before enqueue', async () => {
-    const service = createService()
-    stubResolution(service)
-    const permanentDelete = vi.fn().mockResolvedValue(undefined)
-    mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'FileManager') {
-        return { createInternalEntry: vi.fn().mockResolvedValue({ id: 'in-1' }), permanentDelete }
-      }
-      // enqueueTx fails after the temp input entry was already created → the entry is in
-      // no payload, so generateImageViaJob's setup catch must delete it.
-      if (name === 'JobManager')
-        return {
-          enqueueTx: () => {
-            throw new Error('enqueue boom')
-          },
-          cancel: vi.fn()
-        }
-      if (name === 'DbService')
-        return { withWriteTx: (fn: any) => fn({ insert: () => ({ values: () => ({ run: vi.fn() }) }) }) }
-      return undefined
-    })
-
-    await expect(
-      service.generateImage({
-        uniqueModelId: 'ppio::qwen-image',
-        cleanupPolicy: 'delete_when_unreferenced',
-        prompt: 'edit',
-        paramValues: {},
-        inputImages: ['data:image/png;base64,AAAA']
-      }),
-      expect.anything()
-    ).rejects.toThrow('enqueue boom')
-    expect(permanentDelete).toHaveBeenCalledWith('in-1')
-  })
-
-  it('reclaims the temp inputs when registering the job refs fails', async () => {
-    const service = createService()
-    stubResolution(service)
-    const permanentDelete = vi.fn().mockResolvedValue(undefined)
-    const enqueueTx = vi.fn().mockReturnValue({
-      id: 'job-1',
-      snapshot: {},
-      finished: new Promise(() => {})
-    })
-    mockAddFileRefsTx.mockImplementationOnce(() => {
-      throw new Error('ref insert boom')
-    })
-    // AiService composes the ref write with enqueueTx inside withWriteTx. If
-    // the resource-owner write fails, the transaction throws and the setup
-    // catch must reclaim the scratch copy created before the transaction.
-    mockApplicationGet.mockImplementation((name: string) => {
-      if (name === 'FileManager')
-        return { createInternalEntry: vi.fn().mockResolvedValue({ id: 'in-1' }), permanentDelete }
-      if (name === 'JobManager') return { enqueueTx, cancel: vi.fn() }
-      if (name === 'DbService') return { withWriteTx: (fn: any) => fn({}) }
-      return undefined
-    })
-
-    await expect(
-      service.generateImage({
-        uniqueModelId: 'ppio::qwen-image',
-        prompt: 'edit',
-        paramValues: {},
-        inputImages: ['data:image/png;base64,AAAA'],
-        cleanupPolicy: 'delete_when_unreferenced'
-      })
-    ).rejects.toThrow('ref insert boom')
-    expect(permanentDelete).toHaveBeenCalledWith('in-1')
   })
 })
 

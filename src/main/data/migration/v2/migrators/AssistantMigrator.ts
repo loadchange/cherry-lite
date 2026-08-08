@@ -4,9 +4,8 @@
  */
 
 import { assistantTable } from '@data/db/schemas/assistant'
-import { assistantKnowledgeBaseTable, assistantMcpServerTable } from '@data/db/schemas/assistantRelations'
+import { assistantMcpServerTable } from '@data/db/schemas/assistantRelations'
 import { groupTable } from '@data/db/schemas/group'
-import { knowledgeBaseTable } from '@data/db/schemas/knowledge'
 import { userModelTable } from '@data/db/schemas/userModel'
 import { loggerService } from '@logger'
 import type { ExecuteResult, PrepareResult, ValidateResult } from '@shared/data/migration/v2/types'
@@ -16,7 +15,6 @@ import { v4 as uuidv4 } from 'uuid'
 import type { MigrationContext } from '../core/MigrationContext'
 import { assignOrderKeysInSequence } from '../utils/orderKey'
 import { BaseMigrator } from './BaseMigrator'
-import { KNOWLEDGE_BASE_ID_REMAP_SHARED_DATA_KEY } from './KnowledgeMigrator'
 import { type AssistantTransformResult, type OldAssistant, transformAssistant } from './mappings/AssistantMappings'
 import { resolveModelReference } from './transformers/ModelTransformers'
 
@@ -80,7 +78,6 @@ export function mergeOldAssistants(primary: OldAssistant, secondary: OldAssistan
     settings: mergedSettings,
     mcpMode: pickPrimaryThen('mcpMode'),
     mcpServers: pickPrimaryThen('mcpServers'),
-    knowledge_bases: pickPrimaryThen('knowledge_bases'),
     enableWebSearch: pickPrimaryThen('enableWebSearch'),
     tags: pickPrimaryThen('tags')
   }
@@ -101,7 +98,6 @@ const _MERGE_RULES_COVERED = {
   settings: 'shallowMerge',
   mcpMode: 'pickPrimary',
   mcpServers: 'pickPrimary',
-  knowledge_bases: 'pickPrimary',
   enableWebSearch: 'pickPrimary',
   tags: 'pickPrimary'
 } as const satisfies Record<keyof OldAssistant, 'identity' | 'pickPrimary' | 'shallowMerge'>
@@ -336,59 +332,11 @@ export class AssistantMigrator extends BaseMigrator {
         if (droppedAssistantModelRefs > 0) {
           logger.info(`Filtered ${droppedAssistantModelRefs} dangling assistant model references`)
         }
-
-        // Translate, then filter, knowledge_base references. v1 stores assistant.knowledge_bases[]
-        // with the legacy Redux base id, but KnowledgeMigrator (order 1.8, runs BEFORE this migrator)
-        // re-creates every base under a fresh uuid and publishes the legacy→new id map to sharedData.
-        // Translate each junction row to the new id before filtering — without this, every row carries
-        // a legacy id that never matches the new-uuid set below, so the association is silently
-        // dropped. A legacy id absent from the map points at a base KnowledgeMigrator deleted/skipped,
-        // so it stays unmapped and is dropped here (inserting it would violate the FK on
-        // assistant_knowledge_base.knowledge_base_id).
-        const knowledgeBaseIdRemapRaw = ctx.sharedData.get(KNOWLEDGE_BASE_ID_REMAP_SHARED_DATA_KEY)
-        const knowledgeBaseIdRemap =
-          knowledgeBaseIdRemapRaw instanceof Map
-            ? (knowledgeBaseIdRemapRaw as Map<string, string>)
-            : new Map<string, string>()
-        const allKnowledgeBaseRows = this.preparedResults.flatMap((r) => r.knowledgeBases)
-        const existingKnowledgeBaseIds = new Set(
-          tx
-            .select({ id: knowledgeBaseTable.id })
-            .from(knowledgeBaseTable)
-            .all()
-            .map((r) => r.id)
-        )
-        const knowledgeBaseRows = allKnowledgeBaseRows
-          .map((row) => {
-            const migratedId = knowledgeBaseIdRemap.get(row.knowledgeBaseId)
-            return migratedId ? { ...row, knowledgeBaseId: migratedId } : row
-          })
-          .filter((row) => {
-            if (existingKnowledgeBaseIds.has(row.knowledgeBaseId)) return true
-            logger.warn(
-              `Dropping dangling assistant_knowledge_base ref: assistant=${row.assistantId}, knowledgeBase=${row.knowledgeBaseId}`
-            )
-            return false
-          })
-        for (let i = 0; i < knowledgeBaseRows.length; i += BATCH_SIZE) {
-          tx.insert(assistantKnowledgeBaseTable)
-            .values(knowledgeBaseRows.slice(i, i + BATCH_SIZE))
-            .run()
-        }
-        if (allKnowledgeBaseRows.length !== knowledgeBaseRows.length) {
-          logger.info(
-            `Filtered ${allKnowledgeBaseRows.length - knowledgeBaseRows.length} dangling knowledge_base references`
-          )
-        }
       })
 
       // Self-check FK integrity for the tables that should be fully resolved by now:
       // assistant.modelId is sanitized, assistant.groupId points at groups inserted in the
       // same transaction, and assistant_mcp_server.mcpServerId points at rows McpServerMigrator
-      // (order 1.5) already inserted. assistant_knowledge_base is intentionally EXCLUDED — KnowledgeMigrator
-      // (order 1.8) already created its bases and we just remapped each junction row's knowledgeBaseId
-      // legacy→new and dropped any unmapped ref above, so the engine's final verifyForeignKeys() is
-      // the single source of truth for them.
       this.assertOwnedForeignKeys(ctx.db, [groupTable, assistantTable, assistantMcpServerTable])
 
       // FK whitelist for ChatMigrator. v2 has no system-reserved 'default' row,

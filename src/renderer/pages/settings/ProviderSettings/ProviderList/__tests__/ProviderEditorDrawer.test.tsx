@@ -384,7 +384,7 @@ describe('ProviderEditorDrawer', () => {
     })
   })
 
-  it('uses a dialog for create and duplicate flows while keeping edit in the drawer', () => {
+  it('uses a dialog for the create-custom flow while keeping edit in the drawer', () => {
     const commonProps = {
       open: true,
       initialLogo: undefined,
@@ -398,17 +398,6 @@ describe('ProviderEditorDrawer', () => {
     expect(screen.getByTestId('provider-editor-dialog')).toHaveAttribute('data-size', 'lg')
     expect(screen.getByTestId('provider-editor-scrollbar')).toHaveAttribute('data-slot', 'scrollbar')
     expect(screen.queryByTestId('provider-editor-drawer')).not.toBeInTheDocument()
-
-    const source = {
-      id: 'openai',
-      name: 'OpenAI',
-      presetProviderId: 'openai',
-      defaultChatEndpoint: 'openai-chat-completions',
-      authType: 'api-key'
-    } as any
-    rerender(<ProviderEditorDrawer {...commonProps} mode={{ kind: 'duplicate', source }} />)
-    expect(screen.getByTestId('provider-editor-dialog')).toBeInTheDocument()
-    expect(screen.getByTestId('provider-editor-dialog')).toHaveAttribute('data-size', 'lg')
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
     expect(screen.getByLabelText('settings.provider.more_endpoints.openai_chat')).toBeInTheDocument()
     expect(screen.getByLabelText('settings.provider.more_endpoints.anthropic')).toBeInTheDocument()
@@ -429,9 +418,12 @@ describe('ProviderEditorDrawer', () => {
     )
     expect(screen.getByTestId('provider-editor-drawer')).toBeInTheDocument()
     expect(screen.queryByTestId('provider-editor-dialog')).not.toBeInTheDocument()
+    // Edit mode never exposes the creation-only auth / endpoint fields.
+    expect(screen.queryByLabelText('settings.provider.api_key.label')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('settings.provider.more_endpoints.openai_chat')).not.toBeInTheDocument()
   })
 
-  it('submits a Chat Completions endpoint without assigning a preset', () => {
+  it('submits a Chat Completions endpoint and omits apiKeys when no API key is entered', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined)
     render(
       <ProviderEditorDrawer
@@ -456,14 +448,16 @@ describe('ProviderEditorDrawer', () => {
 
     expect(onSubmit).toHaveBeenCalledWith(
       expect.objectContaining({
+        mode: 'create',
         name: 'My Custom',
         defaultChatEndpoint: 'openai-chat-completions',
         authConfig: { type: 'api-key' },
         endpointConfigs: { 'openai-chat-completions': { baseUrl: 'https://api.example.com' } }
       })
     )
-    const callArg = onSubmit.mock.calls[0]?.[0] as { presetProviderId?: string } | undefined
-    expect(callArg?.presetProviderId).toBeUndefined()
+    const callArg = onSubmit.mock.calls[0]?.[0] as { apiKeys?: unknown; logo?: unknown } | undefined
+    expect(callArg?.apiKeys).toBeUndefined()
+    expect(callArg?.logo).toBeUndefined()
   })
 
   it('uses the first configured common text endpoint as the default', () => {
@@ -497,23 +491,13 @@ describe('ProviderEditorDrawer', () => {
     )
   })
 
-  it('shows common endpoints first and keeps the optional preset last inside More options', () => {
-    const source = {
-      id: 'anthropic',
-      name: 'Anthropic',
-      presetProviderId: 'anthropic',
-      defaultChatEndpoint: 'anthropic-messages',
-      endpointConfigs: { 'anthropic-messages': { baseUrl: 'https://api.anthropic.com' } },
-      authType: 'api-key'
-    } as any
+  it('shows common endpoints first and keeps advanced endpoints inside More options', () => {
     render(
       <ProviderEditorDrawer
         open
         mode={{ kind: 'create-custom' }}
         initialLogo={undefined}
-        presetSources={[source]}
         onClose={vi.fn()}
-        onSelectPreset={vi.fn()}
         onSubmit={vi.fn()}
       />
     )
@@ -540,21 +524,18 @@ describe('ProviderEditorDrawer', () => {
     expect(moreTrigger).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByLabelText('settings.provider.more_endpoints.openai_responses')).not.toBeInTheDocument()
     expect(
-      screen.queryByRole('combobox', {
-        name: 'settings.provider.create_custom.preset_instance.placeholder'
-      })
+      screen.queryByLabelText('settings.provider.image_endpoints.image_edit_base_url.label')
     ).not.toBeInTheDocument()
 
     toggleMoreSettings()
 
-    const presetPicker = screen.getByRole('combobox', {
-      name: 'settings.provider.create_custom.preset_instance.placeholder'
-    })
     const responsesInput = screen.getByLabelText('settings.provider.more_endpoints.openai_responses')
+    const geminiInput = screen.getByLabelText('settings.provider.more_endpoints.gemini')
     const imageEditInput = screen.getByLabelText('settings.provider.image_endpoints.image_edit_base_url.label')
     expect(moreTrigger).toHaveAttribute('aria-expanded', 'true')
     expect(moreTrigger.compareDocumentPosition(responsesInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    expect(imageEditInput.compareDocumentPosition(presetPicker) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(responsesInput.compareDocumentPosition(geminiInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(geminiInput.compareDocumentPosition(imageEditInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(screen.queryByText('settings.provider.create_custom.compatibility.label')).not.toBeInTheDocument()
   })
 
@@ -685,39 +666,17 @@ describe('ProviderEditorDrawer', () => {
     )
   })
 
-  it('switches to a preset instance while preserving identity and basic connection fields', () => {
-    const onSelectPreset = vi.fn()
+  it('submits the full create payload with the API key and the picked logo', () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined)
-    const source = {
-      id: 'anthropic',
-      name: 'Anthropic',
-      presetProviderId: 'anthropic',
-      defaultChatEndpoint: 'anthropic-messages',
-      endpointConfigs: {
-        'anthropic-messages': { baseUrl: 'https://api.anthropic.com' }
-      },
-      authType: 'api-key'
-    } as any
-    const secondSource = {
-      id: 'openai',
-      name: 'OpenAI',
-      presetProviderId: 'openai',
-      defaultChatEndpoint: 'openai-chat-completions',
-      endpointConfigs: {
-        'openai-chat-completions': { baseUrl: 'https://api.openai.com' }
-      },
-      authType: 'api-key'
-    } as any
-    const sharedProps = {
-      open: true,
-      initialLogo: undefined,
-      presetSources: [source, secondSource],
-      onClose: vi.fn(),
-      onSelectPreset,
-      onSubmit
-    }
-
-    const { rerender } = render(<ProviderEditorDrawer {...sharedProps} mode={{ kind: 'create-custom' }} />)
+    render(
+      <ProviderEditorDrawer
+        open
+        mode={{ kind: 'create-custom' }}
+        initialLogo={undefined}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+      />
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'pick-openai' }))
     fireEvent.change(screen.getByPlaceholderText('settings.provider.add.name.placeholder'), {
@@ -729,58 +688,17 @@ describe('ProviderEditorDrawer', () => {
     fireEvent.change(screen.getByLabelText('settings.provider.api_key.label'), {
       target: { value: 'secret' }
     })
-    toggleMoreSettings()
-    fireEvent.change(
-      screen.getByRole('combobox', {
-        name: 'settings.provider.create_custom.preset_instance.placeholder'
-      }),
-      { target: { value: 'anthropic' } }
-    )
 
-    expect(onSelectPreset).toHaveBeenCalledWith(source)
-
-    rerender(<ProviderEditorDrawer {...sharedProps} mode={{ kind: 'duplicate', source }} />)
-
-    const nameInput = screen.getByPlaceholderText('settings.provider.add.name.placeholder')
-    expect(nameInput).toHaveValue('Claude Gateway')
-    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('settings.provider.more_endpoints.openai_chat')).toBeInTheDocument()
-    expect(screen.getByLabelText('settings.provider.more_endpoints.anthropic')).toHaveValue(
-      'https://gateway.example.com'
-    )
-    expect(
-      screen.queryByRole('button', { name: 'settings.provider.create_custom.endpoint_fields.set_default_chat' })
-    ).not.toBeInTheDocument()
-    expect(screen.getByLabelText('settings.provider.more_endpoints.openai_responses')).toBeInTheDocument()
-    expect(screen.getByLabelText('settings.provider.api_key.label')).toHaveValue('secret')
     expect(mocks.providerAvatarPrimitive).toHaveBeenCalledWith(
       expect.objectContaining({ logo: 'icon:openai', providerName: 'Claude Gateway' })
     )
-    const presetPicker = screen.getByRole('combobox', {
-      name: 'settings.provider.create_custom.preset_instance.placeholder'
-    })
-    expect(presetPicker).toHaveValue('anthropic')
-    expect(screen.getAllByText('anthropic')).toHaveLength(1)
-    fireEvent.change(presetPicker, { target: { value: 'openai' } })
-    expect(onSelectPreset).toHaveBeenLastCalledWith(secondSource)
 
-    rerender(<ProviderEditorDrawer {...sharedProps} mode={{ kind: 'duplicate', source: secondSource }} />)
-    expect(
-      screen.getByRole('combobox', {
-        name: 'settings.provider.create_custom.preset_instance.placeholder'
-      })
-    ).toHaveValue('openai')
-    expect(screen.getByLabelText('settings.provider.more_endpoints.openai_chat')).toHaveValue(
-      'https://gateway.example.com'
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: 'settings.provider.duplicate.menu_label' }))
+    fireEvent.click(screen.getByRole('button', { name: 'button.add' }))
 
     expect(onSubmit).toHaveBeenCalledWith({
       mode: 'create',
       name: 'Claude Gateway',
       defaultChatEndpoint: 'openai-chat-completions',
-      presetProviderId: 'openai',
       authConfig: { type: 'api-key' },
       endpointConfigs: {
         'openai-chat-completions': { baseUrl: 'https://gateway.example.com' }
@@ -790,356 +708,50 @@ describe('ProviderEditorDrawer', () => {
     })
   })
 
-  it('uses a duplicate-specific submit label when mode is duplicate', () => {
+  it('masks the API key by default and reveals it on demand', () => {
     render(
       <ProviderEditorDrawer
         open
-        mode={{
-          kind: 'duplicate',
-          source: {
-            id: 'openai-2',
-            name: 'OpenAI Personal',
-            presetProviderId: 'openai',
-            defaultChatEndpoint: 'openai-chat-completions',
-            authType: 'api-key'
-          } as any
-        }}
+        mode={{ kind: 'create-custom' }}
         initialLogo={undefined}
         onClose={vi.fn()}
         onSubmit={vi.fn()}
       />
     )
 
-    expect(screen.getByRole('button', { name: 'settings.provider.duplicate.menu_label' })).toBeInTheDocument()
-    expect(screen.getByText('openai')).toBeInTheDocument()
+    const apiKeyInput = screen.getByLabelText('settings.provider.api_key.label')
+    expect(apiKeyInput).toHaveAttribute('type', 'password')
+
+    fireEvent.click(screen.getByRole('button', { name: 'settings.provider.api_key.show_key' }))
+    expect(screen.getByLabelText('settings.provider.api_key.label')).toHaveAttribute('type', 'text')
+
+    fireEvent.click(screen.getByRole('button', { name: 'settings.provider.api_key.hide_key' }))
+    expect(screen.getByLabelText('settings.provider.api_key.label')).toHaveAttribute('type', 'password')
   })
 
-  it.each([
-    {
-      name: 'OpenAI Responses',
-      presetProviderId: 'openai',
-      defaultChatEndpoint: 'openai-responses',
-      label: 'settings.provider.more_endpoints.openai_responses',
-      baseUrl: 'https://responses.example.com'
-    },
-    {
-      name: 'Gemini',
-      presetProviderId: 'gemini',
-      defaultChatEndpoint: 'google-generate-content',
-      label: 'settings.provider.more_endpoints.gemini',
-      baseUrl: 'https://gemini.example.com'
-    }
-  ] as const)(
-    'puts the $name preset default endpoint first and submits its URL as the primary route',
-    ({ name, presetProviderId, defaultChatEndpoint, label, baseUrl }) => {
-      const onSubmit = vi.fn().mockResolvedValue(undefined)
-      render(
-        <ProviderEditorDrawer
-          open
-          mode={{
-            kind: 'duplicate',
-            source: {
-              id: presetProviderId,
-              name,
-              presetProviderId,
-              defaultChatEndpoint,
-              authType: 'api-key'
-            } as any
-          }}
-          initialLogo={undefined}
-          onClose={vi.fn()}
-          onSubmit={onSubmit}
-        />
-      )
-
-      const primaryInput = screen.getByLabelText(label)
-      const chatInput = screen.getByLabelText('settings.provider.more_endpoints.openai_chat')
-      const defaultBadge = screen.getByText('settings.provider.create_custom.endpoint_fields.default_chat')
-      expect(primaryInput.compareDocumentPosition(chatInput) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-      expect(primaryInput.previousElementSibling).toContainElement(defaultBadge)
-
-      fireEvent.change(screen.getByPlaceholderText('settings.provider.add.name.placeholder'), {
-        target: { value: `${name} Instance` }
-      })
-      fireEvent.change(primaryInput, { target: { value: baseUrl } })
-      toggleMoreSettings()
-      expect(screen.getAllByLabelText(label)).toHaveLength(1)
-      fireEvent.click(screen.getByRole('button', { name: 'settings.provider.duplicate.menu_label' }))
-
-      expect(onSubmit).toHaveBeenCalledWith(
-        expect.objectContaining({
-          defaultChatEndpoint,
-          presetProviderId,
-          endpointConfigs: {
-            [defaultChatEndpoint]: { baseUrl }
-          }
-        })
-      )
-    }
-  )
-
-  it('fans one Base URL out to all canonical text endpoints for a New API preset instance', () => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined)
-    render(
-      <ProviderEditorDrawer
-        open
-        mode={{
-          kind: 'duplicate',
-          source: {
-            id: 'new-api',
-            name: 'New API',
-            presetProviderId: 'new-api',
-            authType: 'api-key',
-            endpointConfigs: {
-              'openai-chat-completions': { baseUrl: 'http://localhost:3000' },
-              'openai-responses': { baseUrl: 'http://localhost:3000' },
-              'anthropic-messages': { baseUrl: 'http://localhost:3000' },
-              'google-generate-content': { baseUrl: 'http://localhost:3000' }
-            }
-          } as any
-        }}
-        initialLogo={undefined}
-        onClose={vi.fn()}
-        onSubmit={onSubmit}
-      />
-    )
-
-    fireEvent.change(screen.getByPlaceholderText('settings.provider.add.name.placeholder'), {
-      target: { value: 'New API Work' }
-    })
-    fireEvent.change(screen.getByLabelText('settings.provider.more_endpoints.openai_chat'), {
-      target: { value: 'https://new-api.example.com' }
-    })
-    toggleMoreSettings()
-    expect(screen.getByLabelText('settings.provider.more_endpoints.openai_responses')).toHaveValue(
-      'https://new-api.example.com'
-    )
-    fireEvent.change(screen.getByLabelText('settings.provider.more_endpoints.openai_responses'), {
-      target: { value: 'https://responses.example.com' }
-    })
-    fireEvent.change(screen.getByLabelText('settings.provider.image_endpoints.image_generation_base_url.label'), {
-      target: { value: 'https://images.example.com' }
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'settings.provider.duplicate.menu_label' }))
-
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        presetProviderId: 'new-api',
-        defaultChatEndpoint: 'openai-chat-completions',
-        endpointConfigs: {
-          'openai-chat-completions': { baseUrl: 'https://new-api.example.com' },
-          'openai-responses': { baseUrl: 'https://responses.example.com' },
-          'anthropic-messages': { baseUrl: 'https://new-api.example.com' },
-          'google-generate-content': { baseUrl: 'https://new-api.example.com' },
-          'openai-image-generation': { baseUrl: 'https://images.example.com' }
-        }
-      })
-    )
-  })
-
-  it('validates configured duplicate endpoints and reveals an invalid advanced field', () => {
+  it('calls onClose from Cancel without submitting', () => {
+    const onClose = vi.fn()
     const onSubmit = vi.fn()
     render(
       <ProviderEditorDrawer
         open
-        mode={{
-          kind: 'duplicate',
-          source: {
-            id: 'openai',
-            name: 'OpenAI',
-            presetProviderId: 'openai',
-            defaultChatEndpoint: 'openai-chat-completions',
-            authType: 'api-key'
-          } as any
-        }}
+        mode={{ kind: 'create-custom' }}
         initialLogo={undefined}
-        onClose={vi.fn()}
+        onClose={onClose}
         onSubmit={onSubmit}
       />
     )
 
     fireEvent.change(screen.getByPlaceholderText('settings.provider.add.name.placeholder'), {
-      target: { value: 'Invalid Responses' }
+      target: { value: 'Abandoned' }
     })
-    toggleMoreSettings()
-    fireEvent.change(screen.getByLabelText('settings.provider.more_endpoints.openai_responses'), {
-      target: { value: 'not-a-url' }
-    })
-    toggleMoreSettings()
-    fireEvent.click(screen.getByRole('button', { name: 'settings.provider.duplicate.menu_label' }))
+    fireEvent.click(screen.getByRole('button', { name: 'common.cancel' }))
 
-    const responsesInput = screen.getByLabelText('settings.provider.more_endpoints.openai_responses')
+    expect(onClose).toHaveBeenCalledTimes(1)
     expect(onSubmit).not.toHaveBeenCalled()
-    expect(
-      screen.getByRole('button', {
-        name: /settings\.provider\.create_custom\.endpoint_fields\.more/
-      })
-    ).toHaveAttribute('aria-expanded', 'true')
-    expect(responsesInput).toHaveAttribute('aria-invalid', 'true')
-    expect(responsesInput.parentElement).toContainElement(screen.getByText('settings.provider.base_url.invalid'))
-
-    fireEvent.change(responsesInput, { target: { value: 'https://responses.example.com' } })
-    expect(responsesInput).toHaveAttribute('aria-invalid', 'false')
   })
 
-  it('reveals an invalid Anthropic field when Responses is the duplicate default endpoint', () => {
-    const onSubmit = vi.fn()
-    render(
-      <ProviderEditorDrawer
-        open
-        mode={{
-          kind: 'duplicate',
-          source: {
-            id: 'openai',
-            name: 'OpenAI',
-            presetProviderId: 'openai',
-            defaultChatEndpoint: 'openai-responses',
-            authType: 'api-key'
-          } as any
-        }}
-        initialLogo={undefined}
-        onClose={vi.fn()}
-        onSubmit={onSubmit}
-      />
-    )
-
-    fireEvent.change(screen.getByPlaceholderText('settings.provider.add.name.placeholder'), {
-      target: { value: 'Invalid Anthropic' }
-    })
-    toggleMoreSettings()
-    fireEvent.change(screen.getByLabelText('settings.provider.more_endpoints.anthropic'), {
-      target: { value: 'not-a-url' }
-    })
-    toggleMoreSettings()
-    fireEvent.click(screen.getByRole('button', { name: 'settings.provider.duplicate.menu_label' }))
-
-    const anthropicInput = screen.getByLabelText('settings.provider.more_endpoints.anthropic')
-    expect(onSubmit).not.toHaveBeenCalled()
-    expect(
-      screen.getByRole('button', {
-        name: /settings\.provider\.create_custom\.endpoint_fields\.more/
-      })
-    ).toHaveAttribute('aria-expanded', 'true')
-    expect(anthropicInput).toHaveAttribute('aria-invalid', 'true')
-    expect(anthropicInput.parentElement).toContainElement(screen.getByText('settings.provider.base_url.invalid'))
-  })
-
-  it('duplicate of an iam-azure source: keeps source defaultChatEndpoint + iam-azure auth, URL-keyed off it', () => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined)
-    render(
-      <ProviderEditorDrawer
-        open
-        mode={{
-          kind: 'duplicate',
-          source: {
-            id: 'azure-1',
-            name: 'Azure 1',
-            presetProviderId: 'azure-openai',
-            defaultChatEndpoint: 'azure-openai-chat-completions',
-            authType: 'iam-azure'
-          } as any
-        }}
-        initialLogo={undefined}
-        onClose={vi.fn()}
-        onSubmit={onSubmit}
-      />
-    )
-
-    fireEvent.change(screen.getByPlaceholderText('settings.provider.add.name.placeholder'), {
-      target: { value: 'Azure 2' }
-    })
-    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
-    fireEvent.change(screen.getByPlaceholderText('settings.provider.base_url.placeholder'), {
-      target: { value: 'https://az.example.com' }
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'settings.provider.duplicate.menu_label' }))
-
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        mode: 'create',
-        name: 'Azure 2',
-        defaultChatEndpoint: 'azure-openai-chat-completions',
-        presetProviderId: 'azure-openai',
-        authConfig: { type: 'iam-azure', apiVersion: '' },
-        endpointConfigs: { 'azure-openai-chat-completions': { baseUrl: 'https://az.example.com' } }
-      })
-    )
-  })
-
-  it('duplicate of an iam-aws source: no URL/api-key fields, region-bearing auth, source endpoint', () => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined)
-    render(
-      <ProviderEditorDrawer
-        open
-        mode={{
-          kind: 'duplicate',
-          source: {
-            id: 'aws-bedrock',
-            name: 'Bedrock',
-            presetProviderId: 'aws-bedrock',
-            defaultChatEndpoint: 'anthropic-messages',
-            authType: 'iam-aws'
-          } as any
-        }}
-        initialLogo={undefined}
-        onClose={vi.fn()}
-        onSubmit={onSubmit}
-      />
-    )
-
-    expect(screen.queryByPlaceholderText('settings.provider.base_url.placeholder')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('settings.provider.api_key.label')).not.toBeInTheDocument()
-    expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
-    fireEvent.change(screen.getByPlaceholderText('settings.provider.add.name.placeholder'), {
-      target: { value: 'Bedrock 2' }
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'settings.provider.duplicate.menu_label' }))
-
-    const payload = onSubmit.mock.calls[0]?.[0] as Record<string, unknown>
-    expect(payload).toMatchObject({
-      mode: 'create',
-      name: 'Bedrock 2',
-      defaultChatEndpoint: 'anthropic-messages',
-      presetProviderId: 'aws-bedrock',
-      authConfig: { type: 'iam-aws', region: '' }
-    })
-    expect(payload.endpointConfigs).toBeUndefined()
-    expect(payload.apiKeys).toBeUndefined()
-  })
-
-  it('duplicate of an api-key-aws source: emptyAuthConfigFor yields region-bearing api-key-aws', () => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined)
-    render(
-      <ProviderEditorDrawer
-        open
-        mode={{
-          kind: 'duplicate',
-          source: {
-            id: 'aws-bedrock',
-            name: 'Bedrock',
-            presetProviderId: 'aws-bedrock',
-            defaultChatEndpoint: 'anthropic-messages',
-            authType: 'api-key-aws'
-          } as any
-        }}
-        initialLogo={undefined}
-        onClose={vi.fn()}
-        onSubmit={onSubmit}
-      />
-    )
-
-    fireEvent.change(screen.getByPlaceholderText('settings.provider.add.name.placeholder'), {
-      target: { value: 'Bedrock 2' }
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'settings.provider.duplicate.menu_label' }))
-
-    expect(onSubmit.mock.calls[0]?.[0]).toMatchObject({
-      mode: 'create',
-      authConfig: { type: 'api-key-aws', region: '' }
-    })
-  })
-
-  it('preserves provider type semantics on edit (defaultChatEndpoint not switched, no presetProviderId leak)', async () => {
+  it('submits only name and the existing defaultChatEndpoint on edit', async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined)
 
     render(
@@ -1150,7 +762,6 @@ describe('ProviderEditorDrawer', () => {
           provider: {
             id: 'openai-work',
             name: 'OpenAI Work',
-            presetProviderId: 'openai',
             defaultChatEndpoint: 'openai-chat-completions'
           } as any
         }}
@@ -1164,15 +775,11 @@ describe('ProviderEditorDrawer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'common.save' }))
 
-    expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'OpenAI Work',
-        defaultChatEndpoint: 'openai-chat-completions'
-      })
-    )
-    const payload = onSubmit.mock.calls[0]?.[0] as { presetProviderId?: string; authConfig?: unknown } | undefined
-    expect(payload?.presetProviderId).toBeUndefined()
-    expect(payload?.authConfig).toBeUndefined()
+    expect(onSubmit).toHaveBeenCalledWith({
+      mode: 'edit',
+      name: 'OpenAI Work',
+      defaultChatEndpoint: 'openai-chat-completions'
+    })
   })
 
   it('shows a required error and does not submit when the name is empty on create-custom', () => {
@@ -1316,30 +923,5 @@ describe('ProviderEditorDrawer', () => {
     const errorNode = document.getElementById(errorId!)
     expect(errorNode).toHaveAttribute('role', 'alert')
     expect(errorNode).toHaveTextContent('settings.provider.add.name.required')
-  })
-
-  it('does not require the base URL in duplicate mode (optional, no error on blur)', () => {
-    render(
-      <ProviderEditorDrawer
-        open
-        mode={{
-          kind: 'duplicate',
-          source: {
-            id: 'openai-2',
-            name: 'OpenAI Personal',
-            presetProviderId: 'openai',
-            defaultChatEndpoint: 'openai-chat-completions',
-            authType: 'api-key'
-          } as any
-        }}
-        initialLogo={undefined}
-        onClose={vi.fn()}
-        onSubmit={vi.fn()}
-      />
-    )
-
-    fireEvent.blur(screen.getByLabelText('settings.provider.more_endpoints.openai_chat'))
-
-    expect(screen.queryByText('settings.provider.base_url.required')).not.toBeInTheDocument()
   })
 })

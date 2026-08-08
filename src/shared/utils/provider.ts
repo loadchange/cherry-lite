@@ -8,7 +8,6 @@ import {
   type ServerToolConfig,
   supportsServerToolFunctionMixing
 } from '@cherrystudio/provider-registry'
-import { CHERRYAI_PROVIDER_ID } from '@shared/data/presets/cherryai'
 import { ENDPOINT_TYPE, type EndpointType, type Model } from '@shared/data/types/model'
 import type { Provider } from '@shared/data/types/provider'
 
@@ -16,8 +15,8 @@ import { getLowerBaseModelName, getRawModelId, isFunctionCallingModel, isGeminiM
 import { getProviderHostTopology } from './providerTopology'
 
 // Azure/Vertex/Bedrock reuse other vendors' endpoint protocols, so authType
-// is the only reliable discriminator (seeded skeletons may lack a distinct
-// defaultChatEndpoint). See presetProviderSeeder.ts.
+// is the only reliable discriminator (a provider row may lack a distinct
+// defaultChatEndpoint).
 export function isVertexProvider(provider: Provider): boolean {
   return provider.authType === 'iam-gcp'
 }
@@ -88,10 +87,6 @@ export function isOpenAICompatibleProvider(provider: Provider): boolean {
 
 export function isPerplexityProvider(provider: Provider): boolean {
   return provider.id === 'perplexity' || provider.presetProviderId === 'perplexity'
-}
-
-export function isCherryAIProvider(provider: Provider): boolean {
-  return provider.id === CHERRYAI_PROVIDER_ID || provider.presetProviderId === CHERRYAI_PROVIDER_ID
 }
 
 export function isNewApiProvider(provider: Provider): boolean {

@@ -108,11 +108,6 @@ describe('ComplexPreferenceMappings', () => {
       })
       expect(onboardingMapping?.transform({ completed: undefined })).toEqual({})
     })
-
-    it('should NOT migrate code_cli (fresh v2 key, v1 throwaway)', () => {
-      const codeToolsMapping = COMPLEX_PREFERENCE_MAPPINGS.find((m) => m.id === 'code_cli_overrides')
-      expect(codeToolsMapping).toBeUndefined()
-    })
   })
 
   describe('getComplexMappingTargetKeys', () => {
@@ -130,8 +125,6 @@ describe('ComplexPreferenceMappings', () => {
       expect(keys).toContain('topic.naming.model_id')
       expect(keys).toContain('feature.quick_assistant.model_id')
       expect(keys).toContain('feature.translate.model_id')
-      expect(keys).toContain('feature.openclaw.gateway_port')
-      expect(keys).toContain('feature.openclaw.selected_model_id')
       expect(keys).toContain('shortcut.app.zoom.in')
       expect(keys).toContain('ui.sidebar.favorites')
       expect(keys).toContain('feature.translate.action.preferred_lang')
@@ -235,49 +228,6 @@ describe('ComplexPreferenceMappings', () => {
       expect(mapping?.transform({})).toEqual({
         'ui.sidebar.favorites': canonicalSidebarFavorites
       })
-    })
-  })
-
-  describe('openclaw_preferences', () => {
-    it('should map gateway port and convert selected model JSON', () => {
-      const mapping = getComplexMappingById('openclaw_preferences')!
-
-      expect(
-        mapping.transform({
-          gatewayPort: 18790,
-          selectedModelUniqId: '{"id":"gpt-4o","provider":"openai"}'
-        })
-      ).toEqual({
-        'feature.openclaw.gateway_port': 18790,
-        'feature.openclaw.selected_model_id': 'openai::gpt-4o'
-      })
-    })
-
-    it.each([
-      ['', null],
-      ['null', null],
-      ['"some-string"', null],
-      ['[{"id":"x","provider":"y"}]', null],
-      ['{"id":"openai::gpt-4","provider":"openai"}', 'openai::gpt-4'],
-      ['openai::gpt-4', null]
-    ])('should handle legacy selected model value %s', (selectedModelUniqId, expected) => {
-      const mapping = getComplexMappingById('openclaw_preferences')!
-
-      expect(
-        mapping.transform({
-          gatewayPort: 18790,
-          selectedModelUniqId
-        })['feature.openclaw.selected_model_id']
-      ).toBe(expected)
-    })
-
-    it('should skip invalid gateway ports so schema default applies', () => {
-      const mapping = getComplexMappingById('openclaw_preferences')!
-
-      expect(mapping.transform({ gatewayPort: undefined })['feature.openclaw.gateway_port']).toBeUndefined()
-      expect(mapping.transform({ gatewayPort: null })['feature.openclaw.gateway_port']).toBeUndefined()
-      expect(mapping.transform({ gatewayPort: '18790' })['feature.openclaw.gateway_port']).toBeUndefined()
-      expect(mapping.transform({ gatewayPort: Number.NaN })['feature.openclaw.gateway_port']).toBeUndefined()
     })
   })
 

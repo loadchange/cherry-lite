@@ -127,8 +127,8 @@ const mockInstallPreferences = (values = DEFAULT_INSTALL_PREFERENCES) => {
 }
 
 describe('binary execution env split', () => {
-  // The shared execution env runs the launched CLIs (claude/codex/gemini/qwen)
-  // and the OpenClaw gateway — it MUST keep the user's real HOME so they find
+  // The shared execution env runs the launched managed binaries — it MUST keep
+  // the user's real HOME so they find
   // their config/creds. HOME/XDG relocation belongs only to the install subprocess.
   it('getBinaryExecutionEnv does not relocate HOME/XDG', () => {
     const env = getBinaryExecutionEnv()
@@ -1700,7 +1700,6 @@ describe('BinaryManager', () => {
 
     it.each([
       [{ name: 'uv', tool: 'github:attacker/uv' }, 'canonical specification'],
-      [{ name: 'codex', tool: 'npm:attacker-codex' }, 'canonical specification'],
       [{ name: 'node', tool: 'npm:attacker-node' }, 'canonical runtime specification'],
       [{ name: 'node-alt', tool: 'core:node' }, 'canonical runtime specification']
     ])('rejects reserved or aliased identities: %j', async (definition, message) => {
@@ -1711,15 +1710,11 @@ describe('BinaryManager', () => {
   })
 
   describe('fixed definition resolution', () => {
-    it('resolves preset and Code CLI definitions from the code-owned catalog', () => {
+    it('resolves preset definitions from the code-owned catalog', () => {
       const service = new BinaryManager()
 
       expect((service as any).resolveFixedDefinition('uv')).toEqual({ name: 'uv', tool: 'uv' })
-      expect((service as any).resolveFixedDefinition('claude')).toEqual({ name: 'claude', tool: 'claude' })
-      expect((service as any).resolveFixedDefinition('gemini')).toEqual({
-        name: 'gemini',
-        tool: 'npm:@google/gemini-cli'
-      })
+      expect((service as any).resolveFixedDefinition('ntn')).toEqual({ name: 'ntn', tool: 'npm:ntn' })
     })
 
     it('returns undefined for a non-fixed name', () => {
@@ -2865,15 +2860,15 @@ describe('BinaryManager', () => {
       ;(service as any).isolatedEnv = {}
       // execFile timeout kill: killed=true, stderr stuck on a progress line.
       mockExecFileAsync.mockRejectedValueOnce(
-        Object.assign(new Error('Command failed: /mock/mise use -g node@22 npm:openclaw@latest'), {
+        Object.assign(new Error('Command failed: /mock/mise use -g node@22 npm:ntn@latest'), {
           killed: true,
           signal: 'SIGTERM',
-          stderr: 'mise npm:openclaw@2026.6.11   [1/3] install\n'
+          stderr: 'mise npm:ntn@1.2.3   [1/3] install\n'
         })
       )
 
       const error = await (service as any)
-        .runMise(['use', '-g', 'node@22', 'npm:openclaw@latest'], { timeoutMs: 0 })
+        .runMise(['use', '-g', 'node@22', 'npm:ntn@latest'], { timeoutMs: 0 })
         .catch((caught: Error) => caught)
       expect(error.message).toContain('mise use timed out after 0s')
       expect(error.message).toContain('[1/3] install')

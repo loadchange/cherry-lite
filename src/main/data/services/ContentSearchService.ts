@@ -1,4 +1,3 @@
-import { agentSessionMessageService } from '@data/services/AgentSessionMessageService'
 import { messageService } from '@data/services/MessageService'
 import { loggerService } from '@logger'
 import { DataApiErrorFactory, ErrorCode, isDataApiError, toDataApiError } from '@shared/data/api/errors'
@@ -75,23 +74,6 @@ export const CONTENT_SEARCH_SOURCE_ADAPTERS = {
         nextCursor: result.nextCursor
       }
     }
-  },
-  'session-message': {
-    search(input) {
-      const result = agentSessionMessageService.search({
-        q: input.q,
-        ...(input.filter?.sessionId ? { sessionId: input.filter.sessionId } : {}),
-        cursor: input.cursor,
-        limit: input.limit,
-        createdAtFrom: input.createdAtFrom
-      })
-
-      return {
-        sourceType: 'session-message',
-        items: result.items,
-        nextCursor: result.nextCursor
-      }
-    }
   }
 } satisfies { [K in ContentSearchSourceType]: ContentSearchSourceAdapter<K> }
 
@@ -110,11 +92,6 @@ function searchContentSource(
 
     switch (sourceType) {
       case 'topic-message':
-        return CONTENT_SEARCH_SOURCE_ADAPTERS[sourceType].search({
-          ...input,
-          filter: query.filters?.[sourceType]
-        })
-      case 'session-message':
         return CONTENT_SEARCH_SOURCE_ADAPTERS[sourceType].search({
           ...input,
           filter: query.filters?.[sourceType]

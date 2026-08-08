@@ -7,7 +7,6 @@ import { startTransition, useCallback, useEffect, useMemo, useRef, useState } fr
 import { useProviderDeepLinkImport } from './hooks/useProviderDeepLinkImport'
 import { ProviderList } from './ProviderList'
 import ProviderSetting from './ProviderSetting'
-import { isProviderSettingsListVisibleProvider } from './utils/providerDisplay'
 
 interface ProviderSettingsPageProps {
   isOnboarding?: boolean
@@ -31,8 +30,7 @@ export default function ProviderSettingsPage({ isOnboarding = false }: ProviderS
   )
   const setLastSelectedProviderIdRef = useRef(setLastSelectedProviderId)
 
-  const providers = useMemo(() => (Array.isArray(rawProviders) ? rawProviders : []), [rawProviders])
-  const visibleProviders = useMemo(() => providers.filter(isProviderSettingsListVisibleProvider), [providers])
+  const visibleProviders = useMemo(() => (Array.isArray(rawProviders) ? rawProviders : []), [rawProviders])
   const filterModeHint = search.filter === 'agent' ? 'agent' : undefined
 
   useEffect(() => {

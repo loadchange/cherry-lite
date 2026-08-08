@@ -82,20 +82,17 @@ describe('ProviderSettingsPage', () => {
     })
   })
 
-  it('does not select CherryAI when it is remembered or requested by URL', async () => {
-    MockUseCacheUtils.setPersistCacheValue('settings.provider.last_selected_provider_id', 'cherryai')
-    searchMock = { id: 'cherryai' }
-    useProvidersMock.mockReturnValue({
-      providers: [{ id: 'cherryai', name: 'CherryAI', isEnabled: true }, ...providers]
-    })
+  it('selects nothing and renders no settings pane when there are no providers', async () => {
+    MockUseCacheUtils.setPersistCacheValue('settings.provider.last_selected_provider_id', 'openai')
+    useProvidersMock.mockReturnValue({ providers: [] })
 
     render(<ProviderSettingsPage />)
 
     await waitFor(() => {
-      expect(screen.getByText('provider-setting-openai')).toBeInTheDocument()
+      expect(screen.getByTestId('selected-provider-id')).toHaveTextContent('')
     })
-    expect(screen.getByTestId('selected-provider-id')).toHaveTextContent('openai')
-    expect(screen.queryByText('provider-setting-cherryai')).not.toBeInTheDocument()
+    expect(screen.queryByText(/^provider-setting-/)).not.toBeInTheDocument()
+    expect(MockUseCacheUtils.getPersistCacheValue('settings.provider.last_selected_provider_id')).toBeNull()
   })
 
   it('passes a stable provider selector to deep-link import across rerenders', () => {

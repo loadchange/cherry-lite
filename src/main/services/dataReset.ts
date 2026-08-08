@@ -62,7 +62,7 @@ export const USER_DATA_WIPE = [
 ]
 
 /** Retained diagnostics and downloaded runtimes. */
-export const USER_DATA_KEPT = ['logs', 'Crashpad', 'Runtime', 'Toolchain', 'tesseract']
+export const USER_DATA_KEPT = ['logs', 'Crashpad', 'Toolchain', 'tesseract']
 
 // Absorb transient Windows file locks before consuming a reset attempt.
 const RM_OPTIONS = { recursive: true, force: true, maxRetries: 3, retryDelay: 100 } as const

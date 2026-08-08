@@ -4,7 +4,6 @@ import * as path from 'node:path'
 import { Node, type ObjectLiteralExpression, Project, SyntaxKind } from 'ts-morph'
 
 import { appLanguageOptions } from '../../../src/renderer/i18n/languages'
-import { CodeCli } from '../../../src/shared/types/codeCli'
 import { COMMAND_DEFINITIONS } from '../../../src/shared/utils/command/definitions'
 
 const ROOT_DIR = path.resolve(__dirname, '..', '..', '..')
@@ -58,10 +57,6 @@ export interface ProductManifest {
   agents: {
     channelTypes: string[]
     scheduleTriggerKinds: string[]
-    codeCli: {
-      route: string
-      tools: string[]
-    }
   }
 }
 
@@ -175,19 +170,10 @@ function readScheduleTriggerKinds(): string[] {
   })
 }
 
-function readAgentCapabilities(primaryRoutes: ProductManifest['routes']['primary']): ProductManifest['agents'] {
-  const codeCliRoute = primaryRoutes.find(({ id }) => id === 'code_tools')?.path
-  if (!codeCliRoute) {
-    throw new Error('SIDEBAR_APP_DEFINITIONS does not contain the code_tools route')
-  }
-
+function readAgentCapabilities(): ProductManifest['agents'] {
   return {
     channelTypes: readChannelTypes(),
-    scheduleTriggerKinds: readScheduleTriggerKinds(),
-    codeCli: {
-      route: codeCliRoute,
-      tools: Object.values(CodeCli)
-    }
+    scheduleTriggerKinds: readScheduleTriggerKinds()
   }
 }
 
@@ -203,7 +189,7 @@ export function generateProductManifest(): ProductManifest {
     commands: JSON.parse(JSON.stringify(COMMAND_DEFINITIONS)) as ProductManifest['commands'],
     providers: readProviders(),
     locales: [...appLanguageOptions],
-    agents: readAgentCapabilities(primaryRoutes)
+    agents: readAgentCapabilities()
   }
 }
 

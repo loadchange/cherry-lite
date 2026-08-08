@@ -22,20 +22,17 @@ import {
 } from '@renderer/components/SettingsPrimitives'
 import UpdateDialogPopup from '@renderer/components/UpdateDialogPopup'
 import { useAppUpdateState } from '@renderer/hooks/useAppUpdateState'
-import { useMiniAppPopup } from '@renderer/hooks/useMiniAppPopup'
 import { useTheme } from '@renderer/hooks/useTheme'
-import i18n from '@renderer/i18n/resolver'
 import { ipcApi } from '@renderer/ipc'
 import { toast } from '@renderer/services/toast'
 import { cn } from '@renderer/utils/style'
-import { ThemeMode, UpgradeChannel } from '@shared/data/preference/preferenceTypes'
+import { UpgradeChannel } from '@shared/data/preference/preferenceTypes'
+import { APP_NAME } from '@shared/utils/constants'
 import { debounce } from 'es-toolkit/compat'
-import { BadgeQuestionMark, Briefcase, Bug, Building2, Github, Globe, Mail, MessageSquareText, Rss } from 'lucide-react'
-import type { FC, ReactNode } from 'react'
+import { Github } from 'lucide-react'
+import type { FC } from 'react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-
-import { FeedbackDialog } from './FeedbackDialog'
 
 const AboutSettings: FC = () => {
   const [autoCheckUpdate, setAutoCheckUpdate] = usePreference('app.dist.auto_update.enabled')
@@ -44,11 +41,8 @@ const AboutSettings: FC = () => {
 
   const [version, setVersion] = useState('')
   const [isPortable, setIsPortable] = useState(false)
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
   const { t } = useTranslation()
   const { theme } = useTheme()
-  const { openSmartMiniApp } = useMiniAppPopup()
-
   const { appUpdateState, updateAppUpdateState } = useAppUpdateState()
 
   const onCheckUpdate = debounce(
@@ -79,33 +73,6 @@ const AboutSettings: FC = () => {
 
   const onOpenWebsite = (url: string) => {
     void ipcApi.request('system.shell.open_website', url)
-  }
-
-  const mailto = async () => {
-    const email = 'support@cherry-ai.com'
-    const subject = 'Cherry Studio Feedback'
-    const version = (await ipcApi.request('app.get_info')).version
-    const platform = window.electron.process.platform
-    const url = `mailto:${email}?subject=${subject}&body=%0A%0AVersion: ${version} | Platform: ${platform}`
-    onOpenWebsite(url)
-  }
-
-  const debug = async () => {
-    await ipcApi.request('system.toggle_dev_tools')
-  }
-
-  const showEnterprise = async () => {
-    onOpenWebsite('https://enterprise.cherry-ai.com')
-  }
-
-  const showReleases = async () => {
-    const { appPath } = await ipcApi.request('app.get_info')
-    openSmartMiniApp({
-      appId: 'cherrystudio-releases',
-      name: t('settings.about.releases.title'),
-      url: `file://${appPath}/resources/cherry-studio/releases.html?theme=${theme === ThemeMode.dark ? 'dark' : 'light'}`,
-      logo: AppLogo
-    })
   }
 
   const currentChannelByVersion =
@@ -175,14 +142,6 @@ const AboutSettings: FC = () => {
     })()
   }, [])
 
-  const onOpenDocs = () => {
-    const isChinese = i18n.language.startsWith('zh')
-    void ipcApi.request(
-      'system.shell.open_website',
-      isChinese ? 'https://docs.cherry-ai.com/' : 'https://docs.cherry-ai.com/docs/en-us'
-    )
-  }
-
   const testChannels = getAvailableTestChannels()
   const isUpdateReady = appUpdateState.available && appUpdateState.downloaded && !appUpdateState.downloading
   const releaseNotesText =
@@ -198,7 +157,7 @@ const AboutSettings: FC = () => {
           <button
             type="button"
             aria-label={t('settings.about.repository')}
-            onClick={() => onOpenWebsite('https://github.com/CherryHQ/cherry-studio')}
+            onClick={() => onOpenWebsite('https://github.com/loadchange/cherry-studio-lite')}
             className="inline-flex items-center justify-center rounded-md p-1 text-foreground transition-colors hover:bg-muted">
             <Github className="size-5" />
           </button>
@@ -210,8 +169,8 @@ const AboutSettings: FC = () => {
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <button
               type="button"
-              aria-label="Cherry Studio"
-              onClick={() => onOpenWebsite('https://github.com/CherryHQ/cherry-studio')}
+              aria-label={APP_NAME}
+              onClick={() => onOpenWebsite('https://github.com/loadchange/cherry-studio-lite')}
               className="relative cursor-pointer">
               {appUpdateState.downloading && appUpdateState.downloadProgress > 0 && (
                 <div className="-top-0.5 -left-0.5 pointer-events-none absolute">
@@ -229,12 +188,12 @@ const AboutSettings: FC = () => {
             </button>
 
             <div className="flex min-h-18 flex-col items-start justify-center">
-              <div className="mb-1 font-bold text-foreground text-lg">Cherry Studio</div>
+              <div className="mb-1 font-bold text-foreground text-lg">{APP_NAME}</div>
               <div className="text-muted-foreground text-sm">{t('settings.about.description')}</div>
               <button
                 type="button"
                 aria-label={t('settings.about.releases.title')}
-                onClick={() => onOpenWebsite('https://github.com/CherryHQ/cherry-studio/releases')}
+                onClick={() => onOpenWebsite('https://github.com/loadchange/cherry-studio-lite/releases')}
                 className="mt-1.5">
                 <Badge className="cursor-pointer rounded-md border-primary/20 bg-primary/10 px-1.5 py-0 text-[11px] text-primary leading-4 transition-colors hover:bg-primary/15">
                   v{version}
@@ -318,90 +277,7 @@ const AboutSettings: FC = () => {
           </Scrollbar>
         </SettingGroup>
       )}
-
-      <SettingGroup theme={theme}>
-        <AboutActionRow
-          icon={<BadgeQuestionMark className="size-4.5" />}
-          title={t('docs.title')}
-          actionLabel={t('settings.about.website.button')}
-          onAction={onOpenDocs}
-        />
-        <Divider className="my-3" />
-        <AboutActionRow
-          icon={<Rss className="size-4.5" />}
-          title={t('settings.about.releases.title')}
-          actionLabel={t('settings.about.releases.button')}
-          onAction={showReleases}
-        />
-        <Divider className="my-3" />
-        <AboutActionRow
-          icon={<Globe className="size-4.5" />}
-          title={t('settings.about.website.title')}
-          actionLabel={t('settings.about.website.button')}
-          onAction={() => onOpenWebsite('https://cherry-ai.com')}
-        />
-        <Divider className="my-3" />
-        <AboutActionRow
-          icon={<MessageSquareText className="size-4.5" />}
-          title={t('settings.about.feedback.title')}
-          actionLabel={t('settings.about.feedback.button')}
-          onAction={() => setFeedbackOpen(true)}
-        />
-        <Divider className="my-3" />
-        <AboutActionRow
-          icon={<Building2 className="size-4.5" />}
-          title={t('settings.about.enterprise.title')}
-          actionLabel={t('settings.about.website.button')}
-          onAction={showEnterprise}
-        />
-        <Divider className="my-3" />
-        <AboutActionRow
-          icon={<Mail className="size-4.5" />}
-          title={t('settings.about.contact.title')}
-          actionLabel={t('settings.about.contact.button')}
-          onAction={mailto}
-        />
-        <Divider className="my-3" />
-        <AboutActionRow
-          icon={<Briefcase className="size-4.5" />}
-          title={t('settings.about.careers.title')}
-          actionLabel={t('settings.about.careers.button')}
-          onAction={() => onOpenWebsite('https://www.cherry-ai.com/careers')}
-        />
-        <Divider className="my-3" />
-        <AboutActionRow
-          icon={<Bug className="size-4.5" />}
-          title={t('settings.about.debug.title')}
-          actionLabel={t('settings.about.debug.open')}
-          onAction={debug}
-        />
-      </SettingGroup>
-      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </SettingsContentColumn>
-  )
-}
-
-function AboutActionRow({
-  actionLabel,
-  icon,
-  onAction,
-  title
-}: {
-  actionLabel: string
-  icon: ReactNode
-  onAction: () => void | Promise<void>
-  title: string
-}) {
-  return (
-    <SettingRow className="gap-3">
-      <SettingRowTitle className="gap-2.5">
-        {icon}
-        {title}
-      </SettingRowTitle>
-      <Button size="sm" onClick={() => void onAction()} variant="outline">
-        {actionLabel}
-      </Button>
-    </SettingRow>
   )
 }
 

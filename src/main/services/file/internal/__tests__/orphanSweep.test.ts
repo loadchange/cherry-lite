@@ -4,8 +4,8 @@ import path from 'node:path'
 
 import { application } from '@application'
 import { fileEntryTable } from '@data/db/schemas/file'
-import { paintingFileRefTable } from '@data/db/schemas/fileRelations'
-import { paintingTable } from '@data/db/schemas/painting'
+import { providerLogoFileRefTable } from '@data/db/schemas/fileRelations'
+import { userProviderTable } from '@data/db/schemas/userProvider'
 import { fileEntryService } from '@data/services/FileEntryService'
 import { fileRefService } from '@data/services/FileRefService'
 import { loggerService } from '@logger'
@@ -72,18 +72,12 @@ describe('scanOrphanEntries (report-only)', () => {
     MockMainCacheServiceUtils.resetMocks()
   })
 
-  // Give an entry a persistent (painting) ref so the sweep treats it as
+  // Give an entry a persistent (provider logo) ref so the sweep treats it as
   // referenced — the canonical fixture for "this entry is not an orphan".
   async function seedPersistentRef(fileEntryId: FileEntryId): Promise<void> {
-    const paintingId = uuidv4()
-    await dbh.db.insert(paintingTable).values({
-      id: paintingId,
-      providerId: 'provider',
-      modelId: null,
-      prompt: 'prompt',
-      orderKey: paintingId
-    })
-    await dbh.db.insert(paintingFileRefTable).values({ fileEntryId, sourceId: paintingId, role: 'output' })
+    const providerId = `provider-${uuidv4()}`
+    await dbh.db.insert(userProviderTable).values({ providerId, name: 'P', orderKey: providerId })
+    await dbh.db.insert(providerLogoFileRefTable).values({ fileEntryId, sourceId: providerId })
   }
 
   it('groups unreferenced entries by origin without deleting any', async () => {

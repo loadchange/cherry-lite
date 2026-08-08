@@ -35,7 +35,7 @@ export interface OAuthTokenStore {
   /**
    * Drop the stored OAuth tokens. `disableProvider` also flips the provider to
    * disabled — correct for providers whose only credential is the OAuth session
-   * (Codex, Grok), but wrong for one that can also hold a manual API key
+   * (OAuth-only providers), but wrong for one that can also hold a manual API key
    * (CherryIN), where disabling would take the manual key down with it.
    */
   clear(
@@ -82,7 +82,7 @@ export interface OAuthRuntimeProviderDefinition {
   clientId: string
   /**
    * Whether clearing the OAuth session (logout / unrecoverable token loss) also
-   * disables the provider. `true` for OAuth-only providers (Codex, Grok) where
+   * disables the provider. `true` for OAuth-only providers where
    * no credential remains; `false`/omitted for providers that can fall back to a
    * manual API key (CherryIN), so logout never strips that key's enablement.
    */

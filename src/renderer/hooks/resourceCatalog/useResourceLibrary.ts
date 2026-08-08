@@ -1,16 +1,11 @@
 import { useGroups } from '@renderer/hooks/useGroups'
-import type { AgentDetail, ResourceItem, ResourceType, SortKey } from '@renderer/types/resourceCatalog'
-import { getAgentAvatarFromConfiguration, getAgentDescriptionForDisplay } from '@renderer/utils/agent'
-import type { InstalledSkill } from '@shared/data/types/agent'
+import type { ResourceItem, ResourceType, SortKey } from '@renderer/types/resourceCatalog'
 import type { Assistant } from '@shared/data/types/assistant'
 import type { Prompt } from '@shared/data/types/prompt'
 import { useCallback, useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
 
-import { agentAdapter } from './agentAdapter'
 import { assistantAdapter } from './assistantAdapter'
 import { promptAdapter } from './promptAdapter'
-import { skillAdapter } from './skillAdapter'
 
 function compareItems(a: ResourceItem, b: ResourceItem, sort: SortKey): number {
   if (sort === 'name') return a.name.localeCompare(b.name, 'zh')
@@ -41,13 +36,10 @@ export function useResourceLibrary({
   search,
   sort
 }: UseResourceLibraryOptions): UseResourceLibraryResult {
-  const { t } = useTranslation()
   const assistantGroups = useGroups('assistant')
 
   const trimmedSearch = search.trim() || undefined
   const isAssistant = resourceType === 'assistant'
-  const isAgent = resourceType === 'agent'
-  const isSkill = resourceType === 'skill'
   const isPrompt = resourceType === 'prompt'
 
   // Assistant needs two reads:
@@ -68,10 +60,6 @@ export function useResourceLibrary({
     search: isAssistant ? trimmedSearch : undefined,
     groupId: isAssistant ? (activeGroupId ?? undefined) : undefined
   })
-  // Agent search stays server-side so matching spans the full database, not only the
-  // current page. The main service resolves the builtin fallback description for this predicate.
-  const agents = agentAdapter.useList({ enabled: isAgent, search: isAgent ? trimmedSearch : undefined })
-  const skills = skillAdapter.useList({ enabled: isSkill, search: isSkill ? trimmedSearch : undefined })
   const prompts = promptAdapter.useList({ enabled: isPrompt, search: isPrompt ? trimmedSearch : undefined })
 
   const buildAssistantItem = useCallback(
@@ -96,39 +84,6 @@ export function useResourceLibrary({
     [groupById]
   )
 
-  const buildAgentItem = useCallback(
-    (a: AgentDetail): ResourceItem => {
-      return {
-        id: a.id,
-        type: 'agent',
-        name: a.name ?? '',
-        description: getAgentDescriptionForDisplay(a, t),
-        avatar: getAgentAvatarFromConfiguration(a.configuration),
-        model: a.modelName ?? undefined,
-        createdAt: a.createdAt,
-        updatedAt: a.updatedAt,
-        raw: a
-      }
-    },
-    [t]
-  )
-
-  const buildSkillItem = useCallback((s: InstalledSkill): ResourceItem => {
-    return {
-      id: s.id,
-      type: 'skill',
-      name: s.name,
-      description: s.description ?? '',
-      // No emoji on InstalledSkill — fall back to the lightning glyph.
-      avatar: '⚡',
-      // Skill metadata tags from SKILL.md live on `sourceTags`; assistant
-      // organization in the resource library uses Group rows instead.
-      createdAt: s.createdAt,
-      updatedAt: s.updatedAt,
-      raw: s
-    }
-  }, [])
-
   const buildPromptItem = useCallback((p: Prompt): ResourceItem => {
     return {
       id: p.id,
@@ -144,67 +99,33 @@ export function useResourceLibrary({
 
   const allResources = useMemo<ResourceItem[]>(() => {
     if (isAssistant) return baseAssistants.data.map(buildAssistantItem)
-    if (isAgent) return agents.data.map(buildAgentItem)
-    if (isPrompt) return prompts.data.map(buildPromptItem)
-    return skills.data.map(buildSkillItem)
-  }, [
-    isAssistant,
-    isAgent,
-    isPrompt,
-    baseAssistants.data,
-    agents.data,
-    skills.data,
-    prompts.data,
-    buildAssistantItem,
-    buildAgentItem,
-    buildSkillItem,
-    buildPromptItem
-  ])
+    return prompts.data.map(buildPromptItem)
+  }, [isAssistant, baseAssistants.data, prompts.data, buildAssistantItem, buildPromptItem])
 
   const filteredAssistantItems = useMemo(
     () => filteredAssistants.data.map(buildAssistantItem),
     [filteredAssistants.data, buildAssistantItem]
   )
-  const agentItems = useMemo(() => agents.data.map(buildAgentItem), [agents.data, buildAgentItem])
-  const skillItems = useMemo(() => skills.data.map(buildSkillItem), [skills.data, buildSkillItem])
   const promptItems = useMemo(() => prompts.data.map(buildPromptItem), [prompts.data, buildPromptItem])
 
   const resources = useMemo<ResourceItem[]>(() => {
-    let list: ResourceItem[]
-    if (isAssistant) list = filteredAssistantItems
-    else if (isAgent) list = agentItems
-    else if (isPrompt) list = promptItems
-    else list = skillItems
+    const list = isAssistant ? filteredAssistantItems : promptItems
 
     return [...list].sort((a, b) => compareItems(a, b, sort))
-  }, [isAssistant, isAgent, isPrompt, filteredAssistantItems, agentItems, promptItems, skillItems, sort])
+  }, [isAssistant, filteredAssistantItems, promptItems, sort])
 
   const isLoading = isAssistant
     ? baseAssistants.isLoading || filteredAssistants.isLoading || assistantGroups.isLoading
-    : isAgent
-      ? agents.isLoading
-      : isPrompt
-        ? prompts.isLoading
-        : skills.isLoading
+    : prompts.isLoading
   const isRefreshing = isAssistant
     ? baseAssistants.isRefreshing || filteredAssistants.isRefreshing
-    : isAgent
-      ? agents.isRefreshing
-      : isPrompt
-        ? prompts.isRefreshing
-        : skills.isRefreshing
+    : prompts.isRefreshing
   const error = isAssistant
     ? (baseAssistants.error ?? filteredAssistants.error ?? assistantGroups.error)
-    : isAgent
-      ? agents.error
-      : isPrompt
-        ? prompts.error
-        : skills.error
+    : prompts.error
 
   const baseAssistantsRefetch = baseAssistants.refetch
   const filteredAssistantsRefetch = filteredAssistants.refetch
-  const agentsRefetch = agents.refetch
-  const skillsRefetch = skills.refetch
   const promptsRefetch = prompts.refetch
   const groupsRefetch = assistantGroups.refetch
 
@@ -213,24 +134,10 @@ export function useResourceLibrary({
       baseAssistantsRefetch()
       filteredAssistantsRefetch()
       void groupsRefetch()
-    } else if (isAgent) {
-      agentsRefetch()
-    } else if (isPrompt) {
-      promptsRefetch()
     } else {
-      skillsRefetch()
+      promptsRefetch()
     }
-  }, [
-    isAssistant,
-    isAgent,
-    isPrompt,
-    baseAssistantsRefetch,
-    filteredAssistantsRefetch,
-    agentsRefetch,
-    skillsRefetch,
-    promptsRefetch,
-    groupsRefetch
-  ])
+  }, [isAssistant, baseAssistantsRefetch, filteredAssistantsRefetch, promptsRefetch, groupsRefetch])
 
   return {
     resources,

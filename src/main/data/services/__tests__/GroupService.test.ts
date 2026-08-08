@@ -45,12 +45,6 @@ describe('GroupService', () => {
       // because neither bucket has a predecessor.
       expect(topicFirst.orderKey).toBe(assistantFirst.orderKey)
     })
-
-    it('should create knowledge groups', async () => {
-      const result = groupService.create({ entityType: 'knowledge', name: 'Knowledge Group' })
-
-      expect(result).toMatchObject({ entityType: 'knowledge', name: 'Knowledge Group' })
-    })
   })
 
   describe('listByEntityType', () => {
@@ -65,13 +59,6 @@ describe('GroupService', () => {
 
     it('should return an empty array when no groups exist for the entityType', () => {
       expect(groupService.listByEntityType('assistant')).toEqual([])
-    })
-
-    it('should list groups for the knowledge entityType', () => {
-      const knowledgeGroup = groupService.create({ entityType: 'knowledge', name: 'Knowledge Group' })
-      groupService.create({ entityType: 'topic', name: 'Topic Group' })
-
-      expect(groupService.listByEntityType('knowledge')).toEqual([knowledgeGroup])
     })
   })
 
@@ -89,14 +76,6 @@ describe('GroupService', () => {
   })
 
   describe('findByIdTx', () => {
-    it('should return a group through a caller transaction', async () => {
-      const created = groupService.create({ entityType: 'knowledge', name: 'Knowledge Group' })
-
-      const result = dbh.db.transaction((tx) => groupService.findByIdTx(tx, created.id))
-
-      expect(result).toEqual(created)
-    })
-
     it('should return null when the group does not exist', () => {
       expect(groupService.findByIdTx(dbh.db, GROUP_ID_MISSING)).toBeNull()
     })

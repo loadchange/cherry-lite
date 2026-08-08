@@ -1,34 +1,16 @@
 import type { NormalToolResponse } from '@renderer/types/mcpTool'
-import {
-  GENERATE_IMAGE_TOOL_NAME,
-  KB_LIST_TOOL_NAME,
-  KB_MANAGE_TOOL_NAME,
-  KB_READ_TOOL_NAME,
-  KB_SEARCH_TOOL_NAME,
-  PROVIDER_WEB_SEARCH_TOOL_NAME,
-  WEB_SEARCH_TOOL_NAME
-} from '@shared/ai/builtinTools'
+import { PROVIDER_WEB_SEARCH_TOOL_NAME, WEB_SEARCH_TOOL_NAME } from '@shared/ai/builtinTools'
 
 import { AgentExecutionTimeline } from './agent'
-import { MessageKnowledgeSearchToolTitle } from './knowledge/MessageKnowledgeSearch'
 import MessageMetaTool, { isMetaToolName } from './meta/MessageMetaTool'
-import { MessageGenerateImageToolTitle } from './painting/MessageGenerateImage'
 import { AgentToolsType, isAskUserQuestionToolName } from './shared/agentToolTypes'
 import { MessageWebSearchToolTitle } from './webSearch/MessageWebSearch'
 
 const builtinToolsPrefix = 'builtin_'
 const agentMcpToolsPrefix = 'mcp__'
-const agentGenerateImageToolName = `mcp__cherry-tools__${GENERATE_IMAGE_TOOL_NAME}`
 const agentTools = new Set<string>(Object.values(AgentToolsType))
 /** cherry-tools that carry short wire names rather than the `mcp__` prefix. */
-const CHERRY_AGENT_TOOL_NAMES = new Set([
-  'web_fetch',
-  KB_SEARCH_TOOL_NAME,
-  KB_LIST_TOOL_NAME,
-  KB_READ_TOOL_NAME,
-  KB_MANAGE_TOOL_NAME,
-  'memory'
-])
+const CHERRY_AGENT_TOOL_NAMES = new Set(['web_fetch', 'memory'])
 
 const isAgentTool = (toolName: string) => {
   if (agentTools.has(toolName) || toolName.startsWith(agentMcpToolsPrefix)) {
@@ -43,15 +25,9 @@ export function chooseTool(toolResponse: NormalToolResponse): React.ReactNode | 
     return <MessageMetaTool toolResponse={toolResponse} />
   }
 
-  // In-process cherry-tools (web/knowledge/memory) carry short wire names, not the `mcp__` prefix.
-  if (toolName === KB_SEARCH_TOOL_NAME) {
-    return <MessageKnowledgeSearchToolTitle toolResponse={toolResponse} />
-  }
+  // In-process cherry-tools (web/memory) carry short wire names, not the `mcp__` prefix.
   if (toolName === WEB_SEARCH_TOOL_NAME || toolName === PROVIDER_WEB_SEARCH_TOOL_NAME) {
     return <MessageWebSearchToolTitle toolResponse={toolResponse} />
-  }
-  if (toolName === GENERATE_IMAGE_TOOL_NAME || toolName === agentGenerateImageToolName) {
-    return <MessageGenerateImageToolTitle toolResponse={toolResponse} />
   }
   // Short-name tools without a bespoke card render through the standard agent tool-call card.
   if (CHERRY_AGENT_TOOL_NAMES.has(toolName)) {
@@ -69,8 +45,6 @@ export function chooseTool(toolResponse: NormalToolResponse): React.ReactNode | 
       case 'web_search':
       case 'web_search_preview':
         return <MessageWebSearchToolTitle toolResponse={toolResponse} />
-      case 'knowledge_search':
-        return <MessageKnowledgeSearchToolTitle toolResponse={toolResponse} />
       default:
         return null
     }

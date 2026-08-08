@@ -1,5 +1,4 @@
 import { getTopicMessages } from '@renderer/hooks/useTopic'
-import { getAgentSessionMessagesForExport } from '@renderer/services/agentSessionExport'
 import { getNamingTextContent } from '@renderer/utils/message/find'
 
 export interface ReferenceTranscriptEntry {
@@ -7,9 +6,7 @@ export interface ReferenceTranscriptEntry {
   text: string
 }
 
-export type EntityReferenceTarget =
-  | { entityType: 'topic'; id: string; name: string }
-  | { entityType: 'session'; id: string; name: string; agentId: string | null }
+export type EntityReferenceTarget = { entityType: 'topic'; id: string; name: string }
 
 export const REFERENCE_CONTEXT_MAX_TOTAL_CHARS = 8000
 export const REFERENCE_CONTEXT_MAX_MESSAGE_CHARS = 2000
@@ -26,7 +23,7 @@ const REFERENCE_CONTEXT_MAX_MESSAGES = 200
  */
 export function buildEntityReferencePromptText(options: {
   name: string
-  entityType: 'topic' | 'session'
+  entityType: 'topic'
   entries: readonly ReferenceTranscriptEntry[]
   maxTotalChars?: number
   maxMessageChars?: number
@@ -63,13 +60,7 @@ export async function fetchEntityReferencePromptText(
   target: EntityReferenceTarget,
   options: { maxTotalChars?: number } = {}
 ): Promise<string> {
-  const messages =
-    target.entityType === 'topic'
-      ? await getTopicMessages(target.id, { maxMessages: REFERENCE_CONTEXT_MAX_MESSAGES })
-      : await getAgentSessionMessagesForExport(
-          { id: target.id, agentId: target.agentId, name: target.name },
-          { maxMessages: REFERENCE_CONTEXT_MAX_MESSAGES }
-        )
+  const messages = await getTopicMessages(target.id, { maxMessages: REFERENCE_CONTEXT_MAX_MESSAGES })
 
   const maxTotalChars = Math.min(
     options.maxTotalChars ?? REFERENCE_CONTEXT_MAX_TOTAL_CHARS,

@@ -18,10 +18,7 @@ const logger = loggerService.withContext('useProviderEditor')
  */
 export type ProviderLogoEdit = { kind: 'image'; file: File } | { kind: 'key'; key: string } | { kind: 'default' }
 
-export type ProviderEditorMode =
-  | { kind: 'create-custom' }
-  | { kind: 'duplicate'; source: Provider }
-  | { kind: 'edit'; provider: Provider }
+export type ProviderEditorMode = { kind: 'create-custom' } | { kind: 'edit'; provider: Provider }
 
 interface UseProviderEditorParams {
   onProviderCreated: (providerId: string) => void
@@ -29,9 +26,8 @@ interface UseProviderEditorParams {
 
 /**
  * Discriminated by `mode` so the type system enforces per-mode field
- * validity: `edit` only carries name/endpoint/logo, while `create` (covers
- * both create-custom and duplicate) carries the full creation payload. The
- * branch decision lives in the params, not a closure.
+ * validity: `edit` only carries name/endpoint/logo, while `create` carries the
+ * full creation payload. The branch decision lives in the params, not a closure.
  */
 export type SubmitProviderEditorParams =
   | {
@@ -46,7 +42,6 @@ export type SubmitProviderEditorParams =
       name: string
       defaultChatEndpoint: EndpointType
       endpointConfigs?: Partial<Record<EndpointType, EndpointConfig>>
-      presetProviderId?: string
       authConfig?: AuthConfig
       apiKeys?: ApiKeyEntry[]
       /** Logo for the new provider (preset key inline; an upload via the command). */
@@ -73,7 +68,6 @@ export function useProviderEditor({ onProviderCreated }: UseProviderEditorParams
 
   const cancel = useCallback(() => updateMode(null), [updateMode])
   const startAdd = useCallback(() => updateMode({ kind: 'create-custom' }), [updateMode])
-  const startAddFrom = useCallback((source: Provider) => updateMode({ kind: 'duplicate', source }), [updateMode])
   const startEdit = useCallback((provider: Provider) => updateMode({ kind: 'edit', provider }), [updateMode])
 
   // Apply a logo edit through the dedicated command: the renderer sends raw
@@ -138,7 +132,6 @@ export function useProviderEditor({ onProviderCreated }: UseProviderEditorParams
       const provider = await createProvider({
         providerId,
         name: trimmedName,
-        ...(params.presetProviderId ? { presetProviderId: params.presetProviderId } : {}),
         defaultChatEndpoint: params.defaultChatEndpoint,
         ...(params.endpointConfigs ? { endpointConfigs: params.endpointConfigs } : {}),
         ...(params.authConfig ? { authConfig: params.authConfig } : {}),
@@ -166,7 +159,6 @@ export function useProviderEditor({ onProviderCreated }: UseProviderEditorParams
     editingProvider,
     initialLogo,
     startAdd,
-    startAddFrom,
     startEdit,
     cancel,
     submit

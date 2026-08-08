@@ -2,7 +2,6 @@ import { isDeepStrictEqual } from 'node:util'
 
 import { application } from '@application'
 import { notifyDataApiDataChange } from '@data/dataApiDataChange'
-import { agentSessionMessageTable } from '@data/db/schemas/agentSessionMessage'
 import { type AiUsageRecordRow, aiUsageRecordTable, type InsertAiUsageRecordRow } from '@data/db/schemas/aiUsageRecord'
 import { messageTable } from '@data/db/schemas/message'
 import type { DbOrTx } from '@data/db/types'
@@ -1126,24 +1125,15 @@ function getMessageUsageProjectionTx(db: DbOrTx, ref: MessageRef): MessageUsageP
 }
 
 function rebuildMessageUsageProjectionTx(db: DbOrTx, ref: MessageRef): boolean {
+  // Only chat messages carry a projection table; `agent-session` remains a legal
+  // persisted `messageKind` for rows migrated before the agents domain was removed.
+  if (ref.kind !== 'chat') return false
   const projection = getMessageUsageProjectionTx(db, ref)
-  if (ref.kind === 'chat') {
-    const row = db.select({ stats: messageTable.stats }).from(messageTable).where(eq(messageTable.id, ref.id)).get()
-    if (!row) return false
-    const nextStats = mergeMessageUsageProjection(row.stats, projection)
-    if (isDeepStrictEqual(row.stats, nextStats)) return false
-    db.update(messageTable).set({ stats: nextStats }).where(eq(messageTable.id, ref.id)).run()
-  } else {
-    const row = db
-      .select({ stats: agentSessionMessageTable.stats })
-      .from(agentSessionMessageTable)
-      .where(eq(agentSessionMessageTable.id, ref.id))
-      .get()
-    if (!row) return false
-    const nextStats = mergeMessageUsageProjection(row.stats, projection)
-    if (isDeepStrictEqual(row.stats, nextStats)) return false
-    db.update(agentSessionMessageTable).set({ stats: nextStats }).where(eq(agentSessionMessageTable.id, ref.id)).run()
-  }
+  const row = db.select({ stats: messageTable.stats }).from(messageTable).where(eq(messageTable.id, ref.id)).get()
+  if (!row) return false
+  const nextStats = mergeMessageUsageProjection(row.stats, projection)
+  if (isDeepStrictEqual(row.stats, nextStats)) return false
+  db.update(messageTable).set({ stats: nextStats }).where(eq(messageTable.id, ref.id)).run()
   return true
 }
 
@@ -1382,20 +1372,10 @@ function insertRowsTx(
 
 function messageReadModelEffects(refs: readonly MessageRef[]): DataApiDataChangeEffect[] {
   const chatIds = refs.filter((ref) => ref.kind === 'chat').map((ref) => ref.id)
-  const agentIds = refs.filter((ref) => ref.kind === 'agent-session').map((ref) => ref.id)
+  if (chatIds.length === 0) return []
   return [
-    ...(chatIds.length > 0
-      ? [
-          { endpoint: '/topics/:topicId/messages', kind: 'projection', entityIds: chatIds } as const,
-          { endpoint: '/messages/:id', entityIds: chatIds } as const
-        ]
-      : []),
-    ...(agentIds.length > 0
-      ? [
-          { endpoint: '/agent-sessions/:sessionId/messages', kind: 'projection', entityIds: agentIds } as const,
-          { endpoint: '/agent-sessions/:sessionId/messages/:messageId', entityIds: agentIds } as const
-        ]
-      : [])
+    { endpoint: '/topics/:topicId/messages', kind: 'projection', entityIds: chatIds },
+    { endpoint: '/messages/:id', entityIds: chatIds }
   ]
 }
 

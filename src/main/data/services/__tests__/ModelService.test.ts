@@ -3,7 +3,6 @@
  */
 
 import { application } from '@application'
-import { knowledgeBaseTable } from '@data/db/schemas/knowledge'
 import { pinTable } from '@data/db/schemas/pin'
 import { userModelTable } from '@data/db/schemas/userModel'
 import { userProviderTable } from '@data/db/schemas/userProvider'
@@ -13,11 +12,6 @@ import type * as ProviderRegistryServiceModule from '@data/services/ProviderRegi
 import { generateOrderKeyBetween, generateOrderKeySequence } from '@data/services/utils/orderKey'
 import { ErrorCode } from '@shared/data/api/errors'
 import { MODELS_DELETE_MAX_IDS, type UpdateModelDto } from '@shared/data/api/schemas/models'
-import {
-  CHERRYAI_DEFAULT_MODEL_ID,
-  CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
-  CHERRYAI_PROVIDER_ID
-} from '@shared/data/presets/cherryai'
 import { createUniqueModelId, MODEL_CAPABILITY } from '@shared/data/types/model'
 import { setupTestDatabase } from '@test-helpers/db'
 import { and, eq, or } from 'drizzle-orm'
@@ -180,17 +174,6 @@ describe('ModelService.update', () => {
         isEnabled: true,
         isHidden: false,
         isDeprecated: false
-      })
-    )
-  }
-
-  async function seedManagedCherryAiDefaultModel() {
-    await dbh.db.insert(userProviderTable).values(providerRow(CHERRYAI_PROVIDER_ID, 'CherryAI'))
-    await dbh.db.insert(userModelTable).values(
-      modelRow(CHERRYAI_PROVIDER_ID, CHERRYAI_DEFAULT_MODEL_ID, {
-        id: CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
-        name: CHERRYAI_DEFAULT_MODEL_ID,
-        isEnabled: true
       })
     )
   }
@@ -456,36 +439,6 @@ describe('ModelService.update', () => {
     expect(result.name).toBe('GPT-4o')
     expect(result.contextWindow).toBe(128_000)
   })
-
-  it('allows an empty PATCH for the managed CherryAI default model', async () => {
-    await seedManagedCherryAiDefaultModel()
-
-    const result = modelService.update(CHERRYAI_PROVIDER_ID, CHERRYAI_DEFAULT_MODEL_ID, {})
-
-    expect(result.id).toBe(CHERRYAI_DEFAULT_UNIQUE_MODEL_ID)
-    expect(result.isEnabled).toBe(true)
-  })
-
-  it('rejects PATCHes for the managed CherryAI default model', async () => {
-    await seedManagedCherryAiDefaultModel()
-
-    let err: unknown
-    try {
-      modelService.update(CHERRYAI_PROVIDER_ID, CHERRYAI_DEFAULT_MODEL_ID, { isEnabled: false })
-    } catch (e) {
-      err = e
-    }
-    expect(err).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION,
-      status: 400
-    })
-
-    const [row] = await dbh.db
-      .select()
-      .from(userModelTable)
-      .where(eq(userModelTable.id, CHERRYAI_DEFAULT_UNIQUE_MODEL_ID))
-    expect(row.isEnabled).toBe(true)
-  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -659,31 +612,6 @@ describe('ModelService.create', () => {
       status: 409,
       message: expect.stringContaining('openai/gpt-4o')
     })
-  })
-
-  it('rejects create for the managed CherryAI default model', async () => {
-    await dbh.db.insert(userProviderTable).values(providerRow(CHERRYAI_PROVIDER_ID, 'CherryAI'))
-
-    let err: unknown
-    try {
-      modelService.create([
-        {
-          dto: {
-            providerId: CHERRYAI_PROVIDER_ID,
-            modelId: CHERRYAI_DEFAULT_MODEL_ID,
-            name: 'Qwen'
-          }
-        }
-      ])
-    } catch (e) {
-      err = e
-    }
-    expect(err).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION
-    })
-
-    const rows = await dbh.db.select().from(userModelTable).where(eq(userModelTable.providerId, CHERRYAI_PROVIDER_ID))
-    expect(rows).toHaveLength(0)
   })
 
   it('builds all rows with the same registry-aware merge semantics as create', async () => {
@@ -1700,72 +1628,6 @@ describe('ModelService.delete', () => {
     })
   })
 
-  it('rejects deletion of the managed CherryAI default model and preserves pins', async () => {
-    await dbh.db.insert(userProviderTable).values(providerRow(CHERRYAI_PROVIDER_ID, 'CherryAI'))
-    await dbh.db.insert(userModelTable).values(
-      modelRow(CHERRYAI_PROVIDER_ID, CHERRYAI_DEFAULT_MODEL_ID, {
-        id: CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
-        name: CHERRYAI_DEFAULT_MODEL_ID
-      })
-    )
-    const pin = pinService.pin({ entityType: 'model', entityId: CHERRYAI_DEFAULT_UNIQUE_MODEL_ID })
-
-    let err: unknown
-    try {
-      modelService.delete(CHERRYAI_PROVIDER_ID, CHERRYAI_DEFAULT_MODEL_ID)
-    } catch (e) {
-      err = e
-    }
-    expect(err).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION,
-      status: 400
-    })
-
-    const rows = await dbh.db
-      .select()
-      .from(userModelTable)
-      .where(eq(userModelTable.id, CHERRYAI_DEFAULT_UNIQUE_MODEL_ID))
-    const pins = await dbh.db.select().from(pinTable).where(eq(pinTable.id, pin.id))
-    expect(rows).toHaveLength(1)
-    expect(pins).toHaveLength(1)
-  })
-
-  it('translates knowledge base embedding references into invalid operation', async () => {
-    const targetModelId = createUniqueModelId('openai', 'text-embedding-3-large')
-
-    await dbh.db.insert(userProviderTable).values(providerRow('openai', 'OpenAI'))
-    await dbh.db.insert(userModelTable).values(
-      modelRow('openai', 'text-embedding-3-large', {
-        id: targetModelId,
-        name: 'text-embedding-3-large'
-      })
-    )
-    await dbh.db.insert(knowledgeBaseTable).values({
-      name: 'Docs',
-      dimensions: 1536,
-      embeddingModelId: targetModelId,
-      status: 'completed',
-      error: null,
-      chunkSize: 1024,
-      chunkOverlap: 200
-    })
-
-    let err: unknown
-    try {
-      modelService.delete('openai', 'text-embedding-3-large')
-    } catch (e) {
-      err = e
-    }
-    expect(err).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION,
-      status: 400,
-      message: expect.stringContaining('knowledge base')
-    })
-
-    const rows = await dbh.db.select().from(userModelTable).where(eq(userModelTable.id, targetModelId))
-    expect(rows).toHaveLength(1)
-  })
-
   it('rejects deletion of a model currently set as the user default', async () => {
     const targetModelId = createUniqueModelId('openai', 'gpt-4o')
     await dbh.db.insert(userProviderTable).values(providerRow('openai', 'OpenAI'))
@@ -1913,86 +1775,6 @@ describe('ModelService.bulkDelete', () => {
     expect(pins).toHaveLength(1)
   })
 
-  it('translates knowledge base embedding references and rolls back bulk delete', async () => {
-    const targetModelId = createUniqueModelId('openai', 'text-embedding-3-large')
-    const siblingModelId = createUniqueModelId('openai', 'gpt-4o')
-
-    await dbh.db.insert(userProviderTable).values(providerRow('openai', 'OpenAI'))
-    await dbh.db.insert(userModelTable).values([
-      modelRow('openai', 'text-embedding-3-large', {
-        id: targetModelId,
-        name: 'text-embedding-3-large'
-      }),
-      modelRow('openai', 'gpt-4o', {
-        id: siblingModelId,
-        name: 'GPT-4o'
-      })
-    ])
-    await dbh.db.insert(knowledgeBaseTable).values({
-      name: 'Docs',
-      dimensions: 1536,
-      embeddingModelId: targetModelId,
-      status: 'completed',
-      error: null,
-      chunkSize: 1024,
-      chunkOverlap: 200
-    })
-
-    let err: unknown
-    try {
-      modelService.bulkDelete([
-        { providerId: 'openai', modelId: 'text-embedding-3-large' },
-        { providerId: 'openai', modelId: 'gpt-4o' }
-      ])
-    } catch (e) {
-      err = e
-    }
-    expect(err).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION,
-      status: 400,
-      message: expect.stringContaining('knowledge base')
-    })
-
-    const rows = await dbh.db.select().from(userModelTable).where(eq(userModelTable.providerId, 'openai'))
-    expect(rows.map((row) => row.id).sort()).toEqual([siblingModelId, targetModelId].sort())
-  })
-
-  it('rejects managed CherryAI default model deletes before writing other rows', async () => {
-    await dbh.db
-      .insert(userProviderTable)
-      .values([providerRow(CHERRYAI_PROVIDER_ID, 'CherryAI'), providerRow('openai', 'OpenAI')])
-    await dbh.db.insert(userModelTable).values([
-      modelRow(CHERRYAI_PROVIDER_ID, CHERRYAI_DEFAULT_MODEL_ID, {
-        id: CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
-        name: CHERRYAI_DEFAULT_MODEL_ID
-      }),
-      modelRow('openai', 'gpt-4o', { name: 'GPT-4o' })
-    ])
-
-    let err: unknown
-    try {
-      modelService.bulkDelete([
-        { providerId: 'openai', modelId: 'gpt-4o' },
-        { providerId: CHERRYAI_PROVIDER_ID, modelId: CHERRYAI_DEFAULT_MODEL_ID }
-      ])
-    } catch (e) {
-      err = e
-    }
-    expect(err).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION,
-      status: 400
-    })
-
-    const openAiRows = await dbh.db.select().from(userModelTable).where(eq(userModelTable.providerId, 'openai'))
-    const cherryAiRows = await dbh.db
-      .select()
-      .from(userModelTable)
-      .where(eq(userModelTable.id, CHERRYAI_DEFAULT_UNIQUE_MODEL_ID))
-
-    expect(openAiRows).toHaveLength(1)
-    expect(cherryAiRows).toHaveLength(1)
-  })
-
   it('rejects bulk delete containing a model set as the user default and rolls back other rows', async () => {
     const defaultId = createUniqueModelId('openai', 'gpt-4o')
     const customId = createUniqueModelId('openai', 'gpt-4o-mini')
@@ -2069,49 +1851,6 @@ describe('ModelService.bulkUpdate', () => {
 
     const [row] = await dbh.db.select().from(userModelTable).where(eq(userModelTable.id, 'openai::gpt-4o'))
     expect(row.name).toBeNull()
-  })
-
-  it('rejects managed CherryAI default model PATCHes before writing other rows', async () => {
-    const [cherryAiOrderKey, openAiOrderKey] = generateOrderKeySequence(2)
-    await dbh.db
-      .insert(userProviderTable)
-      .values([
-        providerRow(CHERRYAI_PROVIDER_ID, 'CherryAI', cherryAiOrderKey),
-        providerRow('openai', 'OpenAI', openAiOrderKey)
-      ])
-    await dbh.db.insert(userModelTable).values([
-      modelRow(CHERRYAI_PROVIDER_ID, CHERRYAI_DEFAULT_MODEL_ID, {
-        id: CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
-        name: CHERRYAI_DEFAULT_MODEL_ID,
-        isEnabled: true
-      }),
-      modelRow('openai', 'gpt-4o', { name: 'GPT-4o-original' })
-    ])
-
-    let err: unknown
-    try {
-      modelService.bulkUpdate([
-        { providerId: 'openai', modelId: 'gpt-4o', patch: { name: 'GPT-4o-new' } },
-        { providerId: CHERRYAI_PROVIDER_ID, modelId: CHERRYAI_DEFAULT_MODEL_ID, patch: { isEnabled: false } }
-      ])
-    } catch (e) {
-      err = e
-    }
-    expect(err).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION,
-      status: 400
-    })
-
-    const [openAiRow] = await dbh.db
-      .select()
-      .from(userModelTable)
-      .where(eq(userModelTable.id, createUniqueModelId('openai', 'gpt-4o')))
-    const [cherryAiRow] = await dbh.db
-      .select()
-      .from(userModelTable)
-      .where(eq(userModelTable.id, CHERRYAI_DEFAULT_UNIQUE_MODEL_ID))
-    expect(openAiRow.name).toBe('GPT-4o-original')
-    expect(cherryAiRow.isEnabled).toBe(true)
   })
 
   it('rolls back the whole batch when one item is missing (atomic update)', async () => {
@@ -2329,38 +2068,6 @@ describe('ModelService.reconcileForProvider', () => {
       providerId: 'openai',
       skippedCount: 1,
       skippedIds: [customModelId]
-    })
-    warnSpy.mockRestore()
-  })
-
-  it('does not remove the managed CherryAI default model during reconcile', async () => {
-    await dbh.db.insert(userProviderTable).values(providerRow(CHERRYAI_PROVIDER_ID, 'CherryAI'))
-    await dbh.db.insert(userModelTable).values(
-      modelRow(CHERRYAI_PROVIDER_ID, CHERRYAI_DEFAULT_MODEL_ID, {
-        id: CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
-        name: CHERRYAI_DEFAULT_MODEL_ID
-      })
-    )
-    const pin = pinService.pin({ entityType: 'model', entityId: CHERRYAI_DEFAULT_UNIQUE_MODEL_ID })
-    const warnSpy = vi.spyOn(mockMainLoggerService, 'warn').mockImplementation(() => {})
-
-    const result = modelService.reconcileForProvider(CHERRYAI_PROVIDER_ID, {
-      toAdd: [],
-      toRemove: [CHERRYAI_DEFAULT_UNIQUE_MODEL_ID]
-    })
-
-    expect(result.map((model) => model.id)).toEqual([CHERRYAI_DEFAULT_UNIQUE_MODEL_ID])
-    const rows = await dbh.db
-      .select()
-      .from(userModelTable)
-      .where(eq(userModelTable.id, CHERRYAI_DEFAULT_UNIQUE_MODEL_ID))
-    const pins = await dbh.db.select().from(pinTable).where(eq(pinTable.id, pin.id))
-    expect(rows).toHaveLength(1)
-    expect(pins).toHaveLength(1)
-    expect(warnSpy).toHaveBeenCalledWith('Skipped managed CherryAI default model removal during reconcile', {
-      providerId: CHERRYAI_PROVIDER_ID,
-      skippedCount: 1,
-      skippedIds: [CHERRYAI_DEFAULT_UNIQUE_MODEL_ID]
     })
     warnSpy.mockRestore()
   })

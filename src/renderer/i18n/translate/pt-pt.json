@@ -33,7 +33,7 @@
     },
     "builtin": {
       "cherry_assistant": {
-        "description": "Assistente integrado do Cherry Studio. Diagnostique problemas, guie operações, colete FAQs, envie bugs/solicitações de recursos e pesquise/crie Habilidades"
+        "description": "Assistente integrado do Cherry Studio Lite. Diagnostique problemas, guie operações, colete FAQs, envie bugs/solicitações de recursos e pesquise/crie Habilidades"
       }
     },
     "channels": {
@@ -1085,55 +1085,6 @@
       "server_not_running_description": "O servidor da API precisa estar em execução para que os agentes funcionem. Você pode iniciá-lo diretamente ou verificar as configurações."
     }
   },
-  "apiGateway": {
-    "actions": {
-      "regenerate": "Regenerar",
-      "restart": {
-        "button": "Reiniciar",
-        "tooltip": "Reiniciar Servidor"
-      },
-      "start": "iniciar",
-      "stop": "parar"
-    },
-    "authHeader": {
-      "title": "Cabeçalho de autorização"
-    },
-    "description": "Expõe as capacidades de IA do Cherry Studio através de APIs HTTP compatíveis com OpenAI",
-    "documentation": {
-      "title": "Documentação API"
-    },
-    "fields": {
-      "apiKey": {
-        "copyTooltip": "Copiar Chave API",
-        "label": "Chave API",
-        "placeholder": "A chave API será gerada automaticamente"
-      },
-      "port": {
-        "label": "Porta"
-      },
-      "url": {
-        "copyTooltip": "Copiar URL",
-        "label": "URL"
-      }
-    },
-    "messages": {
-      "apiKeyRegenerated": "Chave API regenerada",
-      "notEnabled": "O Servidor de API não está habilitado.",
-      "operationFailed": "Operação do Servidor API falhou: ",
-      "restartError": "Falha ao reiniciar o Servidor API: ",
-      "restartFailed": "Reinício do Servidor API falhou: ",
-      "restartSuccess": "Servidor API reiniciado com sucesso",
-      "startError": "Falha ao iniciar o Servidor API: ",
-      "startSuccess": "Servidor API iniciado com sucesso",
-      "stopError": "Falha ao parar o Servidor API: ",
-      "stopSuccess": "Servidor API parado com sucesso"
-    },
-    "status": {
-      "running": "A executar",
-      "stopped": "Parado"
-    },
-    "title": "Servidor API"
-  },
   "assistants": {
     "abbr": "Assistente",
     "clear": {
@@ -2137,11 +2088,6 @@
       },
       "select_placeholder": "Selecionar…"
     },
-    "api_gateway": {
-      "description": "Qualquer CLI, qualquer modelo",
-      "requires_running": "Mantenha o Cherry Studio em execução após ativar — a CLI externa conecta-se ao gateway que ele hospeda.",
-      "title": "Gateway Unificado"
-    },
     "apply_failed": "Falha ao escrever a configuração da CLI no arquivo do sistema",
     "auto_update_to_latest": "Verificar atualizações e instalar a versão mais recente",
     "bun_required_message": "Executar a ferramenta CLI requer a instalação do ambiente Bun",
@@ -2448,9 +2394,6 @@
     "yesterday": "Ontem",
     "you": "Você"
   },
-  "docs": {
-    "title": "Documentação de Ajuda"
-  },
   "emoji_picker": {
     "categories": {
       "activities": "Atividades",
@@ -2519,12 +2462,12 @@
       "content": "Conteúdo bloqueado pelo sistema de segurança, modifique e tente novamente",
       "context_length": "Conversa muito longa, por favor limpe o histórico ou inicie um novo chat",
       "deprecated": "Este modelo foi descontinuado; por favor, mude para outro modelo.",
-      "free_model_unavailable": "O diagnóstico por IA está temporariamente indisponível",
       "go_to_settings": "Ir para definições",
       "knowledge": "Falha na vetorização da base de conhecimento",
       "mcp": "Falha na ligação ao servidor MCP, verifique se o serviço está em execução",
       "model": "Modelo não encontrado ou sem acesso",
       "model_conflict": "O modelo de diagnóstico é igual ao modelo com erro",
+      "model_unavailable": "O diagnóstico por IA está temporariamente indisponível",
       "network": "Não é possível ligar ao servidor, verifique as definições de rede ou proxy",
       "ocr": "Motor OCR não inicializado, verifique as definições de OCR",
       "parse": "A IA retornou uma resposta inválida, tente novamente ou mude de modelo",
@@ -3986,9 +3929,6 @@
           "specified": "Falha ao exportar arquivo Markdown"
         }
       },
-      "notes": {
-        "export": "Falha ao exportar notas"
-      },
       "notion": {
         "export": "Erro ao exportar Notion, verifique o status da conexão e a configuração de acordo com a documentação",
         "no_api_key": "API Key ou Notion Database ID não configurados",
@@ -4092,9 +4032,6 @@
           "preconf": "Arquivo Markdown exportado com sucesso para caminho pré-configurado",
           "specified": "Arquivo Markdown exportado com sucesso"
         }
-      },
-      "notes": {
-        "export": "sucesso ao exportar para nota"
       },
       "notion": {
         "export": "Exportado com sucesso para Notion"
@@ -4493,159 +4430,6 @@
   "navigate": {
     "provider_settings": "Ir para as configurações do provedor"
   },
-  "notes": {
-    "auto_rename": {
-      "empty_note": "A nota está vazia, não é possível gerar um nome",
-      "failed": "Falha ao gerar o nome da nota",
-      "label": "Gerar nome da nota",
-      "success": "Nome da nota gerado com sucesso"
-    },
-    "characters": "caractere",
-    "collapse": "[minimizar]",
-    "conflict": {
-      "description": "Esta nota foi alterada fora do editor. Recarregue para carregar a versão mais recente (suas edições não salvas serão descartadas) ou continue editando.",
-      "keep_draft": "Continue editando",
-      "reload": "Recarregar",
-      "title": "Nota alterada no disco"
-    },
-    "content_placeholder": "Introduza o conteúdo da nota...",
-    "copyContent": "copiar conteúdo",
-    "create_folder_failed": "Falha ao criar pasta",
-    "create_note_failed": "Falha ao criar nota",
-    "crossPlatformRestoreWarning": "Configuração multiplataforma restaurada, mas o diretório de notas está vazio. Por favor, copie seus arquivos de nota para: {{path}}",
-    "delete": "eliminar",
-    "delete_confirm": "Tem a certeza de que deseja eliminar este {{type}}?",
-    "delete_failed": "Falha ao excluir nota",
-    "delete_folder_confirm": "Tem a certeza de que deseja eliminar a pasta \"{{name}}\" e todos os seus conteúdos?",
-    "delete_note_confirm": "Tem a certeza de que deseja eliminar a nota \"{{name}}\"?",
-    "drop_markdown_hint": "Arraste e solte arquivos ou pastas .md aqui para importar",
-    "empty": "Ainda não existem notas",
-    "expand": "expandir",
-    "exportToPDF": "Exportar para PDF",
-    "exportToWord": "Exportar para Word",
-    "export_failed": "Falha ao exportar para a base de conhecimento",
-    "export_knowledge": "exportar anotações para a base de conhecimento",
-    "export_success": "exportado com sucesso para a base de conhecimento",
-    "export_to_pdf_failed": "Falha ao exportar para PDF",
-    "export_to_pdf_success": "Exportado para PDF",
-    "export_to_word_failed": "Falha ao exportar para Word",
-    "file_removed_draft": "Esta nota foi removida do disco. Seu rascunho não salvo ainda está disponível no editor.",
-    "folder": "pasta",
-    "leave": {
-      "description": "Sair desta nota descartará suas edições não salvas. Deseja continuar?",
-      "discard_and_continue": "Descartar e continuar",
-      "title": "Descartar edições não salvas da nota?"
-    },
-    "load_failed": "Falha ao carregar a nota",
-    "load_failed_description": "O arquivo não pôde ser lido. A edição está desabilitada para proteger o conteúdo da nota.",
-    "metadata_sync_failed": "Arquivo atualizado, mas observe que a sincronização de estado falhou. Por favor, tente novamente a operação.",
-    "metadata_update_failed": "Falha ao atualizar o estado da nota",
-    "move_failed": "Falha ao mover a nota",
-    "new_folder": "Nova pasta",
-    "new_note": "Nova nota",
-    "no_content_to_copy": "Não há conteúdo para copiar",
-    "no_content_to_export": "Sem conteúdo para exportar",
-    "no_file_selected": "Selecione o arquivo a ser enviado",
-    "no_note_selected": "Por favor, selecione uma nota primeiro",
-    "no_valid_files": "Nenhum arquivo válido foi carregado",
-    "open_folder": "Abrir pasta externa",
-    "open_outside": "Abrir externamente",
-    "print": "Imprimir",
-    "print_failed": "Falha ao imprimir nota",
-    "rename": "renomear",
-    "rename_changed": "Devido às políticas de segurança, o nome do arquivo foi alterado de {{original}} para {{final}}",
-    "rename_failed": "Falha ao renomear a nota",
-    "save": "salvar em notas",
-    "save_blocked_load_failed": "Salvamento bloqueado porque a nota falhou ao carregar",
-    "save_failed": "Falha ao salvar nota",
-    "save_failure": {
-      "description": "Esta nota não pôde ser salva. Suas edições permanecem no editor e o salvamento automático está pausado.",
-      "metadata_pending": "A nota foi salva, mas seus metadados de arquivo ainda estão sendo recuperados. Não tente salvar novamente."
-    },
-    "search": {
-      "both": "Nome + Conteúdo",
-      "content": "conteúdo",
-      "found_results": "Encontrados {{count}} resultados (nome: {{nameCount}}, conteúdo: {{contentCount}})",
-      "more_matches": "uma correspondência",
-      "searching": "Pesquisando...",
-      "show_less": "Recolher"
-    },
-    "settings": {
-      "data": {
-        "apply": "aplicativo",
-        "apply_path_failed": "caminho do aplicativo falhou",
-        "current_work_directory": "diretório de trabalho atual",
-        "invalid_directory": "O diretório selecionado é inválido ou não tem permissão",
-        "path_required": "Selecione o diretório de trabalho",
-        "path_updated": "Diretório de trabalho atualizado com sucesso",
-        "reset_failed": "reinicialização falhou",
-        "reset_to_default": "redefinir para o padrão",
-        "select": "escolher",
-        "select_directory_failed": "Falha ao selecionar o diretório",
-        "title": "configuração de dados",
-        "work_directory_description": "O diretório de trabalho é a localização onde todos os arquivos de anotações são armazenados. Alterar o diretório de trabalho não move os arquivos existentes; por favor, migre os arquivos manualmente.",
-        "work_directory_placeholder": "Selecionar diretório de trabalho para notas"
-      },
-      "display": {
-        "compress_content": "reduzir a largura da coluna",
-        "compress_content_description": "Ativando isso limitará o número de caracteres por linha, reduzindo o conteúdo exibido na tela.",
-        "default_font": "fonte padrão",
-        "font_size": "tamanho da fonte",
-        "font_size_description": "Ajuste o tamanho da fonte para uma melhor experiência de leitura (10-30px)",
-        "font_size_large": "Grande",
-        "font_size_medium": "中",
-        "font_size_small": "pequeno",
-        "font_title": "configuração de fonte",
-        "serif_font": "fonte com serifa",
-        "show_table_of_contents": "Mostrar esboço do diretório",
-        "show_table_of_contents_description": "Mostrar barra lateral do índice, facilitando a navegação dentro do documento",
-        "title": "configurações de exibição"
-      },
-      "editor": {
-        "edit_mode": {
-          "description": "no modo de edição padrão para novas notas na visualização de edição",
-          "preview_mode": "visualização em tempo real",
-          "source_mode": "modo de código-fonte",
-          "title": "visão padrão de edição"
-        },
-        "title": "configurações do editor",
-        "view_mode": {
-          "description": "modo de visualização padrão para novas anotações",
-          "edit_mode": "modo de edição",
-          "read_mode": "modo de leitura",
-          "title": "vista padrão"
-        },
-        "view_mode_description": "Definir o modo de visualização padrão para novas abas."
-      },
-      "save_failed": "Falha ao salvar as configurações de notas",
-      "title": "notas"
-    },
-    "show_starred": "mostrar notas favoritas",
-    "sort_a2z": "Nome do arquivo (A-Z)",
-    "sort_created_asc": "Data de criação (do mais antigo para o mais recente)",
-    "sort_created_desc": "Data de criação (do mais recente para o mais antigo)",
-    "sort_updated_asc": "Tempo de atualização (do mais antigo para o mais recente)",
-    "sort_updated_desc": "atualização de tempo (do mais novo para o mais antigo)",
-    "sort_z2a": "Nome do arquivo (Z-A)",
-    "spell_check": "verificação ortográfica",
-    "spell_check_tooltip": "Ativar/Desativar verificação ortográfica",
-    "star": "Notas favoritas",
-    "starred_notes": "notas salvas",
-    "target_name_exists": "Uma nota ou pasta com este nome já existe",
-    "title": "nota",
-    "tree_load_failed": "Falha ao carregar o diretório de notas",
-    "unsaved_changes": "Você tem conteúdo não salvo, tem certeza que deseja sair?",
-    "unstar": "cancelar favoritos",
-    "untitled_folder": "Nova pasta",
-    "untitled_note": "Nota sem título",
-    "upload_all_failed": "Falha ao fazer upload de {{failed}} notas",
-    "upload_failed": "Falha ao carregar a nota",
-    "upload_files": "Carregar Ficheiros",
-    "upload_folder": "Carregar Pasta",
-    "upload_partial_failed": "Carregadas {{uploaded}} notas, {{failed}} falharam",
-    "upload_success": "Nota carregada com sucesso",
-    "uploading_files": "A enviar {{count}} ficheiros..."
-  },
   "notification": {
     "assistant": "Resposta do assistente",
     "knowledge": {
@@ -4692,22 +4476,19 @@
     },
     "skip": "Pular",
     "toast": {
-      "complete_failed": "Não foi possível concluir a configuração. Por favor, tente novamente.",
-      "connected": "Conectado com sucesso ao CherryIN"
+      "complete_failed": "Não foi possível concluir a configuração. Por favor, tente novamente."
     },
     "welcome": {
-      "login_cherryin": "Entrar com CherryIN",
       "or_continue_with": "OU CONTINUAR COM",
-      "other_provider": "Escolher Outros Provedores",
       "select_other_provider": "Selecionar Outro Provedor",
       "setup_hint": "Por favor, configure pelo menos um provedor para a melhor experiência",
       "subtitle": "Ligue um fornecedor para ativar a sua estação de trabalho de IA tudo-em-um",
-      "title": "Bem-vindo ao Cherry Studio"
+      "title": "Bem-vindo ao Cherry Studio Lite"
     }
   },
   "openclaw": {
     "checking_installation": "Verificando a instalação do OpenClaw...",
-    "description": "Integre provedores do Cherry Studio com o Gateway OpenClaw para habilitar agentes de codificação de IA como Claude Code, Qwen-Coder e muitos outros.",
+    "description": "Integre provedores do Cherry Studio Lite com o Gateway OpenClaw para habilitar agentes de codificação de IA como Claude Code, Qwen-Coder e muitos outros.",
     "error": {
       "select_provider_model": "Por favor, selecione primeiro um provedor e um modelo."
     },
@@ -4745,7 +4526,7 @@
       "title": "Configuração do Modelo"
     },
     "node_missing": {
-      "description": "O OpenClaw requer Node.js/npm. Por favor, instale o Node.js primeiro e, em seguida, reinicie o Cherry Studio.",
+      "description": "O OpenClaw requer Node.js/npm. Por favor, instale o Node.js primeiro e, em seguida, reinicie o Cherry Studio Lite.",
       "download_button": "Baixar Node.js",
       "hint": "macOS: brew install node | Windows: Baixe a versão LTS em nodejs.org",
       "title": "Node.js Necessário"
@@ -5231,7 +5012,6 @@
     "baidu-cloud": "Nuvem Baidu",
     "burncloud": "BurnCloud",
     "cerebras": "Cerebras AI",
-    "cherryai": "CherryAI",
     "cherryin": "CherryIN",
     "claude-code": "Claude Code",
     "copilot": "GitHub Copiloto",
@@ -5352,221 +5132,6 @@
     },
     "title": "Restauração de Dados"
   },
-  "richEditor": {
-    "action": {
-      "table": {
-        "deleteColumn": "excluir coluna",
-        "deleteRow": "excluir linha",
-        "insertColumnAfter": "Inserir à direita",
-        "insertColumnBefore": "Inserir à esquerda",
-        "insertRowAfter": "inserir abaixo",
-        "insertRowBefore": "inserir acima"
-      }
-    },
-    "commands": {
-      "blockMath": {
-        "description": "inserir fórmula matemática",
-        "title": "fórmula matemática"
-      },
-      "blockquote": {
-        "description": "inserir texto de referência",
-        "title": "citação"
-      },
-      "bold": {
-        "description": "Marcado como negrito",
-        "title": "negrito"
-      },
-      "bulletList": {
-        "description": "criar uma lista simples de marcadores",
-        "title": "lista não ordenada"
-      },
-      "calloutInfo": {
-        "description": "Adicionar caixa de informação",
-        "title": "caixa de mensagem informativa"
-      },
-      "calloutWarning": {
-        "description": "adicionar caixa de alerta",
-        "title": "caixa de alerta"
-      },
-      "code": {
-        "description": "inserir trecho de código",
-        "title": "código"
-      },
-      "codeBlock": {
-        "description": "inserir trecho de código",
-        "title": "bloco de código"
-      },
-      "columns": {
-        "description": "criar layout de colunas",
-        "title": "coluna"
-      },
-      "date": {
-        "description": "inserir a data atual",
-        "title": "data"
-      },
-      "divider": {
-        "description": "adicionar linha divisória horizontal",
-        "title": "linha divisória"
-      },
-      "hardBreak": {
-        "description": "inserir quebra de linha",
-        "title": "quebra de linha"
-      },
-      "heading1": {
-        "description": "título do grande parágrafo",
-        "title": "Título principal"
-      },
-      "heading2": {
-        "description": "título do parágrafo intermediário",
-        "title": "título secundário"
-      },
-      "heading3": {
-        "description": "título do parágrafo",
-        "title": "título de terceiro nível"
-      },
-      "heading4": {
-        "description": "títulos menores de parágrafos",
-        "title": "título de nível quatro"
-      },
-      "heading5": {
-        "description": "título menor de parágrafo",
-        "title": "título de nível cinco"
-      },
-      "heading6": {
-        "description": "menor título de seção",
-        "title": "título de nível seis"
-      },
-      "image": {
-        "description": "inserir imagem",
-        "title": "imagem"
-      },
-      "inlineCode": {
-        "description": "adicionar código em linha",
-        "title": "código embutido"
-      },
-      "inlineMath": {
-        "description": "inserir fórmulas matemáticas inline",
-        "title": "fórmulas matemáticas em linha"
-      },
-      "italic": {
-        "description": "marcado como itálico",
-        "title": "itálico"
-      },
-      "link": {
-        "description": "adicionar link",
-        "title": "ligação"
-      },
-      "noCommandsFound": "Comando não encontrado",
-      "orderedList": {
-        "description": "criar listas numeradas",
-        "title": "lista ordenada"
-      },
-      "paragraph": {
-        "description": "começar a escrever texto normal",
-        "title": "corpo do texto"
-      },
-      "redo": {
-        "description": "Refazer a última operação",
-        "title": "Refazer"
-      },
-      "strike": {
-        "description": "markdown\n\n标记ado como texto riscado",
-        "title": "riscado"
-      },
-      "table": {
-        "description": "inserir tabela",
-        "title": "tabela"
-      },
-      "taskList": {
-        "description": "criar lista de tarefas",
-        "title": "lista de tarefas"
-      },
-      "underline": {
-        "description": "marcado como sublinhado",
-        "title": "sublinhado"
-      },
-      "undo": {
-        "description": "desfazer a última operação",
-        "title": "reverter"
-      }
-    },
-    "dragHandle": "bloco de arrastar",
-    "frontMatter": {
-      "addProperty": "Adicionar atributo",
-      "addTag": "Adicionar etiqueta",
-      "changeToBoolean": "Caixa de seleção",
-      "changeToDate": "Data",
-      "changeToNumber": "número",
-      "changeToTags": "etiqueta",
-      "changeToText": "texto",
-      "changeType": "Alterar tipo",
-      "deleteProperty": "Excluir atributo",
-      "editValue": "Editar valor",
-      "empty": "vazio",
-      "moreActions": "Mais ações",
-      "propertyName": "nome do atributo"
-    },
-    "image": {
-      "placeholder": "adicionar imagem"
-    },
-    "imageUploader": {
-      "embedImage": "inserir imagem",
-      "embedLink": "incorporar link",
-      "embedSuccess": "Imagem incorporada com sucesso",
-      "invalidType": "Por favor, selecione o arquivo de imagem",
-      "invalidUrl": "link de imagem inválido",
-      "processing": "Processando imagem...",
-      "title": "adicionar imagem",
-      "tooLarge": "O tamanho da imagem não pode exceder 10MB",
-      "upload": "carregar",
-      "uploadError": "Falha no carregamento da imagem",
-      "uploadFile": "enviar arquivo",
-      "uploadHint": "Compatível com formatos como JPG, PNG, GIF, etc., tamanho máximo de 10MB",
-      "uploadSuccess": "Imagem enviada com sucesso",
-      "uploadText": "Clique ou arraste a imagem aqui para enviar",
-      "uploading": "enviando imagem",
-      "urlPlaceholder": "colar o endereço do link da imagem",
-      "urlRequired": "Por favor, insira o endereço do link da imagem"
-    },
-    "link": {
-      "remove": "remover link",
-      "text": "título do link",
-      "textPlaceholder": "Por favor, insira o título do link",
-      "url": "endereço do link"
-    },
-    "math": {
-      "placeholder": "insira uma fórmula em LaTeX"
-    },
-    "placeholder": "digite '/' para chamar comandos",
-    "plusButton": "Clique abaixo para adicionar",
-    "toolbar": {
-      "blockMath": "bloco de fórmulas matemáticas",
-      "blockquote": "citação",
-      "bold": "negrito",
-      "bulletList": "lista não ordenada",
-      "clearMarks": "limpar formatação",
-      "code": "código embutido",
-      "codeBlock": "bloco de código",
-      "heading1": "Título de nível um",
-      "heading2": "subtítulo",
-      "heading3": "título nível três",
-      "heading4": "título de quarto nível",
-      "heading5": "Título de quinto nível",
-      "heading6": "título de nível seis",
-      "image": "imagem",
-      "inlineMath": "fórmulas matemáticas em linha",
-      "italic": "itálico",
-      "link": "link",
-      "orderedList": "lista ordenada",
-      "paragraph": "corpo",
-      "redo": "refazer",
-      "strike": "tachado",
-      "table": "tabela",
-      "taskList": "lista de tarefas",
-      "underline": "sublinhado",
-      "undo": "desfazer"
-    }
-  },
   "selection": {
     "action": {
       "builtin": {
@@ -5642,7 +5207,7 @@
           },
           "description": {
             "0": "O Assistente de Seleção de Texto precisa da permissão de «<strong>Funcionalidades de Acesso</strong>» para funcionar corretamente.",
-            "1": "Clique em «<strong>Ir para Configurações</strong>» e, na janela pop-up de solicitação de permissão que aparecerá em seguida, clique no botão «<strong>Abrir Configurações do Sistema</strong>», depois localize «<strong>Cherry Studio</strong>» na lista de aplicativos e ative o interruptor de permissão.",
+            "1": "Clique em «<strong>Ir para Configurações</strong>» e, na janela pop-up de solicitação de permissão que aparecerá em seguida, clique no botão «<strong>Abrir Configurações do Sistema</strong>», depois localize «<strong>Cherry Studio Lite</strong>» na lista de aplicativos e ative o interruptor de permissão.",
             "2": "Após concluir a configuração, ative novamente o Assistente de Seleção de Texto."
           },
           "title": "Permissão de Acessibilidade"
@@ -5666,7 +5231,7 @@
         "wayland_checklist_subtitle": "Certifique-se de que as seguintes condições sejam atendidas para otimizar a experiência com Wayland:",
         "wayland_description": "Você está em uma sessão Wayland. Devido a limitações do sistema, a barra de ferramentas pode aparecer apenas no centro da tela em vez de seguir o texto selecionado em alguns ambientes de desktop. Recomenda-se alternar para uma sessão X11 para a experiência completa.",
         "wayland_title": "Aviso de Sessão Wayland",
-        "xwayland_fail": "Não ativado, por favor inicie o Cherry Studio com a flag `--ozone-platform=x11`",
+        "xwayland_fail": "Não ativado, por favor inicie o Cherry Studio Lite com a flag `--ozone-platform=x11`",
         "xwayland_label": "Modo XWayland:",
         "xwayland_pass": "Ativado"
       },
@@ -5815,28 +5380,13 @@
   },
   "settings": {
     "about": {
-      "careers": {
-        "button": "Visualizar",
-        "title": "Carreiras"
-      },
       "checkUpdate": {
         "available": "Atualizar agora",
         "label": "Verificar atualizações"
       },
       "checkingUpdate": "Verificando atualizações...",
-      "contact": {
-        "button": "E-mail",
-        "title": "Contato por e-mail"
-      },
-      "debug": {
-        "open": "Abrir",
-        "title": "Painel de Depuração"
-      },
       "description": "Um assistente de IA criado para criadores",
       "downloading": "Baixando atualizações...",
-      "enterprise": {
-        "title": "Empresa"
-      },
       "feedback": {
         "agent": {
           "description": "Converse com o Assistente Cherry para compartilhar comentários.",
@@ -5845,7 +5395,7 @@
         "agent_error": "Não foi possível abrir o Cherry Assistant para feedback. Por favor, tente novamente.",
         "button": "Feedback",
         "dialog": {
-          "description": "Escolha como compartilhar feedback e ajude-nos a melhorar o Cherry Studio.",
+          "description": "Escolha como compartilhar feedback e ajude-nos a melhorar o Cherry Studio Lite.",
           "title": "Escolha um canal de feedback"
         },
         "github": {
@@ -5871,11 +5421,7 @@
       "title": "Sobre nós",
       "updateAvailable": "Nova versão disponível {{version}}",
       "updateError": "Erro ao atualizar",
-      "updateNotAvailable": "Seu software já está atualizado",
-      "website": {
-        "button": "Ver",
-        "title": "Site oficial"
-      }
+      "updateNotAvailable": "Seu software já está atualizado"
     },
     "advanced": {
       "auto_switch_to_topics": "Alternar automaticamente para tópicos",
@@ -5927,7 +5473,7 @@
         "select": "Modificar Diretório",
         "select_error": "Falha ao alterar o diretório de dados",
         "select_error_in_app_path": "O novo caminho é igual ao diretório de instalação do aplicativo. Escolha outro caminho",
-        "select_error_protected_path": "O caminho selecionado está protegido pelo sistema operacional ou pelo Cherry Studio. Por favor, escolha outra pasta.",
+        "select_error_protected_path": "O caminho selecionado está protegido pelo sistema operacional ou pelo Cherry Studio Lite. Por favor, escolha outra pasta.",
         "select_error_root_path": "O novo caminho não pode ser o diretório raiz",
         "select_error_same_path": "O novo caminho é igual ao caminho antigo. Escolha outro caminho",
         "select_error_write_permission": "O novo caminho não possui permissão de escrita",
@@ -6516,31 +6062,6 @@
       "installing": "Instalando...",
       "installingHint": "A primeira instalação pode baixar um runtime e levar alguns minutos",
       "invalidTool": "Nome ou chave de ferramenta inválida",
-      "localModels": {
-        "cancel": "Cancelar",
-        "description": "Modelos que executam localmente no seu dispositivo — baixe uma vez e use offline sem chave de API.",
-        "download": "Download",
-        "embedding": {
-          "name": "Embedding Local",
-          "subtitle": "Qwen3 Embedding 0.6B · ~614 MB"
-        },
-        "notice": {
-          "downloadFailed": "Falha no download. Verifique sua conexão e tente novamente.",
-          "inUse": "Ainda utilizado por uma base de conhecimento; os pesos foram mantidos.",
-          "removeFailed": "Falha na remoção. Verifique os registos para mais detalhes."
-        },
-        "ocr": {
-          "name": "OCR Local",
-          "subtitle": "PaddleOCR PP-OCRv6 · ~140 MB"
-        },
-        "remove": "Remover",
-        "status": {
-          "downloading": "A descarregar…",
-          "ready": "Pronto"
-        },
-        "title": "Modelos Locais",
-        "unsupported": "Os modelos locais não são suportados nesta plataforma."
-      },
       "notInstalled": "Não instalado",
       "openBinariesDir": "Open binaries directory",
       "remove": "Remove tool",
@@ -6578,7 +6099,7 @@
         "uv": "Python package manager for MCP services and dependency installation."
       },
       "uninstall": "Desinstalar",
-      "uninstallConfirmMessage": "Tem certeza de que deseja desinstalar \"{{name}}\"? A cópia de backend do Cherry Studio será excluída.",
+      "uninstallConfirmMessage": "Tem certeza de que deseja desinstalar \"{{name}}\"? A cópia de backend do Cherry Studio Lite será excluída.",
       "uninstallConfirmTitle": "Ferramenta de Desinstalação",
       "uninstallFailed": "Falha ao desinstalar ferramenta",
       "uninstallSuccess": "Ferramenta desinstalada",
@@ -7444,10 +6965,6 @@
     "power": {
       "prevent_sleep_when_busy": "Mantenha o sistema ativo enquanto as tarefas estão sendo executadas"
     },
-    "privacy": {
-      "enable_privacy_mode": "Enviar relatórios de erro e estatísticas de forma anônima",
-      "title": "Configurações de Privacidade"
-    },
     "prompts": {
       "add": "Adicionar Prompt",
       "contentLabel": "Conteúdo",
@@ -7586,8 +7103,7 @@
       "base_url": {
         "invalid": "Digite um URL HTTP ou HTTPS válido",
         "label": "URL Base",
-        "placeholder": "https://api.example.com",
-        "required": "Por favor, insira a URL Base"
+        "placeholder": "https://api.example.com"
       },
       "basic_auth": {
         "label": "Autenticação HTTP",
@@ -7687,13 +7203,6 @@
           "text_endpoint_required": "Configure pelo menos um endpoint de texto",
           "url_help": "Digite a URL raiz da API para visualizar o caminho final da solicitação"
         },
-        "preset_instance": {
-          "description": "Para serviços de Coding Plan, múltiplas contas ou isolamento de projetos; configure cada URL Base e chave de API de forma independente",
-          "empty": "Nenhuma predefinição de Provedor correspondente",
-          "placeholder": "Criar a partir de uma predefinição do provedor…",
-          "search_placeholder": "Predefinições do Provedor de Pesquisa",
-          "title": "Comece a partir de uma predefinição (opcional)"
-        },
         "request_preview": "Caminho da solicitação: {{path}}",
         "title": "Adicionar Provedor Personalizado"
       },
@@ -7709,12 +7218,6 @@
       },
       "docs_check": "Verificar",
       "docs_more_details": "Obter mais detalhes",
-      "duplicate": {
-        "add_another": "Adicionar instância {{name}}",
-        "drawer_title": "Adicionar instância {{name}}",
-        "fill_after_create": "Os campos de autenticação podem ser preenchidos após a criação",
-        "menu_label": "Adicionar instância"
-      },
       "enable_failed_after_connection": "Conexão bem-sucedida, mas o provedor não pôde ser habilitado.",
       "filter": {
         "agent": "Suportado por Agente",
@@ -7751,8 +7254,7 @@
         "anthropic": "Mensagens da Anthropic",
         "gemini": "Google Gemini",
         "openai_chat": "Conclusões de Conversação OpenAI",
-        "openai_responses": "Respostas da OpenAI",
-        "toggle": "Mais Endpoints"
+        "openai_responses": "Respostas da OpenAI"
       },
       "no_models_for_check": "Não há modelos disponíveis para verificação (por exemplo, modelos de conversa)",
       "not_checked": "Não verificado",
@@ -8079,13 +7581,6 @@
           "doc2x": {
             "description": "Motor avançado de restauração de arquivos.",
             "name": "Doc2x"
-          },
-          "local_paddleocr": {
-            "description": "PaddleOCR (PP-OCRv6 medium) em execução em processo — totalmente offline, sem chave de API, com reconhecimento em uma thread em segundo plano para manter a interface responsiva. Baixe o modelo (~140MB) em Dependências de Ambiente antes do primeiro uso.",
-            "name": "PaddleOCR Local",
-            "status": {
-              "local": "Funciona totalmente no seu dispositivo"
-            }
           },
           "mineru": {
             "description": "Ferramenta de extração de PDF de alta qualidade de código aberto do OpenDataLab.",

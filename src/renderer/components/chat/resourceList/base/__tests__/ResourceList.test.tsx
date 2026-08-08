@@ -123,7 +123,6 @@ vi.mock('@renderer/components/command', async (importActual) => ({
 
 import type { ResolvedAction } from '../../../actions/actionTypes'
 import { ResourceListActionContextMenu } from '../../../actions/ResourceListActionContextMenu'
-import { SessionResourceList } from '../../SessionResourceList'
 import { TopicResourceList } from '../../TopicResourceList'
 import {
   ResourceList,
@@ -2532,10 +2531,7 @@ describe('ResourceList', () => {
   })
 
   it('exposes explicit business variants without a shared mode prop', () => {
-    const variants = [
-      ['session', SessionResourceList],
-      ['topic', TopicResourceList]
-    ] as const
+    const variants = [['topic', TopicResourceList]] as const
 
     for (const [name, Component] of variants) {
       const { unmount } = render(

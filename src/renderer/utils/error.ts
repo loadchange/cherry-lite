@@ -1,5 +1,4 @@
 import type { McpError } from '@modelcontextprotocol/sdk/types.js'
-import { type AgentServerError, AgentServerErrorSchema } from '@renderer/types/agent'
 import type {
   AiSdkErrorUnion,
   SerializedAiSdkError,
@@ -29,10 +28,6 @@ export function formatErrorMessage(error: unknown): string {
   }
   if (isAxiosError(error)) {
     return formatAxiosError(error)
-  }
-  const parseResult = AgentServerErrorSchema.safeParse(error)
-  if (parseResult.success) {
-    return formatAgentServerError(parseResult.data)
   }
   return formatErrorDetails(error)
 }
@@ -299,8 +294,6 @@ export function formatAiSdkError(error: SerializedAiSdkError): string {
 
   return text.trim()
 }
-export const formatAgentServerError = (error: AgentServerError) =>
-  `${t('common.error')}: ${error.error.code} ${error.error.message}`
 export const formatAxiosError = (error: AxiosError) => {
   if (!error.response) {
     return `${t('common.error')}: ${t('error.no_response')}`

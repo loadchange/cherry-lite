@@ -7,7 +7,7 @@ import { LogoKeySchema } from './logoKey'
  *
  * Only a preset key is expressible here. A custom *uploaded* logo is NOT part of
  * a DataApi DTO; uploads (and all logo *edits*) go through the dedicated IpcApi
- * commands `provider.set_logo` / `mini_app.set_logo`, which take bytes, create
+ * command `provider.set_logo`, which takes bytes, creates
  * the `file_entry` main-side, and bind it — which is why DataApi services never
  * see raw bytes (pure DB). The service-internal bind input the command
  * orchestrator hands to `reconcileLogoSlotTx` after minting the `file_entry`

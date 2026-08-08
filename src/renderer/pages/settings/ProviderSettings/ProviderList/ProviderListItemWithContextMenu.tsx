@@ -3,7 +3,7 @@ import ModelNotesPopup from '@renderer/pages/settings/ProviderSettings/ModelNote
 import { providerListClasses } from '@renderer/pages/settings/ProviderSettings/primitives/ProviderSettingsPrimitives'
 import { getFancyProviderName } from '@renderer/pages/settings/ProviderSettings/utils/providerDisplay'
 import type { Provider } from '@shared/data/types/provider'
-import { CopyPlus, Edit, Trash2, UserPen } from 'lucide-react'
+import { Edit, Trash2, UserPen } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -19,7 +19,6 @@ interface ProviderListItemWithContextMenuProps {
   onSelect: () => void
   onEdit: () => void
   onDelete: () => void
-  onDuplicate?: () => void
   showManagementActions: boolean
   listState: ListDragState
   onSetListItemRef: (providerId: string, element: HTMLDivElement | null) => void
@@ -33,7 +32,6 @@ export default function ProviderListItemWithContextMenu({
   onSelect,
   onEdit,
   onDelete,
-  onDuplicate,
   showManagementActions,
   listState,
   onSetListItemRef
@@ -49,15 +47,6 @@ export default function ProviderListItemWithContextMenu({
         label: t('common.edit'),
         icon: <Edit size={14} />,
         onSelect: onEdit
-      })
-    }
-    if (onDuplicate) {
-      items.push({
-        type: 'item',
-        id: 'duplicate',
-        label: t('settings.provider.duplicate.menu_label'),
-        icon: <CopyPlus size={14} />,
-        onSelect: onDuplicate
       })
     }
     items.push({
@@ -78,7 +67,7 @@ export default function ProviderListItemWithContextMenu({
       })
     }
     return items
-  }, [onDelete, onDuplicate, onEdit, provider.id, showManagementActions, t])
+  }, [onDelete, onEdit, provider.id, showManagementActions, t])
 
   // Right-click stays uncontrolled — Radix handles cross-popup mutex naturally.
   // The more-button popup remains controlled so the parent's single-row-active-at-a-time

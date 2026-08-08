@@ -26,16 +26,7 @@ import type { Citation } from '@renderer/types/message'
 import { WEB_SEARCH_SOURCE } from '@renderer/types/webSearchProvider'
 import { mapCitationMarksToTags, mapMarkdownOutsideCode, normalizeCitationMarks } from '@renderer/utils/citation'
 import { cleanMarkdownContent } from '@renderer/utils/formats'
-import {
-  KB_READ_TOOL_NAME,
-  KB_SEARCH_TOOL_NAME,
-  kbGrepOutputSchema,
-  kbReadOutputSchema,
-  kbSearchOutputSchema,
-  WEB_FETCH_TOOL_NAME,
-  WEB_SEARCH_TOOL_NAME,
-  webSearchOutputSchema
-} from '@shared/ai/builtinTools'
+import { WEB_FETCH_TOOL_NAME, WEB_SEARCH_TOOL_NAME, webSearchOutputSchema } from '@shared/ai/builtinTools'
 import { parseFunctionCallToolName } from '@shared/ai/tools/mcpToolName'
 import { isDeferredToolOutput, isPersistedToolOutput } from '@shared/ai/transport'
 import type { CherryMessagePart } from '@shared/data/types/message'
@@ -61,12 +52,7 @@ export interface MessageCitations {
 
 const EMPTY_MESSAGE_CITATIONS: MessageCitations = { byId: new Map(), byMarkerNumber: new Map(), all: [] }
 
-const CITABLE_TOOL_NAMES: ReadonlySet<string> = new Set([
-  WEB_SEARCH_TOOL_NAME,
-  WEB_FETCH_TOOL_NAME,
-  KB_SEARCH_TOOL_NAME,
-  KB_READ_TOOL_NAME
-])
+const CITABLE_TOOL_NAMES: ReadonlySet<string> = new Set([WEB_SEARCH_TOOL_NAME, WEB_FETCH_TOOL_NAME])
 const CHERRY_TOOLS_MCP_SERVER = 'cherry-tools'
 const TOOL_INVOKE_TOOL_NAME = 'tool_invoke'
 
@@ -75,7 +61,6 @@ const TOOL_INVOKE_TOOL_NAME = 'tool_invoke'
  * but the tooltip only ever shows a snippet. Truncate here so the full slice is not carried
  * through the render path and re-serialized into every `<sup data-citation>` tag.
  */
-const KNOWLEDGE_SNIPPET_MAX_CHARS = 300
 
 type ToolResponsePart = ToolUIPart<UITools> | DynamicToolUIPart
 
@@ -150,46 +135,6 @@ function unwrapCitableOutput(output: unknown): unknown {
   return output
 }
 
-function toSnippet(content: string): string {
-  const trimmed = content.trim()
-  if (trimmed.length <= KNOWLEDGE_SNIPPET_MAX_CHARS) return trimmed
-  return `${trimmed.slice(0, KNOWLEDGE_SNIPPET_MAX_CHARS)}…`
-}
-
-/**
- * kb_read's citable payload, across both of its modes: read mode returns one document slice, grep
- * mode returns matches from one document — either way the call yields a single source, so its
- * output carries one `id` rather than one per item. Returns null for anything not citable: an
- * error/steer string, and results persisted before kb_read joined the citation pipeline (no `id`).
- */
-function parseKbReadCitation(
-  output: unknown
-): { id: string; baseId?: string; conceptId: string; title: string; content: string } | null {
-  const read = kbReadOutputSchema.safeParse(output)
-  if (read.success) {
-    const { id, baseId, conceptId, title, content } = read.data
-    return id ? { id, baseId, conceptId, title, content: toSnippet(content) } : null
-  }
-  const grep = kbGrepOutputSchema.safeParse(output)
-  if (!grep.success) return null
-  const { id, baseId, conceptId, title, matches } = grep.data
-  if (!id || matches.length === 0) return null
-  return { id, baseId, conceptId, title, content: toSnippet(matches.map((match) => match.snippet).join(' … ')) }
-}
-
-/**
- * Document identity for the one-citation-per-document dedup. `conceptId` is a
- * base-relative path, so it only identifies a document within its own base —
- * two bases can each hold a `README.md`. Results persisted before `baseId` was
- * propagated carry none; those keep deduping on the bare `conceptId`, which is
- * how they already behaved.
- */
-function documentKey(item: { baseId?: string; conceptId?: string }): string | undefined {
-  if (!item.conceptId) return undefined
-  // NUL separator: neither id can contain one, so the join is unambiguous.
-  return `${item.baseId ?? ''}\u0000${item.conceptId}`
-}
-
 /** Numeric value a lookup-result id can answer a bare `[N]` marker with. */
 function markerNumberOfId(id: string | number): number | undefined {
   if (typeof id === 'number') return id
@@ -225,68 +170,11 @@ export function resolveMessageCitations(parts: readonly CherryMessagePart[]): Me
   let nextNumber = all.reduce((max, citation) => Math.max(max, citation.number), 0) + 1
   let lookupCallCount = 0
   const toolMarkerCandidates = new Map<number, Citation>()
-  const byDocument = new Map<string, Citation>()
-
-  const addKnowledgeCitation = (item: {
-    id: string | number
-    baseId?: string
-    conceptId?: string
-    title?: string
-    content: string
-  }) => {
-    const key = String(item.id)
-    if (byId.has(key)) return
-    // One citation per document, the knowledge-base counterpart of the URL dedup below: kb_search
-    // can return several chunks of one file and kb_read may then quote that same file again, but
-    // the reader only cares which document backed the statement. First occurrence wins.
-    const document = documentKey(item)
-    const existing = document ? byDocument.get(document) : undefined
-    if (existing) {
-      byId.set(key, existing)
-      return
-    }
-    const citation: Citation = {
-      number: nextNumber++,
-      url: '',
-      title: item.title || '',
-      content: item.content,
-      showFavicon: false,
-      type: 'knowledge'
-    }
-    byId.set(key, citation)
-    if (document) byDocument.set(document, citation)
-    all.push(citation)
-    const markerNumber = markerNumberOfId(item.id)
-    if (markerNumber !== undefined && !toolMarkerCandidates.has(markerNumber)) {
-      toolMarkerCandidates.set(markerNumber, citation)
-    }
-  }
-
   for (const part of parts) {
     const toolName = resolveCitableToolName(part)
     if (!toolName) continue
     const rawOutput = unwrapCitableOutput((part as { output?: unknown }).output)
     const output = normalizeToolOutputResponse(rawOutput)
-
-    if (toolName === KB_SEARCH_TOOL_NAME) {
-      const parsed = kbSearchOutputSchema.safeParse(output)
-      if (!parsed.success || parsed.data.length === 0) continue
-      lookupCallCount += 1
-      for (const item of parsed.data) addKnowledgeCitation(item)
-      continue
-    }
-
-    if (toolName === KB_READ_TOOL_NAME) {
-      // Read mode's payload carries its own top-level `content`, which `normalizeToolOutputResponse`
-      // mistakes for the MCP `{ content, metadata }` envelope and unwraps down to the bare document
-      // text. Try the raw output first (assistant path); the unwrapped form only wins on the agent
-      // path, where a real envelope does wrap the payload.
-      const item = parseKbReadCitation(rawOutput) ?? parseKbReadCitation(output)
-      if (!item) continue
-      lookupCallCount += 1
-      addKnowledgeCitation(item)
-      continue
-    }
 
     const parsed = webSearchOutputSchema.safeParse(output)
     if (!parsed.success || parsed.data.length === 0) continue

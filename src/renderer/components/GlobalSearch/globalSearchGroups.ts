@@ -1,11 +1,9 @@
 import { cacheService } from '@data/CacheService'
 import type { Topic } from '@renderer/types/topic'
-import type { AgentSessionEntity } from '@shared/data/api/schemas/agentSessions'
 import type {
   EntitySearchItem,
   EntitySearchResponse,
   EntitySearchType,
-  SessionMessageContentSearchItem,
   TopicMessageContentSearchItem
 } from '@shared/data/api/schemas/search'
 import type { GlobalSearchRecentEntry, Tab } from '@shared/data/cache/cacheValueTypes'
@@ -17,14 +15,12 @@ export const GLOBAL_MESSAGE_SEARCH_GROUP_COLLAPSED_LIMIT = 3
 export const GLOBAL_SEARCH_ENTITY_GROUP_COLLAPSED_LIMIT = 5
 export const GLOBAL_SEARCH_MESSAGE_PREVIEW_LIMIT = 5
 
-export type GlobalSearchFilter = 'all' | 'topic' | 'session' | 'assistant' | 'agent' | 'knowledge'
-export type GlobalMessageSearchSourceFilter = 'all' | 'topic' | 'session'
-type GlobalTopicMessageSearchResult = TopicMessageContentSearchItem & { sourceType: 'topic' }
-type GlobalSessionMessageSearchResult = SessionMessageContentSearchItem & { sourceType: 'session' }
-export type GlobalMessageSearchResult = GlobalTopicMessageSearchResult | GlobalSessionMessageSearchResult
+export type GlobalSearchFilter = 'all' | 'topic' | 'assistant'
+export type GlobalMessageSearchSourceFilter = 'all' | 'topic'
+export type GlobalMessageSearchResult = TopicMessageContentSearchItem & { sourceType: 'topic' }
 type GlobalMessageSearchSource = GlobalMessageSearchResult['sourceType']
 
-export type GlobalSearchGroupId = 'recent' | 'topic' | 'session' | 'message' | 'assistant' | 'agent' | 'knowledge-base'
+export type GlobalSearchGroupId = 'recent' | 'topic' | 'message' | 'assistant'
 
 export type GlobalMessageSearchPanelItem =
   | {
@@ -89,31 +85,21 @@ export type GlobalSearchPanelGroup = {
 }
 
 const FILTER_TYPES: Record<GlobalSearchFilter, EntitySearchType[]> = {
-  all: ['topic', 'session', 'assistant', 'agent', 'knowledge-base'],
+  all: ['topic', 'assistant'],
   topic: ['topic'],
-  session: ['session'],
-  assistant: ['assistant'],
-  agent: ['agent'],
-  knowledge: ['knowledge-base']
+  assistant: ['assistant']
 }
 
 const INTERNAL_ROUTE_PREFIXES = ['/app/', '/settings']
-const COARSE_ENTITY_ROUTE_PATHS = new Set(['/app/chat', '/app/agents'])
+const COARSE_ENTITY_ROUTE_PATHS = new Set(['/app/chat'])
 const LEGACY_ROUTE_PATHS = new Set(['/app/library'])
 
 export function getGlobalSearchTypes(filter: GlobalSearchFilter): EntitySearchType[] {
   return FILTER_TYPES[filter]
 }
 
-export function getMessageSearchSources(filter: GlobalMessageSearchSourceFilter): GlobalMessageSearchSource[] {
-  switch (filter) {
-    case 'topic':
-      return ['topic']
-    case 'session':
-      return ['session']
-    case 'all':
-      return ['topic', 'session']
-  }
+export function getMessageSearchSources(_filter: GlobalMessageSearchSourceFilter): GlobalMessageSearchSource[] {
+  return ['topic']
 }
 
 export function getGlobalSearchRecentEntryId(entry: GlobalSearchRecentEntry): string {
@@ -184,8 +170,8 @@ export function upsertGlobalSearchRecentEntry(
 /**
  * Records a visit into the persisted recent list.
  *
- * Imperative on purpose: the three call sites (app shell route visit, chat topic
- * activation, agent session activation) only ever WRITE this key — taking
+ * Imperative on purpose: the call sites (app shell route visit, chat topic
+ * activation) only ever WRITE this key — taking
  * `usePersistCache` just for its setter would subscribe them to every recent-list
  * change and rerender them for a value they never read. The functional updater
  * resolves against the latest persisted value, and `upsertGlobalSearchRecentEntry`
@@ -240,20 +226,8 @@ export function createRecentTopicEntryFromTopic(
   }
 }
 
-export function createRecentSessionEntryFromSession(
-  session: Pick<AgentSessionEntity, 'id' | 'name'>,
-  lastAccessTime = Date.now()
-): GlobalSearchRecentEntry {
-  return {
-    kind: 'session',
-    sessionId: session.id,
-    title: session.name,
-    lastAccessTime
-  }
-}
-
 function getMessageResultParentId(result: GlobalMessageSearchResult) {
-  return result.sourceType === 'topic' ? `topic:${result.topicId}` : `session:${result.sessionId}`
+  return `topic:${result.topicId}`
 }
 
 function buildGlobalMessagePreviewItems(items: readonly GlobalMessageSearchResult[]): GlobalSearchPanelItem[] {
@@ -327,12 +301,9 @@ export function buildGlobalSearchGroups({
 
   const groups: GlobalSearchPanelGroup[] = []
   const includeTopic = filter === 'all' || filter === 'topic'
-  const includeSession = filter === 'all' || filter === 'session'
   const includeAssistant = filter === 'all' || filter === 'assistant'
-  const includeAgent = filter === 'all' || filter === 'agent'
-  const includeKnowledge = filter === 'all' || filter === 'knowledge'
   const shouldCollapseEntityGroup = (groupId: GlobalSearchGroupId) =>
-    filter === 'all' && (groupId === 'topic' || groupId === 'session') && !expandedGroupIds.has(groupId)
+    filter === 'all' && groupId === 'topic' && !expandedGroupIds.has(groupId)
   const toPanelGroup = (groupId: GlobalSearchGroupId, items: GlobalSearchPanelItem[]): GlobalSearchPanelGroup => {
     if (!shouldCollapseEntityGroup(groupId) || items.length <= GLOBAL_SEARCH_ENTITY_GROUP_COLLAPSED_LIMIT) {
       return { id: groupId, items, total: items.length }
@@ -359,15 +330,6 @@ export function buildGlobalSearchGroups({
     if (topicItems.length > 0) groups.push(toPanelGroup('topic', topicItems))
   }
 
-  if (includeSession) {
-    const sessionItems = (itemsByType.get('session') ?? []).map((result) => ({
-      kind: 'result' as const,
-      id: `${result.type}:${result.id}`,
-      result
-    }))
-    if (sessionItems.length > 0) groups.push(toPanelGroup('session', sessionItems))
-  }
-
   if (filter === 'all' && messageItems.length > 0) {
     groups.push({
       id: 'message',
@@ -388,24 +350,6 @@ export function buildGlobalSearchGroups({
     if (items.length > 0) groups.push({ id: 'assistant', items })
   }
 
-  if (includeAgent) {
-    const items = (itemsByType.get('agent') ?? []).map((result) => ({
-      kind: 'result' as const,
-      id: `${result.type}:${result.id}`,
-      result
-    }))
-    if (items.length > 0) groups.push({ id: 'agent', items })
-  }
-
-  if (includeKnowledge) {
-    const items = (itemsByType.get('knowledge-base') ?? []).map((result) => ({
-      kind: 'result' as const,
-      id: `${result.type}:${result.id}`,
-      result
-    }))
-    if (items.length > 0) groups.push({ id: 'knowledge-base', items })
-  }
-
   return groups
 }
 
@@ -422,8 +366,8 @@ export function buildGlobalMessageSearchGroups({
   >()
 
   for (const result of items) {
-    const parentId = result.sourceType === 'topic' ? `topic:${result.topicId}` : `session:${result.sessionId}`
-    const title = result.sourceType === 'topic' ? result.topicName : result.sessionName
+    const parentId = `topic:${result.topicId}`
+    const title = result.topicName
     const group = groupsByParent.get(parentId)
 
     if (group) {

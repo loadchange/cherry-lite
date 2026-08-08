@@ -24,7 +24,6 @@ import type { ReasoningEffortOption } from '@shared/types/aiSdk'
 import type { SerializedError } from '@shared/types/error'
 import { type UIMessageChunk } from 'ai'
 
-import { extractAgentSessionId, isAgentSessionTopic } from '../agentSession/topic'
 import { applyTurnOutputAttributes } from '../observability'
 import type { AiStreamRequest, CallOverrides, ContextOwner, InProcessUsageContext } from '../types'
 import { buildCompactReplay } from './buildCompactReplay'
@@ -326,35 +325,31 @@ export class AiStreamManager extends BaseService {
 
   /**
    * Run `fn` under the per-topic dispatch lock. The sole accessor of `dispatchLock`,
-   * so every dispatch entry point serialises through one place: `dispatch()` (the chat
-   * `Ai_Stream_Open` + approval-continue paths) and `startAgentSessionRun` (scheduler /
-   * channel-inbound agent-session runs), which can't use `dispatch()` because it carries
-   * extra listeners. Holding the same per-topic lock around their `hasLiveStream →
-   * prepareDispatch → send` window stops two runs on one topic from both seeing "no live
-   * stream" and orphaning a PENDING placeholder.
+   * so every dispatch entry point serialises through one place. Holding the same
+   * per-topic lock around a run's `hasLiveStream → prepareDispatch → send` window stops
+   * two runs on one topic from both seeing "no live stream" and orphaning a PENDING
+   * placeholder.
    */
   withDispatchLock<T>(topicId: string, fn: () => Promise<T>): Promise<T> {
     return this.dispatchLock.runExclusive(topicId, fn)
   }
 
   // ── Write quiesce (backup restore) ───────────────────────────────
-  // Contract shared with JobManager / AgentSessionRuntimeService / ChannelManager
-  // (issues #16849/#16850): pause() gates new-turn ADMISSION (before prepareDispatch
-  // writes rows) so a restore snapshot sees no new `agent_session_message`/`message`
-  // writes; drainInFlight() awaits everything already writing. Prompt streams
+  // Contract shared with JobManager (issues #16849/#16850): pause() gates new-turn
+  // ADMISSION (before prepareDispatch writes rows) so a restore snapshot sees no new
+  // `message` writes; drainInFlight() awaits everything already writing. Prompt streams
   // (translate / API gateway / topic naming) carry no persistence listener and are
   // neither gated nor drained. `AiService.embedMany` never routes through this
   // manager, so embeddings stay available while quiesced.
 
-  /** True while any write-quiesce hold is live. Public because `startAgentSessionRun` gates on it. */
+  /** True while any write-quiesce hold is live. */
   get isWriteQuiesced(): boolean {
     return this.pauseHolds.size > 0
   }
 
   /**
-   * Pause new-turn admission: `dispatch()` returns `{mode:'blocked', reason:'paused'}` and
-   * `startAgentSessionRun` throws while any hold is live; queued steer continuations are
-   * suppressed (not consumed). In-flight streams keep running until drained. There is
+   * Pause new-turn admission: `dispatch()` returns `{mode:'blocked', reason:'paused'}` while
+   * any hold is live; queued steer continuations are suppressed (not consumed). In-flight streams keep running until drained. There is
    * deliberately NO resume(): dispose your own hold; the last disposal re-kicks suppressed
    * continuations. A dropped hold fails closed (paused until relaunch).
    */
@@ -757,7 +752,7 @@ export class AiStreamManager extends BaseService {
   }
 
   /** Enqueue a steer user message (already persisted by the provider). If the topic settled before
-   *  this landed, start the continuation immediately. Mirrors `AgentSessionRuntimeService.enqueueUserMessage`. */
+   *  this landed, start the continuation immediately. */
   enqueuePendingSteer(
     topicId: string,
     userMessageId: string,
@@ -860,12 +855,7 @@ export class AiStreamManager extends BaseService {
   /** Abort all executions in a topic. */
   abort(topicId: string, reason: string): void {
     const stream = this.activeStreams.get(topicId)
-    if (!stream || !isLiveStatus(stream.status)) {
-      if (isAgentSessionTopic(topicId)) {
-        application.get('AgentSessionRuntimeService').abortPendingTurn(extractAgentSessionId(topicId), reason)
-      }
-      return
-    }
+    if (!stream || !isLiveStatus(stream.status)) return
     logger.info('Aborting stream', { topicId, reason })
     for (const exec of stream.executions.values()) {
       if (exec.status === 'streaming') {
@@ -997,17 +987,8 @@ export class AiStreamManager extends BaseService {
     // steer stays queued for the continuation the user's Approve dispatches. Broadcast this exec's
     // done with isTopicDone=false when chaining (the bubble finalises, the topic stays busy), skip the
     // terminal lifecycle, and start the continuation with the carried renderer listeners.
-    // Agent sessions chain their own follow-ups (terminal listener -> markTurnTerminal -> startNextTurn):
-    // when the runtime will continue this topic, keep the stream alive so the next turn reaches the
-    // carried renderer listeners, but let the runtime drive the continuation.
     const chatChaining = stream.status === 'done' && this.hasPendingSteer(topicId)
-    const agentChaining =
-      topicDone &&
-      !chatChaining &&
-      stream.status === 'done' &&
-      isAgentSessionTopic(topicId) &&
-      application.get('AgentSessionRuntimeService').willContinueTopic(topicId)
-    const chaining = chatChaining || agentChaining
+    const chaining = chatChaining
 
     await this.broadcastExecutionDone(stream, exec, topicDone && !chaining)
 
@@ -1205,7 +1186,7 @@ export class AiStreamManager extends BaseService {
   /**
    * Open a fresh assistant turn answering the head of the steer queue. Carries the finished turn's
    * renderer listeners forward so the continuation streams to the same windows; persistence/trace
-   * listeners are rebuilt by `prepareDispatch`. Mirrors `AgentSessionRuntimeService.startNextTurn`.
+   * listeners are rebuilt by `prepareDispatch`.
    */
   private async startNextChatTurn(topicId: string): Promise<void> {
     // Write-quiesce: suppress the launch before consuming the queue head — the steer stays

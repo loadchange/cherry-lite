@@ -12,13 +12,18 @@ import { AnthropicMessagesLanguageModel } from '@ai-sdk/anthropic/internal'
 import { GoogleGenerativeAILanguageModel } from '@ai-sdk/google/internal'
 import { OpenAIChatLanguageModel, OpenAIResponsesLanguageModel, OpenAISpeechModel } from '@ai-sdk/openai/internal'
 import { OpenAICompatibleChatLanguageModel, OpenAICompatibleEmbeddingModel } from '@ai-sdk/openai-compatible'
-import type { EmbeddingModelV3, ImageModelV3, LanguageModelV3, ProviderV3, RerankingModelV3 } from '@ai-sdk/provider'
+import {
+  type EmbeddingModelV3,
+  type LanguageModelV3,
+  NoSuchModelError,
+  type ProviderV3,
+  type RerankingModelV3
+} from '@ai-sdk/provider'
 import type { FetchFunction } from '@ai-sdk/provider-utils'
 import { loadApiKey, withoutTrailingSlash } from '@ai-sdk/provider-utils'
 import { OpenAICompatibleRerankingModel } from '@cherrystudio/ai-sdk-provider'
 import { ENDPOINT_TYPE, type EndpointType } from '@shared/data/types/model'
 
-import { createAihubmixImageModel } from './aihubmixImageModel'
 import { resolveAihubmixChatFamily } from './aihubmixRouting'
 
 export const AIHUBMIX_PROVIDER_NAME = 'aihubmix' as const
@@ -36,7 +41,6 @@ export interface AihubmixProvider extends ProviderV3 {
   (modelId: string): LanguageModelV3
   languageModel(modelId: string): LanguageModelV3
   embeddingModel(modelId: string): EmbeddingModelV3
-  imageModel(modelId: string): ImageModelV3
   rerankingModel(modelId: string): RerankingModelV3
 }
 
@@ -149,9 +153,6 @@ export function createAihubmix(options: AihubmixProviderSettings = {}): Aihubmix
       fetch: customFetch
     })
 
-  provider.imageModel = (modelId: string) =>
-    createAihubmixImageModel(modelId, { baseURL: chatBaseURL, resolveApiKey, headers: authHeaders, fetch: customFetch })
-
   provider.speechModel = (modelId: string) =>
     new OpenAISpeechModel(modelId, {
       provider: `${AIHUBMIX_PROVIDER_NAME}.speech`,
@@ -167,6 +168,10 @@ export function createAihubmix(options: AihubmixProviderSettings = {}): Aihubmix
       headers: authHeaders,
       fetch: customFetch
     })
+
+  provider.imageModel = (modelId: string) => {
+    throw new NoSuchModelError({ modelId, modelType: 'imageModel' })
+  }
 
   return provider as AihubmixProvider
 }

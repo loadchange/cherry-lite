@@ -485,13 +485,6 @@ export function toContentRole(role: MessageRole): ContentMessageRole {
 export const TOPIC_MESSAGE_SEARCH_ROLES = ['user', 'assistant'] as const satisfies readonly MessageRole[]
 export type TopicMessageSearchRole = (typeof TOPIC_MESSAGE_SEARCH_ROLES)[number]
 
-export const AGENT_SESSION_MESSAGE_SEARCH_ROLES = [
-  'user',
-  'assistant',
-  'system'
-] as const satisfies readonly MessageRole[]
-export type AgentSessionMessageSearchRole = (typeof AGENT_SESSION_MESSAGE_SEARCH_ROLES)[number]
-
 export function coerceSearchRole<TRole extends MessageRole>(
   role: string,
   allowedRoles: readonly TRole[]

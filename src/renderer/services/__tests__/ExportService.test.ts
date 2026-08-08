@@ -1,12 +1,10 @@
 // Import Message, MessageBlock, and necessary enums
 import { getTopicMessages } from '@renderer/hooks/useTopic'
-import { addNote } from '@renderer/services/NotesService'
 import { toast } from '@renderer/services/toast'
 import type { MessageExportView } from '@renderer/types/messageExport'
 import type { Message, MessageBlock } from '@renderer/types/newMessage'
 import { AssistantMessageStatus, MessageBlockStatus, MessageBlockType } from '@renderer/types/newMessage'
 import type * as MessageFind from '@renderer/utils/message/find'
-import { mockRendererLoggerService } from '@test-mocks/RendererLoggerService'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // --- Mocks Setup ---
@@ -97,10 +95,6 @@ vi.mock('@renderer/hooks/useTopic', () => ({
   getTopicMessages: vi.fn()
 }))
 
-vi.mock('@renderer/services/NotesService', () => ({
-  addNote: vi.fn()
-}))
-
 // PreferenceService is now mocked globally in tests/renderer.setup.ts
 
 vi.mock('@renderer/utils/markdown', async (importOriginal) => {
@@ -117,7 +111,6 @@ import { markdownToPlainText } from '@renderer/utils/markdown'
 
 import {
   exportMarkdownToObsidian,
-  exportTopicToNotes,
   messagesToMarkdown,
   messageToMarkdown,
   messageToMarkdownWithReasoning,
@@ -381,24 +374,16 @@ describe('ExportService', () => {
       expect(markdown).toContain('[^1]: [Example](https://example.com)')
     })
 
-    it('should list a URL-less knowledge citation by title', async () => {
+    it('should list a URL-less citation by title', async () => {
       const message = createExportView([
-        {
-          type: 'tool-kb_search',
-          toolCallId: 'kb1',
-          state: 'output-available',
-          input: { query: 'q', baseIds: ['b'] },
-          output: [
-            { id: '3f2a1b9c-1', baseId: 'b', conceptId: 'notes/one.md', title: 'One.md', content: 'kb', score: 0.9 }
-          ]
-        },
-        { type: 'text', text: 'From my notes. [cite:3f2a1b9c-1]' }
+        toolSearchPart([{ id: '3f2a1b9c-1', title: 'Unlinked Source', url: '', content: 'snippet' }]),
+        { type: 'text', text: 'From an unlinked source. [cite:3f2a1b9c-1]' }
       ])
 
       const markdown = await messageToMarkdown(message)
 
       expect(markdown).not.toContain('[cite:')
-      expect(markdown).toContain('[^1]: One.md')
+      expect(markdown).toContain('[^1]: Unlinked Source')
     })
 
     it('should strip tool-part markers entirely when citations are excluded', async () => {
@@ -556,32 +541,6 @@ describe('ExportService', () => {
 
     it('should handle an empty array of messages', async () => {
       expect(await messagesToMarkdown([])).toBe('')
-    })
-  })
-
-  describe('exportTopicToNotes', () => {
-    beforeEach(() => {
-      vi.clearAllMocks()
-      ;(addNote as any).mockResolvedValue(undefined)
-    })
-
-    it('logs and toasts when topic markdown generation fails', async () => {
-      const exportError = new Error('markdown failed')
-      const loggerErrorSpy = vi.spyOn(mockRendererLoggerService, 'error').mockImplementation(() => {})
-      const testTopic = createTopic({
-        id: 'topic_markdown_failure',
-        name: 'Topic Markdown Failure',
-        assistantId: 'asst_test'
-      })
-      ;(getTopicMessages as any).mockRejectedValue(exportError)
-
-      await expect(exportTopicToNotes(testTopic, '/notes')).rejects.toThrow(exportError)
-
-      expect(addNote).not.toHaveBeenCalled()
-      expect(loggerErrorSpy).toHaveBeenCalledWith('导出到笔记失败:', exportError)
-      expect(toast.error).toHaveBeenCalledWith('message.error.notes.export')
-
-      loggerErrorSpy.mockRestore()
     })
   })
 

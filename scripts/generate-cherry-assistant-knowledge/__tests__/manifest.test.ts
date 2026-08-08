@@ -4,7 +4,6 @@ import * as path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { appLanguageOptions } from '../../../src/renderer/i18n/languages'
-import { CodeCli } from '../../../src/shared/types/codeCli'
 import { COMMAND_DEFINITIONS } from '../../../src/shared/utils/command/definitions'
 import { generateProductManifest, serializeProductManifest } from '../generators/manifest'
 
@@ -56,15 +55,13 @@ describe('generateProductManifest', () => {
     expect(manifest.locales).toEqual(appLanguageOptions)
   })
 
-  it('includes agent channels, schedule triggers, and Code CLI tools', () => {
+  it('includes agent channels and schedule triggers', () => {
     const manifest = generateProductManifest()
 
     expect(manifest.agents.channelTypes.length).toBeGreaterThan(0)
     expect(new Set(manifest.agents.channelTypes).size).toBe(manifest.agents.channelTypes.length)
     expect(manifest.agents.scheduleTriggerKinds.length).toBeGreaterThan(0)
     expect(new Set(manifest.agents.scheduleTriggerKinds).size).toBe(manifest.agents.scheduleTriggerKinds.length)
-    expect(manifest.agents.codeCli.route).toBe(manifest.routes.primary.find(({ id }) => id === 'code_tools')?.path)
-    expect(manifest.agents.codeCli.tools).toEqual(Object.values(CodeCli))
   })
 
   it('serializes the manifest as stable JSON', () => {

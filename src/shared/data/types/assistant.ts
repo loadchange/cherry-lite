@@ -141,8 +141,6 @@ export const AssistantSchema = z.strictObject({
   orderKey: z.string(),
   /** Ordered MCP server IDs linked through assistant_mcp_server */
   mcpServerIds: z.array(z.string()),
-  /** Ordered knowledge base IDs linked through assistant_knowledge_base */
-  knowledgeBaseIds: z.array(z.string()),
   /** Creation timestamp (ISO string).
    *  DB column is nullable (SQLite integer), but rowToAssistant always provides a
    *  fallback so the API-level type is non-optional. */

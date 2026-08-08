@@ -19,7 +19,6 @@ import {
   isFixedReasoningModel,
   isFunctionCallingModel,
   isGeminiModel,
-  isGenerateImageModel,
   isGrokModel,
   isOpenAIModel,
   isSupportedReasoningEffortModel,
@@ -35,7 +34,6 @@ import { type AppWebSearchPluginConfig, buildProviderBuiltinWebSearchConfig } fr
 
 export interface ResolvedCapabilities {
   enableReasoning: boolean
-  enableGenerateImage: boolean
   isSupportedToolUse: boolean
   streamOutput: boolean
   webSearchPluginConfig?: AppWebSearchPluginConfig
@@ -80,11 +78,6 @@ export function resolveCapabilities(
   const enableReasoning =
     isSupportedThinkingTokenModel(model) || isSupportedReasoningEffortModel(model) || isFixedReasoningModel(model)
 
-  // Native chat-model image output (Gemini `responseModalities`) stays disabled intentionally:
-  // image generation is delivered via the `generate_image` tool (gated on `settings.enableGenerateImage`),
-  // not this capability. Kept `&& false` so the provider-option plumbing below never fires.
-  const enableGenerateImage = isGenerateImageModel(model) && false
-
   const isSupportedToolUse = isFunctionCallingModel(model)
 
   const streamOutput = assistant.settings?.streamOutput !== false
@@ -122,7 +115,6 @@ export function resolveCapabilities(
 
   return {
     enableReasoning,
-    enableGenerateImage,
     isSupportedToolUse,
     streamOutput,
     webSearchPluginConfig

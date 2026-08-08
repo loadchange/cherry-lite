@@ -8,7 +8,6 @@ import { Bolt, Minus } from 'lucide-react'
 import React, { memo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { FreeTrialModelTag } from '../components/FreeTrialModelTag'
 import ModelTagsWithLabel from '../components/ModelTagsWithLabel'
 import { modelListClasses } from '../primitives/ProviderSettingsPrimitives'
 import { getModelOperationErrorMessage } from './errorMessage'
@@ -47,7 +46,6 @@ const ModelListItem: React.FC<ModelListItemProps> = ({
       toast.error(
         getModelOperationErrorMessage(error, {
           fallback: t('settings.models.manage.operation_failed'),
-          modelInUseByKnowledgeBase: t('settings.models.manage.model_in_use_by_knowledge_base'),
           modelInUseAsDefault: t('settings.models.manage.sync_apply_default_in_use')
         })
       )
@@ -82,7 +80,6 @@ const ModelListItem: React.FC<ModelListItemProps> = ({
             <div className={modelListClasses.rowCapabilityTagCluster}>
               <ModelTagsWithLabel model={model} provider={provider} size={12} style={{ flexWrap: 'nowrap' }} />
             </div>
-            <FreeTrialModelTag modelId={model.id} providerId={model.providerId} />
           </div>
           <div className={modelListClasses.rowInlineActions}>
             <Tooltip content={t('common.settings')} placement="top">

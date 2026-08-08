@@ -1,26 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const {
-  appGetMock,
-  providerUpdateMock,
-  miniAppUpdateMock,
-  createInternalEntryMock,
-  permanentDeleteMock,
-  transcodeMock
-} = vi.hoisted(() => ({
-  appGetMock: vi.fn(),
-  providerUpdateMock: vi.fn(),
-  miniAppUpdateMock: vi.fn(),
-  createInternalEntryMock: vi.fn(),
-  permanentDeleteMock: vi.fn(),
-  transcodeMock: vi.fn()
-}))
+const { appGetMock, providerUpdateMock, createInternalEntryMock, permanentDeleteMock, transcodeMock } = vi.hoisted(
+  () => ({
+    appGetMock: vi.fn(),
+    providerUpdateMock: vi.fn(),
+    createInternalEntryMock: vi.fn(),
+    permanentDeleteMock: vi.fn(),
+    transcodeMock: vi.fn()
+  })
+)
 vi.mock('@application', () => ({ application: { get: appGetMock } }))
 vi.mock('@data/services/ProviderService', () => ({ providerService: { update: providerUpdateMock } }))
-vi.mock('@data/services/MiniAppService', () => ({ miniAppService: { update: miniAppUpdateMock } }))
 vi.mock('@main/utils/image', () => ({ transcodeToEntityWebp: transcodeMock }))
 
-import { setMiniAppLogo, setProviderLogo } from '../entityLogo'
+import { setProviderLogo } from '../entityLogo'
 
 const FILE_ID = '019606a0-0000-7000-8000-000000000003'
 const WEBP = Buffer.from([7, 7])
@@ -36,7 +29,6 @@ beforeEach(() => {
   createInternalEntryMock.mockResolvedValue({ id: FILE_ID })
   permanentDeleteMock.mockResolvedValue(undefined)
   providerUpdateMock.mockReturnValue({})
-  miniAppUpdateMock.mockReturnValue({})
 })
 
 describe('setProviderLogo', () => {
@@ -89,25 +81,6 @@ describe('setProviderLogo', () => {
     // The compensating-delete failure is swallowed (logged) — the original bind
     // error must still surface, not be masked by the cleanup error.
     await expect(setProviderLogo('p1', { kind: 'image', data: new Uint8Array([1]) })).rejects.toThrow('bind failed')
-
-    expect(permanentDeleteMock).toHaveBeenCalledWith(FILE_ID)
-  })
-})
-
-describe('setMiniAppLogo', () => {
-  it('creates a file_entry from bytes and binds it via the service', async () => {
-    await setMiniAppLogo('a1', { kind: 'image', data: new Uint8Array([1]) })
-
-    expect(createInternalEntryMock).toHaveBeenCalled()
-    expect(miniAppUpdateMock).toHaveBeenCalledWith('a1', { logo: { kind: 'file', fileId: FILE_ID } })
-  })
-
-  it('compensates (permanentDelete) when the bind fails', async () => {
-    miniAppUpdateMock.mockImplementationOnce(() => {
-      throw new Error('bind failed')
-    })
-
-    await expect(setMiniAppLogo('a1', { kind: 'image', data: new Uint8Array([1]) })).rejects.toThrow('bind failed')
 
     expect(permanentDeleteMock).toHaveBeenCalledWith(FILE_ID)
   })

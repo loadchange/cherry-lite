@@ -7,14 +7,12 @@ import { topicService } from '@data/services/TopicService'
 import { generateOrderKeySequence } from '@data/services/utils/orderKey'
 import type { AiStreamOpenRequest } from '@shared/ai/transport'
 import { createUniqueModelId } from '@shared/data/types/model'
-import { getKnowledgeBaseIdsFromParts } from '@shared/data/types/uiParts'
 import { setupTestDatabase, withRoot } from '@test-helpers/db'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { startAiChildTurnSpan } from '../../../observability'
 import { PersistenceListener } from '../../listeners/PersistenceListener'
 import type { StreamListener } from '../../types'
-import type { MainSteerContinuationRequest } from '../dispatch'
 import { resolveAssistantModelId, resolveModels, resolvePersistentSiblingsGroupId } from '../modelResolution'
 
 // Stub model resolution + tracing so the test drives the REAL DB history path
@@ -234,97 +232,6 @@ describe('PersistentChatContextProvider — steer continuation history', () => {
       { role: 'user', text: 'branch without boundary' },
       { role: 'user', text: 'continue old branch' }
     ])
-  })
-
-  it('restores the composer-selected knowledge bases when regenerating a response', async () => {
-    const knowledgeBaseIds = ['kb-selected-this-turn']
-    const submitted = await provider.prepareDispatch(
-      makeSubscriber(),
-      {
-        trigger: 'submit-message',
-        topicId: 'topic-1',
-        parentAnchorId: 'a1',
-        userMessageParts: [
-          { type: 'text', text: 'search my selected knowledge base' },
-          { type: 'data-knowledge-scope', data: { baseIds: knowledgeBaseIds } }
-        ]
-      },
-      { hasLiveStream: false }
-    )
-    const userMessageId = submitted.userMessageId!
-
-    expect(getKnowledgeBaseIdsFromParts(messageService.getById(userMessageId).data.parts ?? [])).toEqual(
-      knowledgeBaseIds
-    )
-
-    const regenerated = await provider.prepareDispatch(
-      makeSubscriber(),
-      {
-        trigger: 'regenerate-message',
-        topicId: 'topic-1',
-        parentAnchorId: userMessageId
-      },
-      { hasLiveStream: false }
-    )
-
-    expect(regenerated.models[0].request.knowledgeBaseIds).toEqual(knowledgeBaseIds)
-  })
-
-  it('steer-continuation: opens an assistant turn under the steer user row with a reminder-wrapped prompt', async () => {
-    // u1 → a1 → u2, where u2 is the steer the user sent mid-turn (child of the assistant row).
-    await dbh.db.insert(messageTable).values({
-      id: 'u2',
-      parentId: 'a1',
-      topicId: 'topic-1',
-      role: 'user',
-      data: {
-        parts: [
-          { type: 'text', text: 'actually do X instead' },
-          { type: 'data-knowledge-scope', data: { baseIds: ['kb-selected-for-steer'] } }
-        ]
-      },
-      status: 'success',
-      siblingsGroupId: 0,
-      modelId: MODEL_ID,
-      createdAt: 300,
-      updatedAt: 300
-    })
-
-    vi.mocked(resolveAssistantModelId).mockClear()
-    const prepared = await provider.prepareDispatch(
-      makeSubscriber(),
-      {
-        trigger: 'steer-continuation',
-        topicId: 'topic-1',
-        userMessageId: 'u2',
-        fastMode: false
-      } satisfies MainSteerContinuationRequest,
-      { hasLiveStream: false }
-    )
-
-    expect(resolveAssistantModelId).not.toHaveBeenCalled()
-    expect(resolveModels).toHaveBeenLastCalledWith([MODEL_ID], MODEL_ID)
-    expect(prepared.models[0].request.knowledgeBaseIds).toEqual(['kb-selected-for-steer'])
-
-    // A fresh assistant placeholder is created under u2 — no new user row.
-    const children = messageService.getChildrenByParentId('u2')
-    expect(children).toHaveLength(1)
-    expect(children[0]).toMatchObject({ role: 'assistant', status: 'pending' })
-
-    // The persisted steer row is untouched (only the model-facing copy is wrapped).
-    const u2 = messageService.getById('u2')
-    expect(flatten([{ role: 'user', parts: u2.data.parts ?? [] }])[0].text).toBe('actually do X instead')
-
-    // History is the full path; only the trailing steer message is system-reminder wrapped.
-    const history = prepared.models[0].request.messages!
-    expect(history).toHaveLength(3)
-    expect(flatten([history[0]])[0]).toEqual({ role: 'user', text: 'first question' })
-    expect(flatten([history[1]])[0]).toEqual({ role: 'assistant', text: PARTIAL })
-    const lastText = flatten([history[2]])[0].text
-    expect(history[2].role).toBe('user')
-    expect(lastText).toContain('<system-reminder>')
-    expect(lastText).toContain('actually do X instead')
-    expect(lastText).toContain('Please address this message and continue with your tasks.')
   })
 
   it('drops the paused partial when the new turn does not anchor on it (precondition is necessary)', async () => {
@@ -630,53 +537,5 @@ describe('PersistentChatContextProvider — prepareContinueDispatch (resume-afte
     expect(toolPart?.state).toBe('approval-responded')
     expect(toolPart?.approval).toEqual({ id: APPROVAL_ID, approved: true })
     expect(anchor.data.turnOptions).toEqual({ reasoningEffort: 'high', fastMode: true })
-  })
-
-  it("reuses the anchor's model and re-anchors history on the assistant row (no new placeholder)", async () => {
-    const beforeCount = messageService.getPathToNode('a1').length
-    vi.mocked(resolveModels).mockReturnValueOnce([
-      { id: ANCHOR_MODEL_ID, name: 'GPT-4o mini', providerId: 'openai', apiModelId: 'gpt-4o-mini' }
-    ] as ReturnType<typeof resolveModels>)
-
-    const prepared = await provider.prepareDispatch(
-      makeSubscriber(),
-      {
-        trigger: 'continue-conversation',
-        topicId: 'topic-1',
-        parentAnchorId: 'a1',
-        approvalDecisions: [{ approvalId: APPROVAL_ID, approved: true }]
-      },
-      { hasLiveStream: false }
-    )
-
-    // Model reuse: the anchor's persisted modelId is what gets resolved, not the topic default.
-    expect(resolveAssistantModelId).not.toHaveBeenCalled()
-    expect(resolveModels).toHaveBeenCalledWith([ANCHOR_MODEL_ID], ANCHOR_MODEL_ID)
-
-    // Single model, no sibling group, anchored back on the assistant row.
-    expect(prepared.isMultiModel).toBe(false)
-    expect(prepared.siblingsGroupId).toBeUndefined()
-    expect(prepared.models).toHaveLength(1)
-    expect(prepared.models[0].modelId).toBe(ANCHOR_MODEL_ID)
-    expect(prepared.models[0].request.messageId).toBe('a1')
-    expect(prepared.models[0].request.knowledgeBaseIds).toEqual(['kb-selected-for-approved-tool'])
-    expect(prepared.models[0].runtimeTimingSeed).toEqual({
-      startedAt: 1_000,
-      completedAt: 2_000,
-      spans: []
-    })
-    expect(prepared.models[0].request.reasoningEffort).toBe('high')
-    expect(prepared.models[0].request.fastMode).toBe(true)
-
-    // No placeholder row was created — the path to the anchor is unchanged.
-    const afterCount = messageService.getPathToNode('a1').length
-    expect(afterCount).toBe(beforeCount)
-
-    // History anchors on the assistant row and carries the approval-responded part.
-    const history = prepared.models[0].request.messages
-    expect(history?.map((m) => m.role)).toEqual(['user', 'assistant'])
-    const lastAssistant = history?.[history.length - 1]
-    const toolPart = lastAssistant?.parts.find((p) => p.type === 'tool-fetch_url') as { state: string } | undefined
-    expect(toolPart?.state).toBe('approval-responded')
   })
 })

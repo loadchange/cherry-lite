@@ -5,7 +5,6 @@ import { application } from '@application'
 import { userProviderTable } from '@data/db/schemas/userProvider'
 import { providerService } from '@data/services/ProviderService'
 import { ErrorCode } from '@shared/data/api/errors'
-import { CHERRYAI_PROVIDER_ID } from '@shared/data/presets/cherryai'
 import { setupTestDatabase } from '@test-helpers/db'
 import { eq } from 'drizzle-orm'
 import { describe, expect, it, type Mock } from 'vitest'
@@ -124,32 +123,6 @@ describe('ProviderService.update', () => {
       err = e
     }
     expect(err).toMatchObject({ code: ErrorCode.NOT_FOUND })
-  })
-
-  it('rejects PATCHes for the managed CherryAI provider', async () => {
-    await dbh.db.insert(userProviderTable).values({
-      providerId: CHERRYAI_PROVIDER_ID,
-      name: 'CherryAI',
-      orderKey: 'a0',
-      isEnabled: true
-    })
-
-    let err: unknown
-    try {
-      providerService.update(CHERRYAI_PROVIDER_ID, { isEnabled: false })
-    } catch (e) {
-      err = e
-    }
-    expect(err).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION,
-      status: 400
-    })
-
-    const [row] = await dbh.db
-      .select()
-      .from(userProviderTable)
-      .where(eq(userProviderTable.providerId, CHERRYAI_PROVIDER_ID))
-    expect(row.isEnabled).toBe(true)
   })
 
   it('serializes concurrent PATCHes so neither clobbers the other (read-merge-write inside the tx)', async () => {

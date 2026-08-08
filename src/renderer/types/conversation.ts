@@ -1,1 +1,1 @@
-export type ConversationAppId = 'assistants' | 'agents'
+export type ConversationAppId = 'assistants'

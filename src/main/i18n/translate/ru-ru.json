@@ -2,7 +2,7 @@
   "agent": {
     "builtin": {
       "cherry_assistant": {
-        "description": "Built-in Cherry Studio advisor. Diagnose issues, guide operations, collect FAQs, submit bugs/feature requests, and search/create Skills"
+        "description": "Built-in Cherry Studio Lite advisor. Diagnose issues, guide operations, collect FAQs, submit bugs/feature requests, and search/create Skills"
       }
     },
     "session": {
@@ -10,31 +10,6 @@
         "inaccessible": "Путь к рабочей области недоступен: {{path}}",
         "missing": "Путь к рабочей области не существует: {{path}}",
         "not_directory": "Путь к рабочей области не является каталогом: {{path}}"
-      }
-    }
-  },
-  "apiGateway": {
-    "docs": {
-      "description": "HTTP API Cherry Studio, совместимый с OpenAI, Anthropic и Gemini, а также собственные эндпоинты Cherry (модели, базы знаний)",
-      "language_switcher_label": "Язык документации",
-      "operations": {
-        "chat_completions": "Создаёт ответ чата. Формат запроса и ответа соответствует OpenAI Chat Completions; с `stream: true` вывод передаётся по частям.",
-        "count_tokens": "Оценивает, сколько входных токенов занимает набор сообщений в формате Anthropic.",
-        "generate_content": "Генерирует контент методом `generateContent` из Gemini. Формат запроса и ответа соответствует Gemini API; `streamGenerateContent` доступен по тому же пути.",
-        "get_knowledge_base": "Возвращает базу знаний по её идентификатору.",
-        "health": "Состояние сервиса, текущее время и версия. Аутентификация не требуется.",
-        "info": "Название и версия API, а также основные эндпоинты. Аутентификация не требуется.",
-        "list_knowledge_bases": "Список баз знаний, доступных в этом экземпляре Cherry Studio.",
-        "list_models": "Список моделей, доступных через этот шлюз, в формате models OpenAI.",
-        "messages": "Создаёт сообщение. Формат запроса и ответа соответствует Anthropic Messages; с `stream: true` вывод передаётся по частям.",
-        "responses": "Создаёт ответ. Формат запроса и ответа соответствует OpenAI Responses.",
-        "search_knowledge_bases": "Ищет в одной или нескольких базах знаний и возвращает подходящие фрагменты документов."
-      },
-      "tags": {
-        "anthropic": "Эндпоинты, совместимые с Anthropic. Укажите базовый URL этого шлюза в Anthropic SDK, чтобы их использовать.",
-        "cherry": "Собственные эндпоинты Cherry Studio: базы знаний, информация о сервисе и проверка состояния.",
-        "gemini": "Эндпоинты, совместимые с Gemini; как и в оригинальном API, доступны по пути `/v1beta`.",
-        "openai": "Эндпоинты, совместимые с OpenAI. Укажите базовый URL этого шлюза в OpenAI SDK, чтобы их использовать."
       }
     }
   },
@@ -99,10 +74,10 @@
   },
   "openclaw": {
     "errors": {
-      "binary_incompatible": "Исполняемый файл OpenClaw, используемый Cherry Studio, несовместим со сгенерированной конфигурацией. Обновите OpenClaw.{{details}}",
-      "external_config_invalid": "OpenClaw отклонил конфигурацию за пределами раздела провайдеров, управляемого Cherry Studio. Исправьте эту конфигурацию или обновите OpenClaw.{{details}}",
+      "binary_incompatible": "Исполняемый файл OpenClaw, используемый Cherry Studio Lite, несовместим со сгенерированной конфигурацией. Обновите OpenClaw.{{details}}",
+      "external_config_invalid": "OpenClaw отклонил конфигурацию за пределами раздела провайдеров, управляемого Cherry Studio Lite. Исправьте эту конфигурацию или обновите OpenClaw.{{details}}",
       "more_issues": "и ещё проблем: {{count}}",
-      "preflight_failed": "Cherry Studio не удалось проверить конфигурацию OpenClaw."
+      "preflight_failed": "Cherry Studio Lite не удалось проверить конфигурацию OpenClaw."
     }
   },
   "paintings": {
@@ -116,7 +91,7 @@
     "mcp": {
       "oauth": {
         "callback": {
-          "message": "Вы можете закрыть эту страницу и вернуться в Cherry Studio",
+          "message": "Вы можете закрыть эту страницу и вернуться в Cherry Studio Lite",
           "title": "Аутентификация Успешна"
         }
       }

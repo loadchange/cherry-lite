@@ -6,11 +6,9 @@
 
 import { assistantDataService } from '@data/services/AssistantService'
 import { loggerService } from '@logger'
-import { isAgentSessionTopic } from '@main/ai/agentSession/topic'
 import { temporaryChatService } from '@main/data/services/TemporaryChatService'
 import { toContentRole } from '@shared/data/types/message'
 import { parseUniqueModelId, type UniqueModelId } from '@shared/data/types/model'
-import { getKnowledgeBaseIdsFromParts } from '@shared/data/types/uiParts'
 import { v7 as uuidv7 } from 'uuid'
 
 import type { AiStreamRequest } from '../../types'
@@ -27,8 +25,6 @@ export class TemporaryChatContextProvider implements ChatContextProvider {
   readonly name = 'temporary'
 
   canHandle(topicId: string): boolean {
-    // Defensive — agent-session prefix is never temporary regardless of `hasTopic`.
-    if (isAgentSessionTopic(topicId)) return false
     return temporaryChatService.hasTopic(topicId)
   }
 
@@ -118,7 +114,6 @@ export class TemporaryChatContextProvider implements ChatContextProvider {
       uniqueModelId: model.id,
       messageId,
       messages: history,
-      knowledgeBaseIds: getKnowledgeBaseIdsFromParts(req.userMessageParts),
       reasoningEffort: req.trigger === 'submit-message' ? req.reasoningEffort : undefined,
       ...(req.trigger === 'submit-message' && req.fastMode ? { fastMode: true } : {})
     }

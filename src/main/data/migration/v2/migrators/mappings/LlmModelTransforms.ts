@@ -1,7 +1,6 @@
 import { loggerService } from '@logger'
-import { CHERRYAI_DEFAULT_UNIQUE_MODEL_ID } from '@shared/data/presets/cherryai'
 
-import { legacyChatModelToUniqueId, type LegacyModelRef } from '../transformers/ModelTransformers'
+import { type LegacyModelRef, legacyModelToUniqueId } from '../transformers/ModelTransformers'
 import type { TransformResult } from './ComplexPreferenceMappings'
 
 const logger = loggerService.withContext('LlmModelTransforms')
@@ -19,20 +18,20 @@ function describeLegacyModelRef(value: unknown): Record<string, unknown> {
   }
 }
 
-function resolveChatModelPreference(preferenceKey: string, value: unknown): string {
-  const modelId = legacyChatModelToUniqueId(value as LegacyModelRef | null | undefined)
+function resolveChatModelPreference(preferenceKey: string, value: unknown): string | null {
+  const modelId = legacyModelToUniqueId(value as LegacyModelRef | null | undefined)
   if (modelId) {
     return modelId
   }
 
   if (value != null) {
-    logger.warn('Legacy model preference could not be parsed; falling back to managed CherryAI default model', {
+    logger.warn('Legacy model preference could not be parsed; leaving it unset', {
       preferenceKey,
       ...describeLegacyModelRef(value)
     })
   }
 
-  return CHERRYAI_DEFAULT_UNIQUE_MODEL_ID
+  return null
 }
 
 /**

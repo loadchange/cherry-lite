@@ -7,13 +7,11 @@ import type { TFunction } from 'i18next'
 import {
   BrushCleaning,
   Copy,
-  Database,
   Edit3,
   ExternalLink,
   FileText,
   Image,
   MoveRight,
-  NotebookPen,
   PanelLeft,
   PinIcon,
   PinOffIcon,
@@ -70,8 +68,6 @@ export interface TopicActionContext {
   onOpenInNewTab?: TopicMenuHandler
   onOpenInNewWindow?: TopicMenuHandler
   onPinTopic: TopicMenuHandler
-  onSaveToKnowledge: TopicMenuHandler
-  onSaveToNotes: TopicMenuHandler
   onSetPanePosition?: (position: TopicTabPosition) => void | Promise<void>
   onStartRename: TopicMenuHandler
   panePosition?: TopicTabPosition
@@ -170,16 +166,6 @@ topicActionRegistry.registerCommand({
 topicActionRegistry.registerCommand({
   id: 'topic.clear-messages',
   run: ({ onClearMessages, topic }) => onClearMessages(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.save-notes',
-  run: ({ onSaveToNotes, topic }) => onSaveToNotes(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.save-knowledge',
-  run: ({ onSaveToKnowledge, topic }) => onSaveToKnowledge(topic)
 })
 
 topicActionRegistry.registerCommand({
@@ -353,26 +339,6 @@ topicActionRegistry.registerAction({
   label: ({ t }) => t('chat.topics.clear.title'),
   icon: () => <BrushCleaning size={14} />,
   order: 40,
-  surface: 'menu'
-})
-
-topicActionRegistry.registerAction({
-  id: 'topic.save-notes',
-  commandId: 'topic.save-notes',
-  label: ({ t }) => t('notes.save'),
-  icon: () => <NotebookPen size={14} />,
-  group: 'share',
-  order: 50,
-  surface: 'menu'
-})
-
-topicActionRegistry.registerAction({
-  id: 'topic.save-knowledge',
-  commandId: 'topic.save-knowledge',
-  label: ({ t }) => t('chat.save.topic.knowledge.menu_title'),
-  icon: () => <Database size={14} />,
-  group: 'share',
-  order: 60,
   surface: 'menu'
 })
 

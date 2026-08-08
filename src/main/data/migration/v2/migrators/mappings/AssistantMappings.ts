@@ -3,13 +3,12 @@
  *
  * Transforms legacy Redux Assistant/AssistantPreset objects to:
  * - assistant table row (with modelId from model/defaultModel)
- * - junction table rows (assistant_mcp_server, assistant_knowledge_base)
+ * - junction table rows (assistant_mcp_server)
  * - normalized legacy tag name (converted to assistant.groupId by AssistantMigrator)
  *
  * Field mapping:
  * - model/defaultModel -> assistant.modelId (primary model, composite format)
  * - mcpServers[] -> assistant_mcp_server junction rows
- * - knowledge_bases[] -> assistant_knowledge_base junction rows
  * - first non-empty string in tags[] -> assistant group name
  * - type -> dropped (design flaw)
  * - messages -> dropped (feature removed)
@@ -20,11 +19,11 @@
  */
 
 import type { InsertAssistantRow } from '@data/db/schemas/assistant'
-import type { assistantKnowledgeBaseTable, assistantMcpServerTable } from '@data/db/schemas/assistantRelations'
+import type { assistantMcpServerTable } from '@data/db/schemas/assistantRelations'
 import { AssistantSettingsSchema, DEFAULT_ASSISTANT_SETTINGS } from '@shared/data/types/assistant'
 import type { ZodType } from 'zod'
 
-import { legacyChatModelToUniqueId } from '../transformers/ModelTransformers'
+import { legacyModelToUniqueId } from '../transformers/ModelTransformers'
 
 function sanitizeLegacySettings(legacy: Record<string, unknown>): Record<string, unknown> {
   const shape = AssistantSettingsSchema.shape as Record<string, ZodType>
@@ -82,12 +81,6 @@ export interface OldAssistantSettings {
   enableMaxToolCalls?: boolean
 }
 
-/** Old KnowledgeBase reference from Redux state */
-export interface OldKnowledgeBase {
-  id?: string
-  [key: string]: unknown
-}
-
 /** Old McpServer reference from Redux state */
 export interface OldMcpServer {
   id?: string
@@ -103,7 +96,7 @@ export interface OldMcpServer {
  * to handle incomplete or corrupt data gracefully.
  *
  * Dropped fields (documented for traceability):
- * topics, messages, content, targetLanguage,
+ * topics, messages, content, targetLanguage, knowledge_bases,
  * enableGenerateImage, enableUrlContext, knowledgeRecognition,
  * webSearchProviderId
  *
@@ -122,7 +115,6 @@ export interface OldAssistant {
   settings?: Partial<OldAssistantSettings> | null
   mcpMode?: string | null
   mcpServers?: OldMcpServer[] | null
-  knowledge_bases?: OldKnowledgeBase[] | null
   enableWebSearch?: boolean | null
   tags?: unknown[] | null
 }
@@ -134,7 +126,6 @@ export interface OldAssistant {
 export interface AssistantTransformResult {
   assistant: Omit<InsertAssistantRow, 'groupId' | 'orderKey'>
   mcpServers: (typeof assistantMcpServerTable.$inferInsert)[]
-  knowledgeBases: (typeof assistantKnowledgeBaseTable.$inferInsert)[]
   legacyTagName: string | null
   discardedLegacyTagCount: number
 }
@@ -150,21 +141,13 @@ export interface AssistantTransformResult {
  * Prefers `model` over `defaultModel` (defaultModel is the settings-level fallback).
  */
 function extractPrimaryModelId(source: OldAssistant): string | null {
-  return legacyChatModelToUniqueId(source.model) ?? legacyChatModelToUniqueId(source.defaultModel)
+  return legacyModelToUniqueId(source.model) ?? legacyModelToUniqueId(source.defaultModel)
 }
 
 function extractMcpServerIds(source: OldAssistant): string[] {
   if (!Array.isArray(source.mcpServers)) return []
   return source.mcpServers.reduce<string[]>((ids, s) => {
     if (s.id) ids.push(s.id)
-    return ids
-  }, [])
-}
-
-function extractKnowledgeBaseIds(source: OldAssistant): string[] {
-  if (!Array.isArray(source.knowledge_bases)) return []
-  return source.knowledge_bases.reduce<string[]>((ids, kb) => {
-    if (kb.id) ids.push(kb.id)
     return ids
   }, [])
 }
@@ -196,7 +179,6 @@ export function transformAssistant(source: OldAssistant): AssistantTransformResu
 
   const primaryModelId = extractPrimaryModelId(source)
   const mcpServerIds = extractMcpServerIds(source)
-  const knowledgeBaseIds = extractKnowledgeBaseIds(source)
   const legacyTag = extractLegacyTag(source)
 
   // Build settings JSON: merge legacy top-level fields into settings object
@@ -227,7 +209,6 @@ export function transformAssistant(source: OldAssistant): AssistantTransformResu
       settings
     },
     mcpServers: mcpServerIds.map((mcpServerId) => ({ assistantId, mcpServerId })),
-    knowledgeBases: knowledgeBaseIds.map((knowledgeBaseId) => ({ assistantId, knowledgeBaseId })),
     legacyTagName: legacyTag.name,
     discardedLegacyTagCount: legacyTag.discardedCount
   }

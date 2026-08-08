@@ -1,18 +1,5 @@
-import {
-  CHERRYAI_API_BASE_URL,
-  CHERRYAI_DEFAULT_MODEL_ID,
-  CHERRYAI_DEFAULT_MODEL_NAME,
-  CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
-  CHERRYAI_PROVIDER_ID
-} from '@shared/data/presets/cherryai'
-import {
-  LOCAL_EMBEDDING_MODEL_ID,
-  LOCAL_EMBEDDING_PROVIDER_ID,
-  LOCAL_EMBEDDING_UNIQUE_MODEL_ID
-} from '@shared/data/presets/localEmbedding'
 import { ENDPOINT_TYPE, MODEL_CAPABILITY } from '@shared/data/types/model'
 import { type AuthConfig, DEFAULT_API_FEATURES } from '@shared/data/types/provider'
-import { net } from 'electron'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { makeModel } from '../../__tests__/fixtures/model'
@@ -27,20 +14,12 @@ const { resolveApiKeyMock, getAuthConfigMock, getByProviderIdMock } = vi.hoisted
   getAuthConfigMock: vi.fn<(providerId: string) => AuthConfig | null>(),
   getByProviderIdMock: vi.fn()
 }))
-const { generateSignatureMock } = vi.hoisted(() => ({
-  generateSignatureMock: vi.fn()
-}))
-
 vi.mock('@main/data/services/ProviderService', () => ({
   providerService: {
     resolveApiKey: resolveApiKeyMock,
     getAuthConfig: getAuthConfigMock,
     getByProviderId: getByProviderIdMock
   }
-}))
-
-vi.mock('@main/ai/provider/cherryai', () => ({
-  generateSignature: generateSignatureMock
 }))
 
 // Import the SUT after the mock is declared.
@@ -659,95 +638,6 @@ describe('providerToAiSdkConfig — builder dispatch matrix', () => {
     })
   })
 
-  describe('CherryAI routing', () => {
-    it('uses custom fetch to sign chat completions requests', async () => {
-      resolveApiKeyMock.mockReturnValue({ value: '', apiKeySelection: { attribution: 'unknown' } })
-      generateSignatureMock.mockReturnValue({
-        'X-Client-ID': 'cherry-studio',
-        'X-Timestamp': '1700000000',
-        'X-Signature': 'signed'
-      })
-      // The signing wrapper composes onto customFetch (net.fetch), so the request
-      // routes through Chromium's proxy-aware network stack rather than globalThis.fetch.
-      vi.mocked(net.fetch).mockResolvedValue(new Response('{}'))
-
-      const provider = makeProvider({
-        id: CHERRYAI_PROVIDER_ID,
-        presetProviderId: CHERRYAI_PROVIDER_ID,
-        endpointConfigs: {
-          [ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS]: {
-            baseUrl: CHERRYAI_API_BASE_URL
-          }
-        },
-        defaultChatEndpoint: ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS
-      })
-      const model = makeModel({
-        id: CHERRYAI_DEFAULT_UNIQUE_MODEL_ID,
-        providerId: CHERRYAI_PROVIDER_ID,
-        name: CHERRYAI_DEFAULT_MODEL_NAME
-      })
-
-      const config = await providerToAiSdkConfig(provider, model)
-      await (config.providerSettings as { fetch: typeof fetch }).fetch(`${CHERRYAI_API_BASE_URL}/chat/completions`, {
-        method: 'POST',
-        headers: { Existing: 'yes' },
-        body: JSON.stringify({ model: CHERRYAI_DEFAULT_MODEL_ID })
-      })
-
-      expect(config.providerId).toBe('openai-compatible')
-      expect(generateSignatureMock).toHaveBeenCalledWith({
-        method: 'POST',
-        path: '/chat/completions',
-        query: '',
-        body: { model: CHERRYAI_DEFAULT_MODEL_ID }
-      })
-      expect(net.fetch).toHaveBeenCalledWith(
-        `${CHERRYAI_API_BASE_URL}/chat/completions`,
-        expect.objectContaining({
-          headers: expect.objectContaining({
-            Existing: 'yes',
-            'X-Client-ID': 'cherry-studio',
-            'X-Timestamp': '1700000000',
-            'X-Signature': 'signed'
-          })
-        })
-      )
-    })
-  })
-
-  describe('Local embedding routing (in-process provider, no endpoint/baseURL/apiKey)', () => {
-    it('routes the local embedding provider to its own provider id instead of the openai-compatible fallback (REGRESSION)', async () => {
-      // The local embedding provider has no endpoint config, so resolveAiSdkProviderId
-      // returns 'openai-compatible'. Without the dedicated dispatch row it would fall
-      // through to buildOpenAICompatibleConfig, which hands ai-core an empty baseURL and
-      // throws "Invalid URL". The id-based row must win and produce empty providerSettings.
-      const provider = makeProvider({
-        id: LOCAL_EMBEDDING_PROVIDER_ID,
-        presetProviderId: LOCAL_EMBEDDING_PROVIDER_ID,
-        // Mirrors the registered row: in-process runtime, no endpoints.
-        endpointConfigs: {}
-      })
-      const model = makeModel({
-        id: LOCAL_EMBEDDING_UNIQUE_MODEL_ID,
-        providerId: LOCAL_EMBEDDING_PROVIDER_ID,
-        apiModelId: LOCAL_EMBEDDING_MODEL_ID,
-        capabilities: [MODEL_CAPABILITY.EMBEDDING]
-      })
-
-      const config = await providerToAiSdkConfig(provider, model)
-      const settings = config.providerSettings as Record<string, unknown>
-
-      expect(config.providerId).toBe(LOCAL_EMBEDDING_PROVIDER_ID)
-      // The local builder returns empty providerSettings: no baseURL/apiKey leak from the
-      // openai-compatible builder, and no unused provider key is selected.
-      expect(settings.baseURL).toBeUndefined()
-      expect(settings.apiKey).toBeUndefined()
-      expect(resolveApiKeyMock).not.toHaveBeenCalled()
-      // Still defaulted to the proxy-aware fetch by the shared tail of providerToAiSdkConfig.
-      expect(settings.fetch).toBe(customFetch)
-    })
-  })
-
   describe('generic / openai-compatible fallback', () => {
     it('adds X-Source only to Radeon Cloud chat request headers', async () => {
       const radeonProvider = makeProvider({
@@ -808,31 +698,6 @@ describe('providerToAiSdkConfig — builder dispatch matrix', () => {
       expect(settings.fetch).toBe(customFetch)
     })
 
-    it('routes ModelScope IMAGE models through ModelScope config (so the async submit/poll transport is used)', async () => {
-      // modelscope chat declares adapterFamily 'openai-compatible', and an image model
-      // resolves to that same fallback id — the override must force providerId 'modelscope'
-      // so createModelscopeProvider().imageModel() (the X-ModelScope-Async-Mode submit/poll
-      // transport) is used instead of the generic OpenAICompatibleImageModel (which would
-      // hit the non-existent /v1/images/edits → 404).
-      const provider = makeProvider({
-        id: 'modelscope',
-        defaultChatEndpoint: ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS,
-        endpointConfigs: {
-          [ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS]: {
-            baseUrl: 'https://api-inference.modelscope.cn/v1/',
-            adapterFamily: 'openai-compatible'
-          }
-        }
-      })
-      const model = makeModel({ providerId: 'modelscope', capabilities: [MODEL_CAPABILITY.IMAGE_GENERATION] })
-
-      const config = await providerToAiSdkConfig(provider, model)
-      const settings = config.providerSettings as Record<string, unknown>
-
-      expect(config.providerId).toBe('modelscope')
-      expect(settings.apiKey).toBe('sk-test-key')
-    })
-
     it('leaves ModelScope CHAT models on openai-compatible (image-only override; keeps includeUsage)', async () => {
       const provider = makeProvider({
         id: 'modelscope',
@@ -855,53 +720,6 @@ describe('providerToAiSdkConfig — builder dispatch matrix', () => {
       expect(settings.includeUsage).toBe(true)
     })
 
-    it('routes PPIO IMAGE models through PPIO config', async () => {
-      const provider = makeProvider({
-        id: 'ppio',
-        defaultChatEndpoint: ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS,
-        endpointConfigs: {
-          [ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS]: {
-            baseUrl: 'https://api.ppinfra.com/v3/openai/',
-            adapterFamily: 'openai-compatible'
-          }
-        }
-      })
-      const model = makeModel({ providerId: 'ppio', capabilities: [MODEL_CAPABILITY.IMAGE_GENERATION] })
-
-      const config = await providerToAiSdkConfig(provider, model)
-      expect(config.providerId).toBe('ppio')
-    })
-
-    it.each([
-      ['minimax', undefined, 'https://api.minimaxi.com/v1'],
-      ['minimax-global', 'minimax', 'https://api.minimax.io/v1']
-    ])('routes %s IMAGE models through MiniMax config', async (id, presetProviderId, baseUrl) => {
-      const provider = makeProvider({
-        id,
-        presetProviderId,
-        defaultChatEndpoint: ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS,
-        endpointConfigs: {
-          [ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS]: {
-            baseUrl,
-            adapterFamily: 'openai-compatible'
-          }
-        }
-      })
-      const model = makeModel({ providerId: id, capabilities: [MODEL_CAPABILITY.IMAGE_GENERATION] })
-
-      const { config, credentialReceipt } = await resolveProviderAiSdkConfig(provider, model)
-      const settings = config.providerSettings as Record<string, unknown>
-
-      expect(config.providerId).toBe('minimax')
-      expect(settings.baseURL).toBe(baseUrl)
-      expect(settings.apiKey).toBe('sk-test-key')
-      expect(credentialReceipt).toEqual({
-        attribution: 'explicit',
-        id: 'test-key',
-        masked: 'sk-t****-key'
-      })
-    })
-
     it('leaves MiniMax CHAT models on openai-compatible', async () => {
       const provider = makeProvider({
         id: 'minimax',
@@ -920,37 +738,6 @@ describe('providerToAiSdkConfig — builder dispatch matrix', () => {
       expect(config.providerId).toBe('openai-compatible')
     })
 
-    it('routes Doubao IMAGE models through Doubao config (Ark protocol + the providerOptions key)', async () => {
-      // Two things ride on this id. The generic OpenAICompatibleImageModel would POST
-      // multipart /v1/images/edits once a reference image is attached — an endpoint Ark
-      // does not serve — and the vendor param body would ride under
-      // `providerOptions['openai-compatible']` while the image model read `doubao`,
-      // silently dropping every size/watermark/group control.
-      const provider = makeProvider({
-        id: 'doubao',
-        defaultChatEndpoint: ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS,
-        endpointConfigs: {
-          [ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS]: {
-            baseUrl: 'https://ark.cn-beijing.volces.com/api/v3/',
-            adapterFamily: 'openai-compatible'
-          }
-        }
-      })
-      const model = makeModel({
-        providerId: 'doubao',
-        apiModelId: 'doubao-seedream-5-0-pro',
-        capabilities: [MODEL_CAPABILITY.IMAGE_GENERATION]
-      })
-
-      const config = await providerToAiSdkConfig(provider, model)
-      const settings = config.providerSettings as Record<string, unknown>
-
-      expect(config.providerId).toBe('doubao')
-      // `/api/v3` already carries a version, so no `/v1` is appended — the Ark image
-      // model appends `/images/generations` to exactly this.
-      expect(settings.baseURL).toBe('https://ark.cn-beijing.volces.com/api/v3')
-    })
-
     it('leaves Doubao CHAT models on openai-compatible (image-only override)', async () => {
       const provider = makeProvider({
         id: 'doubao',
@@ -966,27 +753,6 @@ describe('providerToAiSdkConfig — builder dispatch matrix', () => {
 
       const config = await providerToAiSdkConfig(provider, model)
       expect(config.providerId).toBe('openai-compatible')
-    })
-
-    it('routes DMXAPI bespoke-family IMAGE models (e.g. qwen-image) through DMXAPI config', async () => {
-      const provider = makeProvider({
-        id: 'dmxapi',
-        defaultChatEndpoint: ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS,
-        endpointConfigs: {
-          [ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS]: {
-            baseUrl: 'https://www.dmxapi.cn',
-            adapterFamily: 'openai-compatible'
-          }
-        }
-      })
-      const model = makeModel({
-        providerId: 'dmxapi',
-        apiModelId: 'qwen-image',
-        capabilities: [MODEL_CAPABILITY.IMAGE_GENERATION]
-      })
-
-      const config = await providerToAiSdkConfig(provider, model)
-      expect(config.providerId).toBe('dmxapi')
     })
 
     it('preserves a declared DMXAPI Gemini endpoint instead of replacing it with the Chat host', async () => {

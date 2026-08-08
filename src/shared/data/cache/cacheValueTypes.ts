@@ -1,15 +1,8 @@
 import type { McpTool } from '@shared/types/mcp'
 import type { UpdateInfo } from 'builder-util-runtime'
 
-import type { AgentSessionApiRetryState } from '../../ai/agentSessionApiRetry'
-import type { AgentSessionBackgroundTasks, AgentSessionTaskEvents } from '../../ai/agentSessionBackgroundTasks'
-import type { AgentSessionCompactionState } from '../../ai/agentSessionCompaction'
-import type { AgentSessionContextUsage } from '../../ai/agentSessionContextUsage'
-import type { AgentSessionFlowParts } from '../../ai/agentSessionFlowParts'
-import type { AgentSessionSlashCommand } from '../../ai/agentSessionSlashCommands'
 import type { ExternalAppId } from '../../types/externalApp'
 import type { McpServer } from '../types/mcpServer'
-import type { MiniApp } from '../types/miniApp'
 import type { WebSearchStatus } from '../types/webSearch'
 
 export type CacheAppUpdateState = {
@@ -28,7 +21,6 @@ export type CacheActiveSearches = Record<string, WebSearchStatus>
 
 // For cache schema, we use any for complex types to avoid circular dependencies
 // The actual type checking will be done at runtime by the cache system
-export type CacheMiniAppType = MiniApp
 export type CacheMcpTool = McpTool
 
 export type McpRuntimeStatus = {
@@ -110,8 +102,6 @@ export type TranslatingState =
       abortKey: null
     }
 
-export type OpenClawGatewayStatus = 'stopped' | 'starting' | 'running' | 'error'
-
 /**
  * Saved scroll position for a chat topic / agent-session message list.
  *
@@ -129,21 +119,6 @@ export interface ChatScrollAnchor {
 }
 
 export type AgentOpenExternalAppTarget = ExternalAppId | 'file_manager' | null
-
-export type CachePaintingGenerationState = {
-  status: 'running' | 'failed' | 'canceled'
-  taskId: string | null
-  error: string | null
-  progress: number | null
-}
-
-export type CacheAgentSessionContextUsage = AgentSessionContextUsage | null
-export type CacheAgentSessionCompactionState = AgentSessionCompactionState | null
-export type CacheAgentSessionApiRetryState = AgentSessionApiRetryState | null
-export type CacheAgentSessionSlashCommands = AgentSessionSlashCommand[] | null
-export type CacheAgentSessionBackgroundTasks = AgentSessionBackgroundTasks
-export type CacheAgentSessionTaskEvents = AgentSessionTaskEvents
-export type CacheAgentSessionFlowParts = AgentSessionFlowParts
 
 /**
  * Persisted window geometry for the WindowManager "remember bounds" capability.

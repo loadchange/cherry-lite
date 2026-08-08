@@ -77,7 +77,6 @@ export function useAssistantMutations() {
           modelId: source.modelId,
           settings: source.settings,
           mcpServerIds: source.mcpServerIds,
-          knowledgeBaseIds: source.knowledgeBaseIds,
           groupId: source.groupId
         }
       })

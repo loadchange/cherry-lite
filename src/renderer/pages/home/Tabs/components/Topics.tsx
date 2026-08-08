@@ -40,7 +40,6 @@ import { useAssistantMutations, useAssistantsApi } from '@renderer/hooks/useAssi
 import { useConversationNavigation } from '@renderer/hooks/useConversationNavigation'
 import { useGroupReorder, useGroups } from '@renderer/hooks/useGroups'
 import { useImageCaptureTargets } from '@renderer/hooks/useImageCaptureTargets'
-import { useNotesSettings } from '@renderer/hooks/useNotesSettings'
 import { usePins } from '@renderer/hooks/usePins'
 import {
   finishTopicRenaming,
@@ -255,7 +254,6 @@ export function Topics({
   const conversationNav = useConversationNavigation('assistants')
   const isWindowFrame = useWindowFrame().mode === 'window'
   const [groupNow] = useState(() => dayjs())
-  const { notesPath } = useNotesSettings()
   const {
     updateTopic: patchTopic,
     deleteTopic: deleteTopicById,
@@ -1430,7 +1428,6 @@ export function Topics({
           isRenaming={isRenaming}
           isRightPanel={isRightPanel}
           listRef={listRef}
-          notesPath={notesPath}
           onAutoRename={handleAutoRename}
           onClearMessages={handleClearMessages}
           onConfirmDelete={handleConfirmDeleteTopic}
@@ -1528,7 +1525,6 @@ interface TopicListBodyProps {
   isRenaming: (topicId: string) => boolean
   isRightPanel: boolean
   listRef: RefObject<HTMLDivElement | null>
-  notesPath: string
   onAutoRename: (topic: Topic) => Promise<void>
   onClearMessages: (topic: Topic) => void
   onConfirmDelete: (topic: Topic, event?: MouseEvent) => Promise<void>
@@ -1560,7 +1556,6 @@ function TopicListBody(props: TopicListBodyProps) {
     isRenaming,
     isRightPanel,
     listRef,
-    notesPath,
     onAutoRename,
     onClearMessages,
     onConfirmDelete,
@@ -1586,7 +1581,6 @@ function TopicListBody(props: TopicListBodyProps) {
       exportMenuOptions,
       isNewlyRenamed,
       isRenaming,
-      notesPath,
       onAutoRename,
       onClearMessages,
       onConfirmDelete,
@@ -1609,7 +1603,6 @@ function TopicListBody(props: TopicListBodyProps) {
       exportMenuOptions,
       isNewlyRenamed,
       isRenaming,
-      notesPath,
       onAutoRename,
       onClearMessages,
       onConfirmDelete,
@@ -1664,7 +1657,6 @@ const TopicRow = memo(function TopicRow({
   isActive,
   isNewlyRenamed,
   isRenaming,
-  notesPath,
   onAutoRename,
   onClearMessages,
   onConfirmDelete,
@@ -1718,7 +1710,6 @@ const TopicRow = memo(function TopicRow({
     exportMenuOptions,
     isActiveInCurrentTab: isActive,
     isRenaming: isRenaming(topic.id),
-    notesPath,
     assistantMoveTargets,
     onAutoRename,
     onClearMessages,

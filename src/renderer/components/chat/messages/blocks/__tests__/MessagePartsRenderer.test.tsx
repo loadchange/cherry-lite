@@ -1,5 +1,4 @@
-import { UpdateAgentSessionMessageSchema } from '@shared/data/api/schemas/agentSessionMessages'
-import type { CherryMessagePart } from '@shared/data/types/message'
+import { type CherryMessagePart, MessageDataSchema } from '@shared/data/types/message'
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -952,9 +951,9 @@ describe('MessagePartsRenderer', () => {
       // body validator the DataApi runs before writing `data.parts` to SQLite.
       const withDiagnosis = withMessagePartDiagnosis(initialParts, 0, diagnosis)
       expect(withDiagnosis).not.toBeNull()
-      const parsed = UpdateAgentSessionMessageSchema.parse({ data: { parts: withDiagnosis } })
+      const parsed = MessageDataSchema.parse({ parts: withDiagnosis })
 
-      renderParts(parsed.data.parts as CherryMessagePart[])
+      renderParts(parsed.parts as CherryMessagePart[])
 
       const block = screen.getByTestId('mock-error-block')
       expect(block).toHaveAttribute('data-error-message', 'Unauthorized')

@@ -5,24 +5,15 @@
  * Content search is full-text-oriented and keeps per-source cursor semantics.
  */
 
-import type { AgentSessionMessageSearchRole, TopicMessageSearchRole } from '@shared/data/types/message'
+import type { TopicMessageSearchRole } from '@shared/data/types/message'
 import * as z from 'zod'
 
 export type EntitySearchTarget =
   | { type: 'assistant'; target: { assistantId: string } }
-  | { type: 'agent'; target: { agentId: string } }
   | { type: 'topic'; target: { topicId: string; assistantId?: string } }
-  | { type: 'session'; target: { sessionId: string; agentId: string | null } }
-  | { type: 'knowledge-base'; target: { knowledgeBaseId: string } }
 
 export type EntitySearchType = EntitySearchTarget['type']
-export const entitySearchTypes = [
-  'assistant',
-  'agent',
-  'topic',
-  'session',
-  'knowledge-base'
-] as const satisfies readonly EntitySearchType[]
+export const entitySearchTypes = ['assistant', 'topic'] as const satisfies readonly EntitySearchType[]
 export const EntitySearchTypeSchema = z.enum(entitySearchTypes)
 export const ENTITY_SEARCH_MAX_LIMIT_PER_TYPE = 200
 
@@ -64,7 +55,7 @@ export type EntitySearchSchemas = {
   }
 }
 
-export const contentSearchSourceTypes = ['topic-message', 'session-message'] as const satisfies readonly string[]
+export const contentSearchSourceTypes = ['topic-message'] as const satisfies readonly string[]
 export type ContentSearchSourceType = (typeof contentSearchSourceTypes)[number]
 export const ContentSearchSourceTypeSchema = z.enum(contentSearchSourceTypes)
 
@@ -77,14 +68,8 @@ export const TopicMessageContentSearchFilterSchema = z.strictObject({
 })
 export type TopicMessageContentSearchFilter = z.output<typeof TopicMessageContentSearchFilterSchema>
 
-export const SessionMessageContentSearchFilterSchema = z.strictObject({
-  sessionId: z.string().min(1).optional()
-})
-export type SessionMessageContentSearchFilter = z.output<typeof SessionMessageContentSearchFilterSchema>
-
 export const ContentSearchFiltersSchema = z.strictObject({
-  'topic-message': TopicMessageContentSearchFilterSchema.optional(),
-  'session-message': SessionMessageContentSearchFilterSchema.optional()
+  'topic-message': TopicMessageContentSearchFilterSchema.optional()
 })
 export type ContentSearchFilters = z.output<typeof ContentSearchFiltersSchema>
 
@@ -111,30 +96,13 @@ export interface TopicMessageContentSearchItem {
   createdAt: string
 }
 
-export interface SessionMessageContentSearchItem {
-  messageId: string
-  sessionId: string
-  sessionName: string
-  agentId?: string
-  agentName?: string
-  role?: AgentSessionMessageSearchRole
-  snippet: string
-  createdAt: string
-}
-
 export type TopicMessageContentSearchGroup = {
   sourceType: 'topic-message'
   items: TopicMessageContentSearchItem[]
   nextCursor?: string
 }
 
-export type SessionMessageContentSearchGroup = {
-  sourceType: 'session-message'
-  items: SessionMessageContentSearchItem[]
-  nextCursor?: string
-}
-
-export type ContentSearchGroup = TopicMessageContentSearchGroup | SessionMessageContentSearchGroup
+export type ContentSearchGroup = TopicMessageContentSearchGroup
 
 export type ContentSearchResponse = {
   query: string

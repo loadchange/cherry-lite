@@ -45,7 +45,7 @@ interface TableWithOrderKey extends SQLiteTable {
 }
 
 interface InsertWithOrderKeyOptions {
-  /** Primary-key column of the target table (e.g. `miniappTable.appId`). */
+  /** Primary-key column of the target table (e.g. `topicTable.id`). */
   pkColumn: AnyColumn
   /** Where to insert relative to existing rows. Defaults to `'last'`. */
   position?: 'first' | 'last'

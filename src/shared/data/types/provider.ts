@@ -311,7 +311,7 @@ export const ProviderSchema = z.object({
   /**
    * Registry capability: the provider serves requests without any credential
    * (local server — ollama / lmstudio / gpustack / ovms), so the missing-API-key
-   * guards (model sync, painting/OpenClaw gating) skip the key check. Carried
+   * guards (model sync) skip the key check. Carried
    * from the registry; absent ⇒ false.
    */
   authOptional: z.boolean().optional(),

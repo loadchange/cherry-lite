@@ -3,8 +3,7 @@
  *
  * Contract: `pause(reason?): Disposable` gates new-turn ADMISSION — `dispatch()`
  * resolves `{mode:'blocked', reason:'paused'}` (re-checked under the per-topic
- * lock), `startAgentSessionRun` throws before `prepareDispatch` writes rows, and
- * queued steer continuations are suppressed (not consumed). `steer-continuation`
+ * lock) and queued steer continuations are suppressed (not consumed). `steer-continuation`
  * dispatches are exempt (grandfathered launches are drain-visible instead).
  * `drainInFlight({timeoutMs})` awaits gate-admitted dispatches through stream
  * handoff, persistence-bearing loop promises, in-flight steer-continuation
@@ -65,14 +64,7 @@ vi.mock('@main/services/TopicNamingService', () => ({
   topicNamingService: { inFlightWrites: () => namingWrites }
 }))
 
-// `startAgentSessionRun`'s quiesce gate must throw BEFORE prepareDispatch writes rows.
-const prepareDispatchMock = vi.fn()
-vi.mock('../context/AgentChatContextProvider', () => ({
-  agentChatContextProvider: { prepareDispatch: prepareDispatchMock }
-}))
-
 const { AiStreamManager } = await import('../AiStreamManager')
-const { startAgentSessionRun } = await import('../api/startAgentSessionRun')
 
 // ── Helpers ─────────────────────────────────────────────────────────
 
@@ -105,10 +97,6 @@ const fakeSubscriber = {} as StreamListener
 const openReq = (topicId: string) => ({ trigger: 'submit-message', topicId, messages: [] }) as never
 const steerReq = (topicId: string, userMessageId: string) =>
   ({ trigger: 'steer-continuation', topicId, userMessageId }) as never
-
-function streamListener(id: string): StreamListener {
-  return { id, onChunk: vi.fn(), onDone: vi.fn(), onPaused: vi.fn(), onError: vi.fn(), isAlive: () => true }
-}
 
 /** Drain pending microtasks + the async-mutex acquire (which resolves on a macrotask). */
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
@@ -185,7 +173,6 @@ describe('AiStreamManager pause / drainInFlight (write quiesce)', () => {
     namingWrites.clear()
     findPendingAssistantMessageIds.mockReturnValue([])
     mgr = createManager()
-    // `startAgentSessionRun` resolves the manager via the container.
     ;(application.get as ReturnType<typeof vi.fn>).mockImplementation((name: string) => {
       if (name === 'AiStreamManager') return mgr
       throw new Error(`AiStreamManager.pause.test: unexpected application.get('${name}')`)
@@ -251,15 +238,6 @@ describe('AiStreamManager pause / drainInFlight (write quiesce)', () => {
       expect(internals(mgr).suppressedChatContinuationTopicIds.has('t')).toBe(true)
       expect(mockDispatchStreamRequest).not.toHaveBeenCalled()
     })
-
-    it('rejects a paused startAgentSessionRun before prepareDispatch writes any rows', async () => {
-      mgr.pause('test: agent-session gate')
-
-      await expect(
-        startAgentSessionRun({ sessionId: 's1', userParts: [], listeners: [streamListener('l1')] })
-      ).rejects.toThrow(/write-quiesced/)
-      expect(prepareDispatchMock).not.toHaveBeenCalled()
-    })
   })
 
   // -------------------------------------------------------------------------
@@ -295,22 +273,22 @@ describe('AiStreamManager pause / drainInFlight (write quiesce)', () => {
       hold.dispose()
     })
 
-    it('waits for an admitted agent dispatch parked in validateSession through stream-registry handoff', async () => {
+    it('waits for an admitted dispatch parked before persisting through stream-registry handoff', async () => {
       const validateSession = makeDeferred()
       const streamLoop = makeDeferred()
       const validateSessionMock = vi.fn(() => validateSession.promise)
       mockDispatchStreamRequest.mockImplementationOnce(async (manager) => {
-        // Model AgentChatContextProvider.prepareDispatch(): the gate has admitted this dispatch,
-        // but validateSession has not yet allowed it to persist rows or call manager.send().
+        // Model a provider's prepareDispatch(): the gate has admitted this dispatch, but the
+        // provider has not yet been allowed to persist rows or call manager.send().
         await validateSessionMock()
-        seedFakeStream(manager as ManagerInstance, 'agent-session:s1', {
-          listenerKey: 'persistence:agents-db',
+        seedFakeStream(manager as ManagerInstance, 'parked-topic', {
+          listenerKey: 'persistence:db',
           loopPromise: streamLoop.promise
         })
         return { mode: 'started' }
       })
 
-      const dispatch = trackSettled(mgr.dispatch(fakeSubscriber, openReq('agent-session:s1')))
+      const dispatch = trackSettled(mgr.dispatch(fakeSubscriber, openReq('parked-topic')))
       await flush()
       expect(validateSessionMock).toHaveBeenCalledOnce()
       expect(internals(mgr).inFlightDispatches.size).toBe(1)
@@ -323,7 +301,7 @@ describe('AiStreamManager pause / drainInFlight (write quiesce)', () => {
       validateSession.resolve()
       await flush()
       expect(dispatch.isSettled()).toBe(true)
-      expect(internals(mgr).activeStreams.has('agent-session:s1')).toBe(true)
+      expect(internals(mgr).activeStreams.has('parked-topic')).toBe(true)
       // The admission settled only after handing off to the stream registry; fixed-point
       // collection must now wait on that persistence-bearing stream rather than return clean.
       expect(drain.isSettled()).toBe(false)

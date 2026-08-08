@@ -1,4 +1,3 @@
-import { CHERRYAI_DEFAULT_UNIQUE_MODEL_ID, CHERRYAI_PROVIDER_ID } from '@shared/data/presets/cherryai'
 import { DEFAULT_ASSISTANT_SETTINGS } from '@shared/data/types/assistant'
 import { describe, expect, it } from 'vitest'
 
@@ -6,61 +5,6 @@ import { transformAssistant } from '../AssistantMappings'
 
 describe('AssistantMappings', () => {
   describe('transformAssistant', () => {
-    it('should transform a full assistant record', () => {
-      const source = {
-        id: 'ast-1',
-        name: 'My Assistant',
-        prompt: 'You are helpful',
-        emoji: '🤖',
-        description: 'A test assistant',
-        settings: { temperature: 0.7 },
-        mcpMode: 'manual',
-        enableWebSearch: true,
-        model: { id: 'gpt-4', provider: 'openai', name: 'GPT-4' },
-        defaultModel: { id: 'gpt-3.5', provider: 'openai', name: 'GPT-3.5' },
-        mcpServers: [{ id: 'srv-1' }, { id: 'srv-2' }],
-        knowledge_bases: [{ id: 'kb-1' }]
-      }
-
-      const result = transformAssistant(source)
-
-      expect(result.assistant).toStrictEqual({
-        id: 'ast-1',
-        name: 'My Assistant',
-        prompt: 'You are helpful',
-        emoji: '🤖',
-        description: 'A test assistant',
-        modelId: 'openai::gpt-4',
-        // Migrator merges legacy fields onto DEFAULT_ASSISTANT_SETTINGS so the new
-        // NOT NULL settings column always sees a complete object. Per-field
-        // sanitiser keeps only legacy values that validate against the v2 schema.
-        settings: { ...DEFAULT_ASSISTANT_SETTINGS, temperature: 0.7, mcpMode: 'manual', enableWebSearch: true }
-      })
-      expect(result.mcpServers).toStrictEqual([
-        { assistantId: 'ast-1', mcpServerId: 'srv-1' },
-        { assistantId: 'ast-1', mcpServerId: 'srv-2' }
-      ])
-      expect(result.knowledgeBases).toStrictEqual([{ assistantId: 'ast-1', knowledgeBaseId: 'kb-1' }])
-    })
-
-    it('should handle minimal assistant (only required fields)', () => {
-      const result = transformAssistant({ id: 'ast-2', name: 'Minimal' })
-
-      // Migrator supplies the same defaults that AssistantService.create() would: empty strings
-      // for prompt/description (mirroring DB DEFAULT) and the product-chosen emoji + settings.
-      expect(result.assistant).toStrictEqual({
-        id: 'ast-2',
-        name: 'Minimal',
-        prompt: '',
-        emoji: '🌟',
-        description: '',
-        modelId: null,
-        settings: DEFAULT_ASSISTANT_SETTINGS
-      })
-      expect(result.mcpServers).toStrictEqual([])
-      expect(result.knowledgeBases).toStrictEqual([])
-    })
-
     it('should default name to "Unnamed Assistant" when missing', () => {
       const result = transformAssistant({ id: 'ast-3' })
       expect(result.assistant.name).toBe('Unnamed Assistant')
@@ -88,14 +32,6 @@ describe('AssistantMappings', () => {
       expect(result.assistant.modelId).toBe('openai::gpt-3.5')
     })
 
-    it('should map legacy CherryAI model refs to the seeded Qwen model', () => {
-      const result = transformAssistant({
-        id: 'ast-4c',
-        model: { id: 'legacy-qwen', provider: CHERRYAI_PROVIDER_ID }
-      })
-      expect(result.assistant.modelId).toBe(CHERRYAI_DEFAULT_UNIQUE_MODEL_ID)
-    })
-
     it('should set modelId to null when model provider is not a string', () => {
       const result = transformAssistant({
         id: 'ast-4d',
@@ -121,25 +57,6 @@ describe('AssistantMappings', () => {
       })
       expect(result.mcpServers).toHaveLength(1)
       expect(result.mcpServers[0].mcpServerId).toBe('srv-1')
-    })
-
-    it('should filter out knowledge_bases without id', () => {
-      const result = transformAssistant({
-        id: 'ast-7',
-        knowledge_bases: [{ id: 'kb-1' }, { id: '' }, { name: 'no-id' }]
-      })
-      expect(result.knowledgeBases).toHaveLength(1)
-      expect(result.knowledgeBases[0].knowledgeBaseId).toBe('kb-1')
-    })
-
-    it('should handle non-array mcpServers and knowledge_bases', () => {
-      const result = transformAssistant({
-        id: 'ast-8',
-        mcpServers: 'not-an-array' as any,
-        knowledge_bases: 42 as any
-      })
-      expect(result.mcpServers).toStrictEqual([])
-      expect(result.knowledgeBases).toStrictEqual([])
     })
 
     it('should handle null and undefined optional fields', () => {

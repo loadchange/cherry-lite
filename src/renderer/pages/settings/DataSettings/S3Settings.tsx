@@ -1,6 +1,5 @@
 import { Button, InfoTooltip, Input, RowFlex, Switch, WarnTooltip } from '@cherrystudio/ui'
 import { usePreference } from '@data/hooks/usePreference'
-import AppLogo from '@renderer/assets/images/logo.png'
 import { S3BackupManager } from '@renderer/components/S3BackupManager'
 import { S3BackupModal, useS3BackupModal } from '@renderer/components/S3Modals'
 import Selector from '@renderer/components/Selector'
@@ -13,8 +12,8 @@ import {
   SettingTitle
 } from '@renderer/components/SettingsPrimitives'
 import { useBackupSyncState } from '@renderer/hooks/useBackupSyncState'
-import { useMiniAppPopup } from '@renderer/hooks/useMiniAppPopup'
 import { useTheme } from '@renderer/hooks/useTheme'
+import { ipcApi } from '@renderer/ipc'
 import dayjs from 'dayjs'
 import { FolderOpen, RefreshCw, Save } from 'lucide-react'
 import type { FC } from 'react'
@@ -40,8 +39,6 @@ const S3Settings: FC = () => {
   const { theme } = useTheme()
   const { t } = useTranslation()
 
-  const { openSmartMiniApp } = useMiniAppPopup()
-
   const s3Sync = useBackupSyncState('s3')
 
   const onSyncIntervalChange = async (value: number) => {
@@ -54,12 +51,7 @@ const S3Settings: FC = () => {
   }
 
   const handleTitleClick = () => {
-    openSmartMiniApp({
-      appId: 's3-help',
-      name: 'S3 Compatible Storage Help',
-      url: 'https://docs.cherry-ai.com/data-settings/s3-compatible',
-      logo: AppLogo
-    })
+    void ipcApi.request('system.shell.open_website', 'https://docs.cherry-ai.com/data-settings/s3-compatible')
   }
 
   const onMaxBackupsChange = (value: number) => {

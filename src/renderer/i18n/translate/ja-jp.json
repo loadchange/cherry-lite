@@ -33,7 +33,7 @@
     },
     "builtin": {
       "cherry_assistant": {
-        "description": "内蔵のCherry Studioアドバイザー。問題の診断、操作ガイド、FAQの収集、バグ/機能リクエストの提出、およびスキルの検索/作成を行います。"
+        "description": "内蔵のCherry Studio Liteアドバイザー。問題の診断、操作ガイド、FAQの収集、バグ/機能リクエストの提出、およびスキルの検索/作成を行います。"
       }
     },
     "channels": {
@@ -1085,55 +1085,6 @@
       "server_not_running_description": "エージェントを動作させるには、APIサーバーが稼働している必要があります。直接起動するか、設定を確認してください。"
     }
   },
-  "apiGateway": {
-    "actions": {
-      "regenerate": "再生成",
-      "restart": {
-        "button": "再起動",
-        "tooltip": "サーバーを再起動"
-      },
-      "start": "開始",
-      "stop": "停止"
-    },
-    "authHeader": {
-      "title": "認証ヘッダー"
-    },
-    "description": "OpenAI 互換の HTTP API を通じて Cherry Studio の AI 機能を公開します",
-    "documentation": {
-      "title": "API ドキュメント"
-    },
-    "fields": {
-      "apiKey": {
-        "copyTooltip": "API キーをコピー",
-        "label": "API キー",
-        "placeholder": "API キーは自動生成されます"
-      },
-      "port": {
-        "label": "ポート"
-      },
-      "url": {
-        "copyTooltip": "URL をコピー",
-        "label": "URL"
-      }
-    },
-    "messages": {
-      "apiKeyRegenerated": "API キーが再生成されました",
-      "notEnabled": "APIサーバーが有効になっていません。",
-      "operationFailed": "API サーバーの操作に失敗しました：",
-      "restartError": "API サーバーの再起動に失敗しました：",
-      "restartFailed": "API サーバーの再起動に失敗しました：",
-      "restartSuccess": "API サーバーが正常に再起動されました",
-      "startError": "API サーバーの開始に失敗しました：",
-      "startSuccess": "API サーバーが正常に開始されました",
-      "stopError": "API サーバーの停止に失敗しました：",
-      "stopSuccess": "API サーバーが正常に停止されました"
-    },
-    "status": {
-      "running": "実行中",
-      "stopped": "停止中"
-    },
-    "title": "API サーバー"
-  },
   "assistants": {
     "abbr": "アシスタント",
     "clear": {
@@ -2137,11 +2088,6 @@
       },
       "select_placeholder": "選択…"
     },
-    "api_gateway": {
-      "description": "あらゆるCLI、すべてのモデル",
-      "requires_running": "有効化後、Cherry Studio を実行し続けてください — 外部 CLI は、Cherry Studio がホストするゲートウェイに接続します。",
-      "title": "統合ゲートウェイ"
-    },
     "apply_failed": "システムファイルへのCLI設定の書き込みに失敗しました",
     "auto_update_to_latest": "最新バージョンを自動的に更新する",
     "bun_required_message": "CLI ツールを実行するには Bun 環境が必要です",
@@ -2448,9 +2394,6 @@
     "yesterday": "昨日",
     "you": "あなた"
   },
-  "docs": {
-    "title": "ドキュメント"
-  },
   "emoji_picker": {
     "categories": {
       "activities": "活動",
@@ -2519,12 +2462,12 @@
       "content": "コンテンツがセキュリティシステムによりブロックされました。修正して再試行してください",
       "context_length": "会話が長すぎます。履歴をクリアするか、新しいチャットを開始してください。",
       "deprecated": "このモデルは廃止されました。別のモデルに切り替えてください。",
-      "free_model_unavailable": "AI診断は一時的に利用できません",
       "go_to_settings": "設定へ移動",
       "knowledge": "ナレッジベースのベクトル化に失敗しました",
       "mcp": "MCP サーバーへの接続に失敗しました。サービスが実行中か確認してください",
       "model": "モデルが見つからないか、アクセス権がありません",
       "model_conflict": "診断モデルとエラーモデルが同一のため、診断できません",
+      "model_unavailable": "AI診断は一時的に利用できません",
       "network": "サーバーに接続できません。ネットワークまたはプロキシの設定を確認してください",
       "ocr": "OCR エンジンが初期化されていません。OCR 設定を確認してください",
       "parse": "AIが無効な応答を返しました。再試行するか、別のモデルに切り替えてください。",
@@ -3986,9 +3929,6 @@
           "specified": "Markdown ファイルのエクスポートに失敗しました"
         }
       },
-      "notes": {
-        "export": "ノートのエクスポートに失敗しました"
-      },
       "notion": {
         "export": "Notionへのエクスポートに失敗しました。接続状態と設定を確認してください",
         "no_api_key": "Notion ApiKey または Notion DatabaseID が設定されていません",
@@ -4092,9 +4032,6 @@
           "preconf": "Markdown ファイルを事前設定されたパスに正常にエクスポートしました",
           "specified": "Markdown ファイルを正常にエクスポートしました"
         }
-      },
-      "notes": {
-        "export": "成功的にノートにエクスポートされました"
       },
       "notion": {
         "export": "Notionへのエクスポートに成功しました"
@@ -4493,159 +4430,6 @@
   "navigate": {
     "provider_settings": "プロバイダー設定に移動"
   },
-  "notes": {
-    "auto_rename": {
-      "empty_note": "ノートが空です。名前を生成できません。",
-      "failed": "ノート名の生成に失敗しました",
-      "label": "ノート名の生成",
-      "success": "ノート名の生成に成功しました"
-    },
-    "characters": "文字",
-    "collapse": "閉じる",
-    "conflict": {
-      "description": "このノートはエディタ外で変更されました。最新バージョンを読み込むには再読み込みしてください（保存されていない編集内容は破棄されます）、または編集を続行してください。",
-      "keep_draft": "編集を続ける",
-      "reload": "再読み込み",
-      "title": "ディスク上でメモが変更されました"
-    },
-    "content_placeholder": "メモの内容を入力してください...",
-    "copyContent": "コンテンツをコピーします",
-    "create_folder_failed": "フォルダの作成に失敗しました",
-    "create_note_failed": "ノートの作成に失敗しました",
-    "crossPlatformRestoreWarning": "クロスプラットフォーム設定は復元されましたが、ノートディレクトリが空です。ノートファイルを次の場所にコピーしてください：{{path}}",
-    "delete": "削除",
-    "delete_confirm": "この{{type}}を本当に削除しますか？",
-    "delete_failed": "メモの削除に失敗しました",
-    "delete_folder_confirm": "「{{name}}」フォルダーとそのすべての内容を削除してもよろしいですか？",
-    "delete_note_confirm": "メモ \"{{name}}\" を削除してもよろしいですか？",
-    "drop_markdown_hint": ".md ファイルまたはディレクトリをここにドラッグ＆ドロップしてインポートしてください",
-    "empty": "暫無ノート",
-    "expand": "展開",
-    "exportToPDF": "PDFにエクスポート",
-    "exportToWord": "Wordにエクスポート",
-    "export_failed": "知識ベースへのエクスポートに失敗しました",
-    "export_knowledge": "ノートをナレッジベースにエクスポートする",
-    "export_success": "知識ベースへのエクスポートが成功しました",
-    "export_to_pdf_failed": "PDFへのエクスポートに失敗しました",
-    "export_to_pdf_success": "PDFにエクスポートされました",
-    "export_to_word_failed": "Wordへのエクスポートに失敗しました",
-    "file_removed_draft": "このノートはディスクから削除されました。保存されていない下書きはエディター内でまだ利用可能です。",
-    "folder": "フォルダー",
-    "leave": {
-      "description": "このメモを残すと、保存されていない編集内容が破棄されます。続行しますか？",
-      "discard_and_continue": "破棄して続行",
-      "title": "保存されていないメモの編集を破棄しますか？"
-    },
-    "load_failed": "ノートの読み込みに失敗しました",
-    "load_failed_description": "ファイルを読み取ることができませんでした。ノートの内容を保護するため、編集は無効になっています。",
-    "metadata_sync_failed": "ファイルは更新されましたが、状態の同期に失敗しました。操作を再試行してください。",
-    "metadata_update_failed": "ノートの状態を更新できませんでした",
-    "move_failed": "ノートの移動に失敗しました",
-    "new_folder": "新しいフォルダーを作成する",
-    "new_note": "新規ノート作成",
-    "no_content_to_copy": "コピーするコンテンツはありません",
-    "no_content_to_export": "エクスポートするコンテンツがありません",
-    "no_file_selected": "アップロードするファイルを選択してください",
-    "no_note_selected": "まずノートを選択してください",
-    "no_valid_files": "有効なファイルがアップロードされていません",
-    "open_folder": "外部フォルダーを開きます",
-    "open_outside": "外部から開く",
-    "print": "印刷",
-    "print_failed": "ノートの印刷に失敗しました",
-    "rename": "名前の変更",
-    "rename_changed": "セキュリティポリシーにより、ファイル名は{{original}}から{{final}}に変更されました",
-    "rename_failed": "ノートの名前を変更できませんでした",
-    "save": "メモに保存する",
-    "save_blocked_load_failed": "保存がブロックされました。ノートの読み込みに失敗しました。",
-    "save_failed": "メモの保存に失敗しました",
-    "save_failure": {
-      "description": "このノートを保存できませんでした。編集内容はエディタに残っており、自動保存は一時停止されています。",
-      "metadata_pending": "メモは保存されましたが、ファイルのメタデータはまだ復旧中です。この保存を再試行しないでください。"
-    },
-    "search": {
-      "both": "名称+内容",
-      "content": "内容",
-      "found_results": "{{count}} 件の結果が見つかりました（名称: {{nameCount}}、内容: {{contentCount}}）",
-      "more_matches": "一致",
-      "searching": "検索中...",
-      "show_less": "閉じる"
-    },
-    "settings": {
-      "data": {
-        "apply": "応用",
-        "apply_path_failed": "アプリケーションパスが失敗しました",
-        "current_work_directory": "現在の作業ディレクトリ",
-        "invalid_directory": "選択したディレクトリは無効であるか、権限がありません",
-        "path_required": "ワーキングディレクトリを選択してください",
-        "path_updated": "ワーキングディレクトリの更新は正常に更新されます",
-        "reset_failed": "リセットに失敗しました",
-        "reset_to_default": "デフォルトにリセットします",
-        "select": "選ぶ",
-        "select_directory_failed": "ディレクトリの選択に失敗しました",
-        "title": "データ設定",
-        "work_directory_description": "作業ディレクトリは、すべてのメモが保存される場所です。ワーキングディレクトリを変更しても、既存のファイルは移動しません。ファイルを手動で移行してください。",
-        "work_directory_placeholder": "ノートワークディレクトリを選択します"
-      },
-      "display": {
-        "compress_content": "バーの幅を減らします",
-        "compress_content_description": "有効にすると、1行あたりの単語数が制限され、画面に表示されるコンテンツが減少します。",
-        "default_font": "デフォルトフォント",
-        "font_size": "フォントサイズ",
-        "font_size_description": "フォントサイズを調整して読書体験を向上させる（10-30px）",
-        "font_size_large": "大",
-        "font_size_medium": "中",
-        "font_size_small": "小",
-        "font_title": "フォント設定",
-        "serif_font": "セリフフォント",
-        "show_table_of_contents": "目次アウトラインを表示",
-        "show_table_of_contents_description": "目次アウトラインサイドバーを表示し、文書内のナビゲーションを容易にする",
-        "title": "見せる"
-      },
-      "editor": {
-        "edit_mode": {
-          "description": "編集ビューでは、新しいメモのデフォルトの編集モード",
-          "preview_mode": "ライブプレビュー",
-          "source_mode": "ソースコードモード",
-          "title": "デフォルトの編集ビュー"
-        },
-        "title": "エディター設定",
-        "view_mode": {
-          "description": "新しいノートデフォルトビューモード",
-          "edit_mode": "編集モード",
-          "read_mode": "読み取りモード",
-          "title": "デフォルトビュー"
-        },
-        "view_mode_description": "新しいタブページのデフォルトビューモードを設定します。"
-      },
-      "save_failed": "ノート設定の保存に失敗しました",
-      "title": "その他のオプション"
-    },
-    "show_starred": "お気に入りのノートを表示する",
-    "sort_a2z": "ファイル名（A-Z）",
-    "sort_created_asc": "作成日時（古い順）",
-    "sort_created_desc": "作成日時（新しい順）",
-    "sort_updated_asc": "更新日時（古い順）",
-    "sort_updated_desc": "更新日時（新しい順）",
-    "sort_z2a": "ファイル名（Z-A）",
-    "spell_check": "スペルチェック",
-    "spell_check_tooltip": "スペルチェックの有効/無効",
-    "star": "お気に入りのノート",
-    "starred_notes": "収集したノート",
-    "target_name_exists": "この名前のノートまたはフォルダは既に存在します",
-    "title": "ノート",
-    "tree_load_failed": "ノートディレクトリの読み込みに失敗しました",
-    "unsaved_changes": "保存されていないコンテンツがあります。本当に離れますか？",
-    "unstar": "お気に入りを解除する",
-    "untitled_folder": "新ファイル夹",
-    "untitled_note": "無題のメモ",
-    "upload_all_failed": "{{failed}}件のノートをアップロードできませんでした",
-    "upload_failed": "ノートのアップロードに失敗しました",
-    "upload_files": "ファイルをアップロード",
-    "upload_folder": "アップロードフォルダ",
-    "upload_partial_failed": "{{uploaded}}件のノートをアップロードしました、{{failed}}件が失敗しました",
-    "upload_success": "ノートのアップロードが成功しました",
-    "uploading_files": "{{count}} 個のファイルをアップロード中..."
-  },
   "notification": {
     "assistant": "助手回應",
     "knowledge": {
@@ -4692,22 +4476,19 @@
     },
     "skip": "スキップ",
     "toast": {
-      "complete_failed": "セットアップを完了できませんでした。もう一度お試しください。",
-      "connected": "CherryINに正常に接続されました"
+      "complete_failed": "セットアップを完了できませんでした。もう一度お試しください。"
     },
     "welcome": {
-      "login_cherryin": "CherryINでログイン",
       "or_continue_with": "または続行",
-      "other_provider": "他のプロバイダーを選択",
       "select_other_provider": "他のプロバイダーを選択",
       "setup_hint": "ベストな体験のために、少なくとも1つのプロバイダーを設定してください",
       "subtitle": "プロバイダーに接続して、オールインワンAIワークステーションを始めましょう",
-      "title": "Cherry Studioへようこそ"
+      "title": "Cherry Studio Liteへようこそ"
     }
   },
   "openclaw": {
     "checking_installation": "OpenClawのインストールを確認しています...",
-    "description": "Cherry Studio プロバイダーを OpenClaw Gateway と統合し、Claude Code、Qwen-Coder などの AI コーディングエージェントを有効にします。",
+    "description": "Cherry Studio Lite プロバイダーを OpenClaw Gateway と統合し、Claude Code、Qwen-Coder などの AI コーディングエージェントを有効にします。",
     "error": {
       "select_provider_model": "プロバイダーとモデルをまず選択してください"
     },
@@ -4745,7 +4526,7 @@
       "title": "モデル設定"
     },
     "node_missing": {
-      "description": "OpenClawにはNode.js/npmが必要です。まずNode.jsをインストールしてから、Cherry Studioを再起動してください。",
+      "description": "OpenClawにはNode.js/npmが必要です。まずNode.jsをインストールしてから、Cherry Studio Liteを再起動してください。",
       "download_button": "Node.jsをダウンロード",
       "hint": "macOS: brew install node | Windows: nodejs.org から LTS 版をダウンロード",
       "title": "Node.jsが必要"
@@ -5231,7 +5012,6 @@
     "baidu-cloud": "Baidu Cloud",
     "burncloud": "BurnCloud",
     "cerebras": "Cerebras AI",
-    "cherryai": "CherryAI",
     "cherryin": "CherryIN",
     "claude-code": "Claude Code",
     "copilot": "GitHub Copilot",
@@ -5352,221 +5132,6 @@
     },
     "title": "データ復元"
   },
-  "richEditor": {
-    "action": {
-      "table": {
-        "deleteColumn": "列を削除",
-        "deleteRow": "行を削除",
-        "insertColumnAfter": "右に挿入",
-        "insertColumnBefore": "左に挿入",
-        "insertRowAfter": "下に挿入",
-        "insertRowBefore": "上に挿入"
-      }
-    },
-    "commands": {
-      "blockMath": {
-        "description": "数式を挿入します",
-        "title": "数式"
-      },
-      "blockquote": {
-        "description": "参照されたテキストを挿入します",
-        "title": "引用"
-      },
-      "bold": {
-        "description": "太字でマークされています",
-        "title": "大胆な"
-      },
-      "bulletList": {
-        "description": "シンプルな弾丸リストを作成します",
-        "title": "順序付けられていないリスト"
-      },
-      "calloutInfo": {
-        "description": "メッセージプロンプトボックスを追加します",
-        "title": "情報プロンプトボックス"
-      },
-      "calloutWarning": {
-        "description": "警告ボックスを追加します",
-        "title": "警告プロンプトボックス"
-      },
-      "code": {
-        "description": "コードスニペットを挿入します",
-        "title": "コード"
-      },
-      "codeBlock": {
-        "description": "コードスニペットを挿入します",
-        "title": "コードブロック"
-      },
-      "columns": {
-        "description": "列レイアウトを作成します",
-        "title": "セクション列"
-      },
-      "date": {
-        "description": "現在の日付を挿入します",
-        "title": "日付"
-      },
-      "divider": {
-        "description": "水平方向のスプリットラインを追加します",
-        "title": "分割線"
-      },
-      "hardBreak": {
-        "description": "ラインブレークを挿入します",
-        "title": "ラインブレーク"
-      },
-      "heading1": {
-        "description": "大きな段落タイトル",
-        "title": "レベル1タイトル"
-      },
-      "heading2": {
-        "description": "真ん中の段落タイトル",
-        "title": "二次タイトル"
-      },
-      "heading3": {
-        "description": "小さな段落タイトル",
-        "title": "レベル3タイトル"
-      },
-      "heading4": {
-        "description": "より小さな段落タイトル",
-        "title": "レベル4タイトル"
-      },
-      "heading5": {
-        "description": "より小さな段落タイトル",
-        "title": "レベル5タイトル"
-      },
-      "heading6": {
-        "description": "最小限の段落タイトル",
-        "title": "レベル6タイトル"
-      },
-      "image": {
-        "description": "画像を挿入します",
-        "title": "写真"
-      },
-      "inlineCode": {
-        "description": "インラインコードを追加します",
-        "title": "インラインコード"
-      },
-      "inlineMath": {
-        "description": "行に数式を挿入します",
-        "title": "業界の数式"
-      },
-      "italic": {
-        "description": "イタリックとしてマークされています",
-        "title": "イタリック"
-      },
-      "link": {
-        "description": "リンクを追加します",
-        "title": "リンク"
-      },
-      "noCommandsFound": "コマンドが見つかりません",
-      "orderedList": {
-        "description": "番号付きリストを作成します",
-        "title": "注文リスト"
-      },
-      "paragraph": {
-        "description": "プレーンテキストの書き始めます",
-        "title": "文章"
-      },
-      "redo": {
-        "description": "前のステップを作り直します",
-        "title": "やり直し"
-      },
-      "strike": {
-        "description": "削除行としてマークします",
-        "title": "行を削除します"
-      },
-      "table": {
-        "description": "テーブルを挿入します",
-        "title": "シート"
-      },
-      "taskList": {
-        "description": "To Doリストを作成します",
-        "title": "タスクリスト"
-      },
-      "underline": {
-        "description": "下線付けのマーク",
-        "title": "下線"
-      },
-      "undo": {
-        "description": "前の操作を元に戻します",
-        "title": "取り消す"
-      }
-    },
-    "dragHandle": "ブロックをドラッグします",
-    "frontMatter": {
-      "addProperty": "属性を追加",
-      "addTag": "タグを追加",
-      "changeToBoolean": "チェックボックス",
-      "changeToDate": "日付",
-      "changeToNumber": "数字",
-      "changeToTags": "タグ",
-      "changeToText": "テキスト",
-      "changeType": "種類を変更",
-      "deleteProperty": "削除属性",
-      "editValue": "編集値",
-      "empty": "空",
-      "moreActions": "その他の操作",
-      "propertyName": "プロパティ名"
-    },
-    "image": {
-      "placeholder": "写真を追加します"
-    },
-    "imageUploader": {
-      "embedImage": "埋め込まれた写真",
-      "embedLink": "埋め込みリンク",
-      "embedSuccess": "画像埋め込みは正常に埋め込まれています",
-      "invalidType": "画像ファイルを選択してください",
-      "invalidUrl": "無効な画像リンク",
-      "processing": "写真を扱う...",
-      "title": "写真を追加します",
-      "tooLarge": "画像サイズは10MBを超えることはできません",
-      "upload": "アップロード",
-      "uploadError": "画像のアップロードに失敗しました",
-      "uploadFile": "ファイルをアップロード",
-      "uploadHint": "JPG、PNG、GIFおよびその他の形式をサポートし、最大10MB",
-      "uploadSuccess": "画像アップロードに正常にアップロードします",
-      "uploadText": "画像をクリックまたはドラッグしてここにアップロードします",
-      "uploading": "写真のアップロード",
-      "urlPlaceholder": "画像リンクアドレスを貼り付けます",
-      "urlRequired": "画像リンクアドレスを入力してください"
-    },
-    "link": {
-      "remove": "リンクを削除します",
-      "text": "リンクタイトル",
-      "textPlaceholder": "リンクタイトルを入力してください",
-      "url": "リンクアドレス"
-    },
-    "math": {
-      "placeholder": "ラテックスフォーミュラを入力します"
-    },
-    "placeholder": "'/'を入力してコマンドを呼び出します",
-    "plusButton": "クリックして以下を追加します",
-    "toolbar": {
-      "blockMath": "数式",
-      "blockquote": "引用",
-      "bold": "大胆な",
-      "bulletList": "順序付けられていないリスト",
-      "clearMarks": "クリア形式",
-      "code": "インラインコード",
-      "codeBlock": "コードブロック",
-      "heading1": "レベル1タイトル",
-      "heading2": "二次タイトル",
-      "heading3": "レベル3タイトル",
-      "heading4": "レベル4タイトル",
-      "heading5": "レベル5タイトル",
-      "heading6": "CET-6タイトル",
-      "image": "写真",
-      "inlineMath": "業界の数式",
-      "italic": "イタリック",
-      "link": "リンク",
-      "orderedList": "注文リスト",
-      "paragraph": "文章",
-      "redo": "やり直し",
-      "strike": "行を削除します",
-      "table": "シート",
-      "taskList": "タスクリスト",
-      "underline": "下線",
-      "undo": "取り消す"
-    }
-  },
   "selection": {
     "action": {
       "builtin": {
@@ -5642,7 +5207,7 @@
           },
           "description": {
             "0": "テキスト選択ツールは、<strong>アクセシビリティー権限</strong>が必要です。",
-            "1": "「<strong>設定に移動</strong>」をクリックし、後で表示される権限要求ポップアップで「<strong>システム設定を開く</strong>」ボタンをクリックします。その後、表示されるアプリケーションリストで「<strong>Cherry Studio</strong>」を見つけ、権限スイッチをオンにしてください。",
+            "1": "「<strong>設定に移動</strong>」をクリックし、後で表示される権限要求ポップアップで「<strong>システム設定を開く</strong>」ボタンをクリックします。その後、表示されるアプリケーションリストで「<strong>Cherry Studio Lite</strong>」を見つけ、権限スイッチをオンにしてください。",
             "2": "設定が完了したら、テキスト選択ツールを再起動してください。"
           },
           "title": "アクセシビリティー権限"
@@ -5666,7 +5231,7 @@
         "wayland_checklist_subtitle": "Wayland エクスペリエンスを最適化するために、次の条件が満たされていることを確認してください：",
         "wayland_description": "Waylandセッションで実行中です。システムの制約により、一部のデスクトップ環境ではツールバーが選択したテキストに追随せず、画面中央にのみ表示される場合があります。完全な体験のためにはX11セッションへの切り替えを推奨します。",
         "wayland_title": "Waylandセッション通知",
-        "xwayland_fail": "有効ではありません。`--ozone-platform=x11` フラグを付けて Cherry Studio を起動してください。",
+        "xwayland_fail": "有効ではありません。`--ozone-platform=x11` フラグを付けて Cherry Studio Lite を起動してください。",
         "xwayland_label": "XWaylandモード:",
         "xwayland_pass": "有効"
       },
@@ -5815,28 +5380,13 @@
   },
   "settings": {
     "about": {
-      "careers": {
-        "button": "表示",
-        "title": "キャリア"
-      },
       "checkUpdate": {
         "available": "今すぐ更新",
         "label": "更新を確認"
       },
       "checkingUpdate": "更新を確認中...",
-      "contact": {
-        "button": "メール",
-        "title": "連絡先"
-      },
-      "debug": {
-        "open": "開く",
-        "title": "デバッグ"
-      },
       "description": "クリエイターのための強力なAIアシスタント",
       "downloading": "ダウンロード中...",
-      "enterprise": {
-        "title": "エンタープライズ"
-      },
       "feedback": {
         "agent": {
           "description": "チェリーアシスタントとチャットしてフィードバックを共有してください。",
@@ -5845,7 +5395,7 @@
         "agent_error": "フィードバック用のCherry Assistantを開けません。もう一度お試しください。",
         "button": "フィードバック",
         "dialog": {
-          "description": "フィードバックの共有方法を選択して、Cherry Studioの改善にご協力ください。",
+          "description": "フィードバックの共有方法を選択して、Cherry Studio Liteの改善にご協力ください。",
           "title": "フィードバックチャンネルを選択してください"
         },
         "github": {
@@ -5871,11 +5421,7 @@
       "title": "について",
       "updateAvailable": "新しいバージョン {{version}} が見つかりました",
       "updateError": "更新エラー",
-      "updateNotAvailable": "最新バージョンを使用しています",
-      "website": {
-        "button": "ウェブサイト",
-        "title": "公式ウェブサイト"
-      }
+      "updateNotAvailable": "最新バージョンを使用しています"
     },
     "advanced": {
       "auto_switch_to_topics": "トピックに自動的に切り替える",
@@ -5927,7 +5473,7 @@
         "select": "ディレクトリを変更",
         "select_error": "データディレクトリの変更に失敗しました",
         "select_error_in_app_path": "新しいパスはアプリのインストールパスと同じです。別のパスを選択してください",
-        "select_error_protected_path": "選択されたパスは、オペレーティングシステムまたはCherry Studioによって保護されています。別のフォルダを選択してください。",
+        "select_error_protected_path": "選択されたパスは、オペレーティングシステムまたはCherry Studio Liteによって保護されています。別のフォルダを選択してください。",
         "select_error_root_path": "新しいパスはルートパスにできません",
         "select_error_same_path": "新しいパスは元のパスと同じです。別のパスを選択してください",
         "select_error_write_permission": "新しいパスに書き込み権限がありません",
@@ -6516,31 +6062,6 @@
       "installing": "インストール中...",
       "installingHint": "初回インストール時にランタイムをダウンロードする場合があり、数分かかることがあります",
       "invalidTool": "無効なツール名またはキー",
-      "localModels": {
-        "cancel": "キャンセル",
-        "description": "デバイス上でローカルに動作するモデル — 一度ダウンロードすれば、APIキーなしでオフラインで使用できます。",
-        "download": "ダウンロード",
-        "embedding": {
-          "name": "ローカル埋め込み",
-          "subtitle": "Qwen3 Embedding 0.6B · ~614 MB"
-        },
-        "notice": {
-          "downloadFailed": "ダウンロードに失敗しました。接続を確認して、もう一度お試しください。",
-          "inUse": "ナレッジベースによってまだ使用されている; ウェイトは保持された。",
-          "removeFailed": "削除に失敗しました。詳細についてはログを確認してください。"
-        },
-        "ocr": {
-          "name": "ローカルOCR",
-          "subtitle": "PaddleOCR PP-OCRv6 · ~140 MB"
-        },
-        "remove": "削除",
-        "status": {
-          "downloading": "ダウンロード中…",
-          "ready": "準備完了"
-        },
-        "title": "ローカルモデル",
-        "unsupported": "このプラットフォームではローカルモデルはサポートされていません。"
-      },
       "notInstalled": "インストールされていません",
       "openBinariesDir": "Open binaries directory",
       "remove": "Remove tool",
@@ -6578,7 +6099,7 @@
         "uv": "Python package manager for MCP services and dependency installation."
       },
       "uninstall": "アンインストール",
-      "uninstallConfirmMessage": "\"{{name}}\"をアンインストールしてもよろしいですか？Cherry Studioのバックエンドコピーが削除されます。",
+      "uninstallConfirmMessage": "\"{{name}}\"をアンインストールしてもよろしいですか？Cherry Studio Liteのバックエンドコピーが削除されます。",
       "uninstallConfirmTitle": "アンインストールツール",
       "uninstallFailed": "ツールのアンインストールに失敗しました",
       "uninstallSuccess": "ツールをアンインストールしました",
@@ -7444,10 +6965,6 @@
     "power": {
       "prevent_sleep_when_busy": "タスクが実行されている間はシステムをスリープさせない"
     },
-    "privacy": {
-      "enable_privacy_mode": "匿名エラーレポートとデータ統計の送信",
-      "title": "プライバシー設定"
-    },
     "prompts": {
       "add": "プロンプトを追加",
       "contentLabel": "内容",
@@ -7586,8 +7103,7 @@
       "base_url": {
         "invalid": "有効なHTTPまたはHTTPS URLを入力してください",
         "label": "ベースURL",
-        "placeholder": "https://api.example.com",
-        "required": "Base URLを入力してください"
+        "placeholder": "https://api.example.com"
       },
       "basic_auth": {
         "label": "HTTP 認証",
@@ -7687,13 +7203,6 @@
           "text_endpoint_required": "少なくとも1つのテキストエンドポイントを設定してください",
           "url_help": "APIルートURLを入力して、最終的なリクエストパスをプレビューしてください"
         },
-        "preset_instance": {
-          "description": "コーディングプランサービス、複数アカウント、またはプロジェクト分離の場合、各ベースURLとAPIキーを独立して設定してください。",
-          "empty": "一致するプロバイダープリセットがありません",
-          "placeholder": "プロバイダープリセットから作成…",
-          "search_placeholder": "検索プロバイダのプリセット",
-          "title": "プリセットから開始（オプション）"
-        },
         "request_preview": "リクエストパス: {{path}}",
         "title": "カスタムプロバイダーを追加"
       },
@@ -7709,12 +7218,6 @@
       },
       "docs_check": "チェック",
       "docs_more_details": "詳細を確認",
-      "duplicate": {
-        "add_another": "{{name}} インスタンスを追加",
-        "drawer_title": "{{name}}インスタンスを追加",
-        "fill_after_create": "認証フィールドは作成後に入力できます",
-        "menu_label": "インスタンスを追加"
-      },
       "enable_failed_after_connection": "接続は成功しましたが、プロバイダーを有効にすることができませんでした。",
       "filter": {
         "agent": "エージェントサポート",
@@ -7751,8 +7254,7 @@
         "anthropic": "Anthropic メッセージ",
         "gemini": "Google Gemini",
         "openai_chat": "OpenAI チャット コンプリーション",
-        "openai_responses": "OpenAI レスポンス",
-        "toggle": "さらなるエンドポイント"
+        "openai_responses": "OpenAI レスポンス"
       },
       "no_models_for_check": "チェックするモデルがありません（例：会話モデル）",
       "not_checked": "未チェック",
@@ -8079,13 +7581,6 @@
           "doc2x": {
             "description": "高度なファイル復元エンジン。",
             "name": "Doc2x"
-          },
-          "local_paddleocr": {
-            "description": "PaddleOCR (PP-OCRv6 medium) をインプロセスで実行 — 完全オフライン、APIキー不要、認識処理はバックグラウンドスレッドで実行されるためUIが応答性を保ちます。初回使用前に環境依存関係でモデル（約140MB）をダウンロードしてください。",
-            "name": "ローカルPaddleOCR",
-            "status": {
-              "local": "お使いのデバイス上で完全に動作"
-            }
           },
           "mineru": {
             "description": "OpenDataLabのオープンソース高品質PDF抽出ツール",

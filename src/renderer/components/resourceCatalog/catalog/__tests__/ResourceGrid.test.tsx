@@ -38,14 +38,10 @@ vi.mock('react-i18next', () => ({
           'library.assistant_catalog.title': '助手库',
           'library.assistant_catalog.go_to_chat': '去对话',
           'library.create_menu.create': '新建助手',
-          'library.skill_add.add': '添加技能',
-          'library.skill_add.local_import': '本地导入',
-          'library.skill_add.online_search': '在线搜索',
-          'library.skill_add.system_search': '系统搜索',
           'library.toolbar.all_groups': '全部分组',
           'library.toolbar.group_button': '分组',
           'library.type.assistant': '助手',
-          'library.type.skill': '技能'
+          'library.type.prompt': '提示词'
         }) satisfies Record<string, string>
       )[key] ?? key
   })
@@ -399,32 +395,6 @@ function createAssistantResource(overrides: Partial<Extract<ResourceItem, { type
   }
 }
 
-function createAgentResource(): ResourceItem {
-  return {
-    id: 'agent-1',
-    type: 'agent',
-    name: 'Agent',
-    description: '',
-    avatar: 'A',
-    createdAt: '2026-05-06T00:00:00.000Z',
-    updatedAt: '2026-05-06T00:00:00.000Z',
-    raw: {} as Extract<ResourceItem, { type: 'agent' }>['raw']
-  }
-}
-
-function createSkillResource(version: string | null = null): ResourceItem {
-  return {
-    id: 'skill-1',
-    type: 'skill',
-    name: 'Skill',
-    description: '',
-    avatar: 'S',
-    createdAt: '2026-05-06T00:00:00.000Z',
-    updatedAt: '2026-05-06T00:00:00.000Z',
-    raw: { version } as Extract<ResourceItem, { type: 'skill' }>['raw']
-  }
-}
-
 function createPromptResource(): ResourceItem {
   return {
     id: 'prompt-1',
@@ -452,7 +422,6 @@ function renderResourceGrid(props: Partial<ComponentProps<typeof ResourceGrid>> 
       onExport={vi.fn()}
       onCreate={vi.fn()}
       onImportAssistant={vi.fn()}
-      onOpenSkillMarketplace={vi.fn()}
       groups={[]}
       activeGroupId={null}
       onGroupFilter={vi.fn()}
@@ -482,7 +451,7 @@ describe('ResourceGrid empty state copy', () => {
 
     unmount()
     const onSearchChange = vi.fn()
-    renderResourceGrid({ activeResourceType: 'skill', onSearchChange, variant: 'settings', title: '技能' })
+    renderResourceGrid({ activeResourceType: 'prompt', onSearchChange, variant: 'settings', title: '提示词' })
 
     fireEvent.change(screen.getByPlaceholderText('library.toolbar.search_placeholder'), {
       target: { value: 'creator' }
@@ -509,7 +478,7 @@ describe('ResourceGrid empty state copy', () => {
     const clientWidthSpy = vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(1200)
 
     try {
-      renderResourceGrid({ activeResourceType: 'skill', isLoading: true, variant: 'settings', title: '技能' })
+      renderResourceGrid({ activeResourceType: 'prompt', isLoading: true, variant: 'settings', title: '提示词' })
 
       const loadingGrid = screen.getByTestId('resource-grid-loading')
       await waitFor(() => expect(loadingGrid).toHaveStyle({ gridTemplateColumns: 'repeat(1, minmax(0, 1fr))' }))
@@ -569,51 +538,6 @@ describe('ResourceGrid assistant add actions', () => {
     expect(screen.getByRole('button', { name: '新建助手' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '助手库' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '导入助手' })).toBeInTheDocument()
-  })
-})
-
-describe('ResourceGrid skill add actions', () => {
-  it('renders skill actions inline and dispatches online, system, or local actions', async () => {
-    const user = userEvent.setup()
-    const onCreate = vi.fn()
-    const onOpenSkillMarketplace = vi.fn()
-    const onOpenSystemSkills = vi.fn()
-
-    renderResourceGrid({
-      activeResourceType: 'skill',
-      onCreate,
-      onOpenSkillMarketplace,
-      onOpenSystemSkills
-    })
-
-    expect(screen.getByRole('button', { name: '添加技能' })).toBeInTheDocument()
-
-    await user.click(screen.getByRole('button', { name: '添加技能' }))
-
-    expect(screen.getByRole('menuitem', { name: '在线搜索' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: '本地导入' })).toBeInTheDocument()
-    expect(screen.getByRole('menuitem', { name: '系统搜索' })).toBeInTheDocument()
-
-    await user.click(screen.getByRole('menuitem', { name: '在线搜索' }))
-
-    expect(onOpenSkillMarketplace).toHaveBeenCalledTimes(1)
-    expect(onCreate).not.toHaveBeenCalled()
-
-    await user.click(screen.getByRole('menuitem', { name: '本地导入' }))
-
-    expect(onCreate).toHaveBeenCalledWith('skill')
-
-    await user.click(screen.getByRole('menuitem', { name: '系统搜索' }))
-
-    expect(onOpenSystemSkills).toHaveBeenCalledTimes(1)
-  })
-
-  it('hides system search when no current agent is available', () => {
-    renderResourceGrid({ activeResourceType: 'skill' })
-
-    fireEvent.click(screen.getByRole('button', { name: '添加技能' }))
-
-    expect(screen.queryByRole('menuitem', { name: '系统搜索' })).not.toBeInTheDocument()
   })
 })
 
@@ -780,37 +704,18 @@ describe('ResourceGrid group toolbar management', () => {
 })
 
 describe('ResourceGrid card actions', () => {
-  it('shows the Skill version tag only when a version is available', () => {
-    const { rerender } = render(<ResourceCard resource={createSkillResource('1.2.3')} {...getResourceCardProps()} />)
-
-    expect(screen.getByText('1.2.3')).toBeInTheDocument()
-
-    rerender(<ResourceCard resource={createSkillResource()} {...getResourceCardProps()} />)
-
-    expect(screen.queryByText('1.2.3')).not.toBeInTheDocument()
-  })
-
-  it('uses the neutral settings treatment without changing library Skill cards', () => {
+  it('uses the neutral settings treatment without changing library cards', () => {
     const { rerender } = render(
-      <ResourceCard resource={createSkillResource()} variant="settings" {...getResourceCardProps()} />
+      <ResourceCard resource={createPromptResource()} variant="settings" {...getResourceCardProps()} />
     )
 
-    const settingsCard = screen.getByRole('button', { name: 'Skill' })
+    const settingsCard = screen.getByRole('button', { name: 'Prompt' })
     expect(settingsCard).toHaveClass('rounded-xl', 'border-border')
-    expect(settingsCard.querySelector('[aria-hidden="true"]')?.parentElement).toHaveClass(
-      'bg-secondary',
-      'text-secondary-foreground'
-    )
-    expect(settingsCard.querySelector('[aria-hidden="true"]')).toHaveClass('text-foreground-tertiary')
 
-    rerender(<ResourceCard resource={createSkillResource()} {...getResourceCardProps()} />)
+    rerender(<ResourceCard resource={createPromptResource()} {...getResourceCardProps()} />)
 
-    const libraryCard = screen.getByRole('button', { name: 'Skill' })
+    const libraryCard = screen.getByRole('button', { name: 'Prompt' })
     expect(libraryCard).toHaveClass('rounded-lg', 'border-border-subtle')
-    expect(libraryCard.querySelector('[aria-hidden="true"]')?.parentElement).toHaveClass(
-      'bg-warning-subtle',
-      'text-warning'
-    )
   })
 
   it('shows the overflow menu only for assistant cards', () => {
@@ -822,7 +727,7 @@ describe('ResourceGrid card actions', () => {
 
   it('shows a direct delete action when delete is the only card action', async () => {
     const user = userEvent.setup()
-    const resource = createAgentResource()
+    const resource = createPromptResource()
     const onDelete = vi.fn()
 
     render(<ResourceCard resource={resource} {...getResourceCardProps({ onDelete })} />)
@@ -1030,32 +935,30 @@ describe('ResourceCardMenu group binding', () => {
     })
   })
 
-  it('does not expose group management for agent, skill, or prompt resources', async () => {
-    const user = userEvent.setup()
-    const menuProps = {
-      onClose: vi.fn(),
-      onDuplicate: vi.fn(),
-      onDelete: vi.fn(),
-      onExport: vi.fn(),
-      allGroups: assistantGroups
-    }
-
-    for (const resource of [createAgentResource(), createSkillResource(), createPromptResource()]) {
-      const { unmount } = render(<ResourceCardMenu resource={resource} {...menuProps} />)
-
-      await user.click(screen.getByRole('button', { name: /common.more/ }))
-      expect(screen.queryByRole('button', { name: /library.action.manage_groups/ })).not.toBeInTheDocument()
-
-      unmount()
-    }
-  })
-
-  it('keeps uninstall available for skill resources without extra menu actions', async () => {
+  it('does not expose group management for prompt resources', async () => {
     const user = userEvent.setup()
 
     render(
       <ResourceCardMenu
-        resource={createSkillResource()}
+        resource={createPromptResource()}
+        onClose={vi.fn()}
+        onDuplicate={vi.fn()}
+        onDelete={vi.fn()}
+        onExport={vi.fn()}
+        allGroups={assistantGroups}
+      />
+    )
+
+    await user.click(screen.getByRole('button', { name: /common.more/ }))
+    expect(screen.queryByRole('button', { name: /library.action.manage_groups/ })).not.toBeInTheDocument()
+  })
+
+  it('keeps delete as the only action for prompt resources without a divider', async () => {
+    const user = userEvent.setup()
+
+    render(
+      <ResourceCardMenu
+        resource={createPromptResource()}
         onClose={vi.fn()}
         onDuplicate={vi.fn()}
         onDelete={vi.fn()}
@@ -1065,7 +968,7 @@ describe('ResourceCardMenu group binding', () => {
     )
 
     await user.click(screen.getByRole('button', { name: /common.more/ }))
-    expect(screen.getByRole('menuitem', { name: /library.action.uninstall/ })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: '删除' })).toBeInTheDocument()
     expect(screen.queryByTestId('menu-divider')).not.toBeInTheDocument()
   })
 

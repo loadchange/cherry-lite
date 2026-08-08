@@ -1,14 +1,10 @@
-import { agentTable } from '@data/db/schemas/agent'
-import { agentSessionTable } from '@data/db/schemas/agentSession'
-import { agentWorkspaceTable } from '@data/db/schemas/agentWorkspace'
 import { assistantTable } from '@data/db/schemas/assistant'
-import { knowledgeBaseTable } from '@data/db/schemas/knowledge'
 import { topicTable } from '@data/db/schemas/topic'
 import { userModelTable } from '@data/db/schemas/userModel'
 import { userProviderTable } from '@data/db/schemas/userProvider'
-import { agentService } from '@data/services/AgentService'
 import { assistantDataService } from '@data/services/AssistantService'
 import { EntitySearchService } from '@data/services/EntitySearchService'
+import { topicService } from '@data/services/TopicService'
 import { generateOrderKeySequence } from '@data/services/utils/orderKey'
 import { ENTITY_SEARCH_MAX_LIMIT_PER_TYPE, EntitySearchQuerySchema } from '@shared/data/api/schemas/search'
 import { DEFAULT_ASSISTANT_SETTINGS } from '@shared/data/types/assistant'
@@ -57,137 +53,27 @@ describe('EntitySearchService', () => {
       settings: DEFAULT_ASSISTANT_SETTINGS,
       orderKey: 'a0'
     })
-    await dbh.db.insert(agentTable).values({
-      id: '22222222-2222-4222-8222-222222222222',
-      type: 'claude-code',
-      name: 'Needle Agent',
-      description: 'Agent result',
-      instructions: 'Help',
-      model: null,
-      configuration: { avatar: '🧠' },
-      orderKey: 'a0'
-    })
-    await dbh.db.insert(agentWorkspaceTable).values({
-      id: 'workspace-search',
-      name: 'Search workspace',
-      path: '/tmp/workspace-search',
-      type: 'user',
-      orderKey: 'a0'
-    })
     await dbh.db.insert(topicTable).values({
       id: '33333333-3333-4333-8333-333333333333',
       name: 'Needle Topic',
       assistantId: '11111111-1111-4111-8111-111111111111',
       orderKey: 'a0'
     })
-    await dbh.db.insert(agentSessionTable).values({
-      id: '44444444-4444-4444-8444-444444444444',
-      agentId: '22222222-2222-4222-8222-222222222222',
-      name: 'Needle Session',
-      description: 'Session result',
-      workspaceId: 'workspace-search',
-      orderKey: 'a0'
-    })
-    await dbh.db.insert(knowledgeBaseTable).values({
-      id: '55555555-5555-4555-8555-555555555555',
-      name: 'Needle Knowledge',
-      dimensions: 1536,
-      embeddingModelId: createUniqueModelId('openai', 'embed-model'),
-      status: 'completed',
-      error: null,
-      rerankModelId: null,
-      fileProcessorId: null,
-      chunkSize: 800,
-      chunkOverlap: 120,
-      documentCount: null
-    })
   }
-
-  it('aggregates all supported entity types into read-model groups', async () => {
-    await seedEntitySearchRows()
-
-    const result = service.search(EntitySearchQuerySchema.parse({ q: 'Needle', limitPerType: 5 }))
-
-    expect(result.query).toBe('Needle')
-    expect(result).not.toHaveProperty('messageItems')
-    expect(result.groups.map((group) => group.type)).toEqual([
-      'assistant',
-      'agent',
-      'topic',
-      'session',
-      'knowledge-base'
-    ])
-    expect(result.groups.map((group) => group.items)).toEqual([
-      [
-        expect.objectContaining({
-          type: 'assistant',
-          id: '11111111-1111-4111-8111-111111111111',
-          title: 'Needle Assistant',
-          emoji: '🌟',
-          target: { assistantId: '11111111-1111-4111-8111-111111111111' }
-        })
-      ],
-      [
-        expect.objectContaining({
-          type: 'agent',
-          id: '22222222-2222-4222-8222-222222222222',
-          title: 'Needle Agent',
-          emoji: '🧠',
-          target: { agentId: '22222222-2222-4222-8222-222222222222' }
-        })
-      ],
-      [
-        expect.objectContaining({
-          type: 'topic',
-          id: '33333333-3333-4333-8333-333333333333',
-          title: 'Needle Topic',
-          subtitle: 'Needle Assistant',
-          target: {
-            topicId: '33333333-3333-4333-8333-333333333333',
-            assistantId: '11111111-1111-4111-8111-111111111111'
-          }
-        })
-      ],
-      [
-        expect.objectContaining({
-          type: 'session',
-          id: '44444444-4444-4444-8444-444444444444',
-          title: 'Needle Session',
-          subtitle: 'Needle Agent',
-          target: {
-            sessionId: '44444444-4444-4444-8444-444444444444',
-            agentId: '22222222-2222-4222-8222-222222222222'
-          }
-        })
-      ],
-      [
-        expect.objectContaining({
-          type: 'knowledge-base',
-          id: '55555555-5555-4555-8555-555555555555',
-          title: 'Needle Knowledge',
-          target: {
-            knowledgeBaseId: '55555555-5555-4555-8555-555555555555'
-          }
-        })
-      ]
-    ])
-  })
 
   it('honors type filters and limitPerType', async () => {
     await seedEntitySearchRows()
-    await dbh.db.insert(agentSessionTable).values({
+    await dbh.db.insert(topicTable).values({
       id: '66666666-6666-4666-8666-666666666666',
-      agentId: '22222222-2222-4222-8222-222222222222',
       name: 'Needle Follow-up',
-      description: '',
-      workspaceId: 'workspace-search',
+      assistantId: '11111111-1111-4111-8111-111111111111',
       orderKey: 'a1'
     })
 
-    const result = service.search(EntitySearchQuerySchema.parse({ q: 'Needle', types: ['session'], limitPerType: 1 }))
+    const result = service.search(EntitySearchQuerySchema.parse({ q: 'Needle', types: ['topic'], limitPerType: 1 }))
 
     expect(result.groups).toHaveLength(1)
-    expect(result.groups[0].type).toBe('session')
+    expect(result.groups[0].type).toBe('topic')
     expect(result.groups[0].items).toHaveLength(1)
   })
 
@@ -195,11 +81,11 @@ describe('EntitySearchService', () => {
     vi.spyOn(assistantDataService, 'search').mockImplementationOnce(() => {
       throw new Error('database is busy')
     })
-    const agentSearch = vi.spyOn(agentService, 'search').mockReturnValueOnce([])
+    const topicSearch = vi.spyOn(topicService, 'search').mockReturnValueOnce([])
 
     let err: unknown
     try {
-      service.search(EntitySearchQuerySchema.parse({ q: 'Needle', types: ['assistant', 'agent'], limitPerType: 5 }))
+      service.search(EntitySearchQuerySchema.parse({ q: 'Needle', types: ['assistant', 'topic'], limitPerType: 5 }))
     } catch (e) {
       err = e
     }
@@ -211,7 +97,7 @@ describe('EntitySearchService', () => {
     // Sync federated search fails fast: the first failing type (assistant) short-circuits
     // the `types.map`, so later types are not attempted — the query still fails as a whole
     // with type context, without wasting DB work on the remaining types.
-    expect(agentSearch).not.toHaveBeenCalled()
+    expect(topicSearch).not.toHaveBeenCalled()
   })
 
   it('clamps direct service limitPerType above the maximum', async () => {
@@ -294,18 +180,6 @@ describe('EntitySearchService', () => {
           })
         ]
       }
-    ])
-  })
-
-  it('returns empty item groups when no entity matches', async () => {
-    const result = service.search(EntitySearchQuerySchema.parse({ q: 'missing', limitPerType: 2 }))
-
-    expect(result.groups.map((group) => [group.type, group.items])).toEqual([
-      ['assistant', []],
-      ['agent', []],
-      ['topic', []],
-      ['session', []],
-      ['knowledge-base', []]
     ])
   })
 })

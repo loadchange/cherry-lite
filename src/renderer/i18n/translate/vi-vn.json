@@ -33,7 +33,7 @@
     },
     "builtin": {
       "cherry_assistant": {
-        "description": "Cố vấn tích hợp Cherry Studio. Chẩn đoán sự cố, hướng dẫn thao tác, thu thập câu hỏi thường gặp, gửi báo cáo lỗi/yêu cầu tính năng, và tìm kiếm/tạo Kỹ năng"
+        "description": "Cố vấn tích hợp Cherry Studio Lite. Chẩn đoán sự cố, hướng dẫn thao tác, thu thập câu hỏi thường gặp, gửi báo cáo lỗi/yêu cầu tính năng, và tìm kiếm/tạo Kỹ năng"
       }
     },
     "channels": {
@@ -1085,55 +1085,6 @@
       "server_not_running_description": "Máy chủ API cần được chạy để các tác nhân hoạt động. Bạn có thể khởi động nó trực tiếp hoặc kiểm tra cài đặt."
     }
   },
-  "apiGateway": {
-    "actions": {
-      "regenerate": "Tái tạo",
-      "restart": {
-        "button": "Khởi động lại",
-        "tooltip": "Khởi động lại máy chủ"
-      },
-      "start": "Bắt đầu",
-      "stop": "Dừng lại"
-    },
-    "authHeader": {
-      "title": "Tiêu đề ủy quyền"
-    },
-    "description": "Phơi bày khả năng AI của Cherry Studio qua các API HTTP tương thích với OpenAI",
-    "documentation": {
-      "title": "API Documentación"
-    },
-    "fields": {
-      "apiKey": {
-        "copyTooltip": "Sao chép Khóa API",
-        "label": "Khóa API",
-        "placeholder": "API key wird automatisch generiert"
-      },
-      "port": {
-        "label": "Harbor"
-      },
-      "url": {
-        "copyTooltip": "Sao chép URL",
-        "label": "URL"
-      }
-    },
-    "messages": {
-      "apiKeyRegenerated": "Khóa API đã được tạo lại",
-      "notEnabled": "Máy chủ API chưa được kích hoạt.",
-      "operationFailed": "Hoạt động của Máy chủ API không thành công:",
-      "restartError": "Không khởi động lại được Máy chủ API:",
-      "restartFailed": "Khởi động lại Máy chủ API không thành công:",
-      "restartSuccess": "Máy chủ API đã khởi động lại thành công",
-      "startError": "Không thể khởi động Máy chủ API:",
-      "startSuccess": "Máy chủ API đã khởi động thành công",
-      "stopError": "Không thể dừng Máy chủ API:",
-      "stopSuccess": "Máy chủ API đã dừng thành công"
-    },
-    "status": {
-      "running": "Chạy",
-      "stopped": "Đã dừng"
-    },
-    "title": "Máy chủ API"
-  },
   "assistants": {
     "abbr": "Trợ lý",
     "clear": {
@@ -2137,11 +2088,6 @@
       },
       "select_placeholder": "Chọn…"
     },
-    "api_gateway": {
-      "description": "Bất kỳ CLI nào, mọi mô hình",
-      "requires_running": "Giữ Cherry Studio chạy sau khi bật — CLI bên ngoài kết nối với cổng mà nó lưu trữ.",
-      "title": "Cổng thống nhất"
-    },
     "apply_failed": "Không thể ghi cấu hình CLI vào tệp hệ thống",
     "auto_update_to_latest": "Tự động cập nhật lên phiên bản mới nhất",
     "bun_required_message": "Môi trường Bun là bắt buộc để chạy các công cụ CLI",
@@ -2448,9 +2394,6 @@
     "yesterday": "Hôm qua",
     "you": "Bạn"
   },
-  "docs": {
-    "title": "Tài liệu"
-  },
   "emoji_picker": {
     "categories": {
       "activities": "Hoạt động",
@@ -2519,12 +2462,12 @@
       "content": "Nội dung bị chặn bởi hệ thống an toàn, vui lòng sửa đổi và thử lại",
       "context_length": "Cuộc hội thoại quá dài, vui lòng xóa lịch sử hoặc bắt đầu cuộc trò chuyện mới",
       "deprecated": "Mô hình này đã ngừng hoạt động, vui lòng chuyển sang mô hình khác",
-      "free_model_unavailable": "Chẩn đoán AI tạm thời không khả dụng",
       "go_to_settings": "Đi tới Cài đặt",
       "knowledge": "Vector hóa cơ sở tri thức thất bại",
       "mcp": "Kết nối máy chủ MCP thất bại, hãy kiểm tra xem dịch vụ có đang chạy không",
       "model": "Không tìm thấy mô hình hoặc bạn không có quyền truy cập",
       "model_conflict": "Mô hình chẩn đoán giống với mô hình đang gặp lỗi",
+      "model_unavailable": "Chẩn đoán AI tạm thời không khả dụng",
       "network": "Không thể kết nối đến máy chủ, hãy kiểm tra cài đặt mạng hoặc proxy",
       "ocr": "Công cụ OCR chưa được khởi tạo, hãy kiểm tra cài đặt OCR",
       "parse": "AI đã trả về phản hồi không hợp lệ, vui lòng thử lại hoặc chuyển sang mô hình khác",
@@ -3986,9 +3929,6 @@
           "specified": "Không thể xuất tệp Markdown"
         }
       },
-      "notes": {
-        "export": "Không thể xuất ghi chú"
-      },
       "notion": {
         "export": "Không xuất được sang Notion. Vui lòng kiểm tra trạng thái kết nối và cấu hình theo tài liệu",
         "no_api_key": "Notion ApiKey hoặc Notion DatabaseID chưa được cấu hình",
@@ -4092,9 +4032,6 @@
           "preconf": "Đã xuất thành công tệp Markdown đến đường dẫn được cấu hình trước",
           "specified": "Đã xuất thành công tệp Markdown"
         }
-      },
-      "notes": {
-        "export": "Đã xuất thành công sang ghi chú"
       },
       "notion": {
         "export": "Exportación exitosa a Notion"
@@ -4493,159 +4430,6 @@
   "navigate": {
     "provider_settings": "Đi tới cài đặt nhà cung cấp"
   },
-  "notes": {
-    "auto_rename": {
-      "empty_note": "Ghi chú trống, không thể tạo tên",
-      "failed": "Không thể tạo tên ghi chú",
-      "label": "Tạo Tên Ghi Chú",
-      "success": "Tên ghi chú được tạo thành công"
-    },
-    "characters": "Nhân vật",
-    "collapse": "Thu gọn",
-    "conflict": {
-      "description": "Ghi chú này đã được thay đổi bên ngoài trình chỉnh sửa. Tải lại để tải phiên bản mới nhất (các chỉnh sửa chưa lưu của bạn sẽ bị hủy), hoặc tiếp tục chỉnh sửa.",
-      "keep_draft": "Tiếp tục chỉnh sửa",
-      "reload": "Tải lại",
-      "title": "Ghi chú đã thay đổi trên đĩa"
-    },
-    "content_placeholder": "Vui lòng nhập nội dung ghi chú...",
-    "copyContent": "Sao chép nội dung",
-    "create_folder_failed": "Không thể tạo thư mục",
-    "create_note_failed": "Không thể tạo ghi chú",
-    "crossPlatformRestoreWarning": "Cấu hình đa nền tảng đã được khôi phục, nhưng thư mục ghi chú đang trống. Vui lòng sao chép các tệp ghi chú của bạn vào: {{path}}",
-    "delete": "xóa",
-    "delete_confirm": "Bạn có chắc chắn muốn xóa {{type}} này không?",
-    "delete_failed": "Không thể xóa ghi chú",
-    "delete_folder_confirm": "Bạn có chắc chắn muốn xóa thư mục \"{{name}}\" và toàn bộ nội dung bên trong không?",
-    "delete_note_confirm": "Bạn có chắc chắn muốn xóa ghi chú \"{{name}}\" không?",
-    "drop_markdown_hint": "Thả tệp .md hoặc thư mục vào đây để nhập",
-    "empty": "Chưa có ghi chú nào",
-    "expand": "mở ra",
-    "exportToPDF": "Xuất ra PDF",
-    "exportToWord": "Xuất ra Word",
-    "export_failed": "Không xuất được vào cơ sở tri thức",
-    "export_knowledge": "Xuất ghi chú sang cơ sở tri thức",
-    "export_success": "Đã xuất khẩu thành công vào cơ sở tri thức",
-    "export_to_pdf_failed": "Không thể xuất sang PDF",
-    "export_to_pdf_success": "Xuất sang PDF",
-    "export_to_word_failed": "Không xuất được sang Word",
-    "file_removed_draft": "Ghi chú này đã được xóa khỏi ổ đĩa. Bản nháp chưa lưu của bạn vẫn còn trong trình soạn thảo.",
-    "folder": "thư mục",
-    "leave": {
-      "description": "Rời khỏi trang này sẽ hủy bỏ các chỉnh sửa chưa lưu của bạn. Bạn có muốn tiếp tục?",
-      "discard_and_continue": "Bỏ qua và tiếp tục",
-      "title": "Hủy bỏ các chỉnh sửa ghi chú chưa lưu?"
-    },
-    "load_failed": "Không thể tải ghi chú",
-    "load_failed_description": "Không thể đọc tệp. Chức năng chỉnh sửa đã bị vô hiệu hóa để bảo vệ nội dung ghi chú.",
-    "metadata_sync_failed": "Tệp đã được cập nhật, nhưng lưu ý đồng bộ trạng thái không thành công. Vui lòng thử lại thao tác.",
-    "metadata_update_failed": "Không thể cập nhật trạng thái ghi chú",
-    "move_failed": "Không thể di chuyển ghi chú",
-    "new_folder": "Thư mục mới",
-    "new_note": "Tạo một ghi chú mới",
-    "no_content_to_copy": "Không có nội dung để sao chép",
-    "no_content_to_export": "Không có nội dung để xuất",
-    "no_file_selected": "Vui lòng chọn tệp để tải lên",
-    "no_note_selected": "Vui lòng chọn một ghi chú trước",
-    "no_valid_files": "Không có tệp hợp lệ nào được tải lên",
-    "open_folder": "Mở một thư mục bên ngoài",
-    "open_outside": "Mở từ bên ngoài",
-    "print": "In ấn",
-    "print_failed": "Không thể in ghi chú",
-    "rename": "Đổi tên",
-    "rename_changed": "Do chính sách bảo mật, tên tệp đã được thay đổi từ {{original}} thành {{final}}",
-    "rename_failed": "Không đổi được tên ghi chú",
-    "save": "Lưu vào Ghi chú",
-    "save_blocked_load_failed": "Không thể lưu vì ghi chú không tải được",
-    "save_failed": "Không lưu được ghi chú",
-    "save_failure": {
-      "description": "Ghi chú này không thể được lưu. Các chỉnh sửa của bạn vẫn còn trong trình chỉnh sửa và tính năng tự động lưu đã bị tạm dừng.",
-      "metadata_pending": "Ghi chú đã được lưu, nhưng siêu dữ liệu tệp của nó vẫn đang được khôi phục. Không thử lại việc lưu này."
-    },
-    "search": {
-      "both": "Tên+Nội dung",
-      "content": "Nội dung",
-      "found_results": "Tìm thấy {{count}} kết quả (Tên: {{nameCount}}, Nội dung: {{contentCount}})",
-      "more_matches": "nhiều trận đấu hơn",
-      "searching": "Đang tìm kiếm...",
-      "show_less": "Hiển thị ít hơn"
-    },
-    "settings": {
-      "data": {
-        "apply": "Áp dụng",
-        "apply_path_failed": "Không áp dụng được đường dẫn",
-        "current_work_directory": "Thư mục làm việc hiện tại",
-        "invalid_directory": "Thư mục đã chọn không hợp lệ hoặc bị từ chối truy cập",
-        "path_required": "Vui lòng chọn thư mục làm việc",
-        "path_updated": "Thư mục làm việc đã được cập nhật thành công",
-        "reset_failed": "Đặt lại thất bại",
-        "reset_to_default": "Đặt lại về mặc định",
-        "select": "Chọn",
-        "select_directory_failed": "Không thể chọn thư mục",
-        "title": "Cài đặt Dữ liệu",
-        "work_directory_description": "Thư mục làm việc là nơi lưu trữ tất cả các tệp ghi chú. Việc thay đổi thư mục làm việc sẽ không di chuyển các tệp hiện có, vui lòng di chuyển các tệp thủ công.",
-        "work_directory_placeholder": "Chọn thư mục làm việc ghi chú"
-      },
-      "display": {
-        "compress_content": "Nén nội dung",
-        "compress_content_description": "Khi được bật, nó sẽ giới hạn số ký tự trên mỗi dòng, làm giảm nội dung hiển thị trên màn hình, nhưng giúp các đoạn văn dài dễ đọc hơn.",
-        "default_font": "Phông chữ mặc định",
-        "font_size": "Cỡ chữ",
-        "font_size_description": "Điều chỉnh kích thước phông chữ để có trải nghiệm đọc tốt hơn (10-30px)",
-        "font_size_large": "Lớn",
-        "font_size_medium": "Trung bình",
-        "font_size_small": "Nhỏ",
-        "font_title": "Cài đặt phông chữ",
-        "serif_font": "Phông chữ Serif",
-        "show_table_of_contents": "Mostrar índice",
-        "show_table_of_contents_description": "Hiển thị thanh bên mục lục để dễ dàng điều hướng trong tài liệu",
-        "title": "Cài đặt hiển thị"
-      },
-      "editor": {
-        "edit_mode": {
-          "description": "Trong Chế độ Chỉnh sửa, chế độ chỉnh sửa mặc định cho ghi chú mới",
-          "preview_mode": "Xem trước trực tiếp",
-          "source_mode": "undefined",
-          "title": "Vista de edición predeterminada"
-        },
-        "title": "Cài đặt Trình chỉnh sửa",
-        "view_mode": {
-          "description": "Chế độ xem mặc định cho Ghi chú mới",
-          "edit_mode": "Modo de edición",
-          "read_mode": "Modo lectura",
-          "title": "Vista predeterminada"
-        },
-        "view_mode_description": "Thiết lập chế độ xem mặc định cho trang tab mới."
-      },
-      "save_failed": "Không thể lưu cài đặt ghi chú",
-      "title": "Ghi chú"
-    },
-    "show_starred": "Hiển thị ghi chú yêu thích",
-    "sort_a2z": "Tên tệp (A-Z)",
-    "sort_created_asc": "Thời gian tạo (cũ nhất trước)",
-    "sort_created_desc": "Thời gian tạo (mới nhất trước)",
-    "sort_updated_asc": "Thời gian cập nhật (cũ nhất trước)",
-    "sort_updated_desc": "Thời gian cập nhật (mới nhất trước)",
-    "sort_z2a": "Tên tệp (Z-A)",
-    "spell_check": "Kiểm tra chính tả",
-    "spell_check_tooltip": "Bật/Tắt kiểm tra chính tả",
-    "star": "Ghi chú yêu thích",
-    "starred_notes": "Ghi chú đã thu thập",
-    "target_name_exists": "Một ghi chú hoặc thư mục với tên này đã tồn tại",
-    "title": "Ghi chú",
-    "tree_load_failed": "Không thể tải thư mục ghi chú",
-    "unsaved_changes": "Bạn có nội dung chưa lưu, bạn có chắc chắn muốn rời đi không?",
-    "unstar": "Bỏ thích",
-    "untitled_folder": "Thư mục mới",
-    "untitled_note": "Ghi chú chưa có tiêu đề",
-    "upload_all_failed": "Không thể tải lên {{failed}} ghi chú",
-    "upload_failed": "Lưu ý tải lên thất bại",
-    "upload_files": "Tải lên Tệp",
-    "upload_folder": "Tải lên thư mục",
-    "upload_partial_failed": "Đã tải lên {{uploaded}} ghi chú, {{failed}} thất bại",
-    "upload_success": "Ghi chú tải lên thành công",
-    "uploading_files": "Đang tải lên {{count}} tệp..."
-  },
   "notification": {
     "assistant": "Phản hồi của Trợ lý",
     "knowledge": {
@@ -4692,22 +4476,19 @@
     },
     "skip": "Bỏ qua",
     "toast": {
-      "complete_failed": "Không thể hoàn tất thiết lập. Vui lòng thử lại.",
-      "connected": "Đã kết nối thành công với CherryIN"
+      "complete_failed": "Không thể hoàn tất thiết lập. Vui lòng thử lại."
     },
     "welcome": {
-      "login_cherryin": "Đăng nhập bằng CherryIN",
       "or_continue_with": "HOẶC TIẾP TỤC VỚI",
-      "other_provider": "Chọn Nhà Cung Cấp Khác",
       "select_other_provider": "Chọn Nhà Cung Cấp Khác",
       "setup_hint": "Vui lòng cấu hình ít nhất một nhà cung cấp để có trải nghiệm tốt nhất",
       "subtitle": "Kết nối nhà cung cấp để khởi động trạm làm việc AI tất cả trong một",
-      "title": "Chào mừng bạn đến với Cherry Studio"
+      "title": "Chào mừng bạn đến với Cherry Studio Lite"
     }
   },
   "openclaw": {
     "checking_installation": "Đang kiểm tra cài đặt OpenClaw...",
-    "description": "Sử dụng các nhà cung cấp Cherry Studio để cấp nguồn cho OpenClaw, trợ lý AI cá nhân của bạn hoạt động trên WhatsApp, Telegram, Slack, Discord và nhiều nền tảng khác.",
+    "description": "Sử dụng các nhà cung cấp Cherry Studio Lite để cấp nguồn cho OpenClaw, trợ lý AI cá nhân của bạn hoạt động trên WhatsApp, Telegram, Slack, Discord và nhiều nền tảng khác.",
     "error": {
       "select_provider_model": "Vui lòng chọn nhà cung cấp và mô hình trước"
     },
@@ -5231,7 +5012,6 @@
     "baidu-cloud": "Baidu Cloud",
     "burncloud": "BurnCloud",
     "cerebras": "Cerebras AI",
-    "cherryai": "CherryAI",
     "cherryin": "CherryIN",
     "claude-code": "Claude Code",
     "copilot": "GitHub Copilot",
@@ -5352,221 +5132,6 @@
     },
     "title": "Khôi phục dữ liệu"
   },
-  "richEditor": {
-    "action": {
-      "table": {
-        "deleteColumn": "Xóa cột",
-        "deleteRow": "Xóa hàng",
-        "insertColumnAfter": "Chèn Sau",
-        "insertColumnBefore": "Chèn trước",
-        "insertRowAfter": "Chèn bên dưới",
-        "insertRowBefore": "Chèn Phía Trên"
-      }
-    },
-    "commands": {
-      "blockMath": {
-        "description": "Chèn công thức toán học",
-        "title": "Công thức Toán học"
-      },
-      "blockquote": {
-        "description": "Ghi lại một câu trích dẫn",
-        "title": "Trích dẫn"
-      },
-      "bold": {
-        "description": "**Marcată în aldine**",
-        "title": "In đậm"
-      },
-      "bulletList": {
-        "description": "Tạo một danh sách dấu đầu dòng đơn giản",
-        "title": "Liste à puces"
-      },
-      "calloutInfo": {
-        "description": "Thêm một khung thông tin",
-        "title": "Informations-Hinweis"
-      },
-      "calloutWarning": {
-        "description": "Ajoutez un encadré d’avertissement",
-        "title": "Lời cảnh báo"
-      },
-      "code": {
-        "description": "Insérer un extrait de code",
-        "title": "Mã"
-      },
-      "codeBlock": {
-        "description": "Fange einen Codeausschnitt ein",
-        "title": "Khối mã"
-      },
-      "columns": {
-        "description": "Tạo bố cục cột",
-        "title": "Cột"
-      },
-      "date": {
-        "description": "Inserte la fecha actual",
-        "title": "Ngày"
-      },
-      "divider": {
-        "description": "Thêm một đường kẻ ngang",
-        "title": "Dividir"
-      },
-      "hardBreak": {
-        "description": "Chèn một dòng ngắt",
-        "title": "Ngắt dòng"
-      },
-      "heading1": {
-        "description": "Tiêu đề phần lớn",
-        "title": "Tiêu đề 1"
-      },
-      "heading2": {
-        "description": "Tiêu đề phần trung bình",
-        "title": "Tiêu đề 2"
-      },
-      "heading3": {
-        "description": "Tiêu đề phần nhỏ",
-        "title": "Tiêu đề 3"
-      },
-      "heading4": {
-        "description": "Tiêu đề phần nhỏ hơn",
-        "title": "Tiêu đề 4"
-      },
-      "heading5": {
-        "description": "Tiêu đề phần còn nhỏ hơn",
-        "title": "Tiêu đề 5"
-      },
-      "heading6": {
-        "description": "Tiêu đề phần nhỏ nhất",
-        "title": "Tiêu đề 6"
-      },
-      "image": {
-        "description": "Chèn một hình ảnh",
-        "title": "Hình ảnh"
-      },
-      "inlineCode": {
-        "description": "Thêm mã nội tuyến",
-        "title": "Mã nội tuyến"
-      },
-      "inlineMath": {
-        "description": "Chèn công thức toán học nội dòng",
-        "title": "Toán nội dòng"
-      },
-      "italic": {
-        "description": "Được đánh dấu in nghiêng",
-        "title": "Nghiêng"
-      },
-      "link": {
-        "description": "Thêm một liên kết",
-        "title": "Liên kết"
-      },
-      "noCommandsFound": "Không tìm thấy lệnh nào",
-      "orderedList": {
-        "description": "Tạo một danh sách có đánh số",
-        "title": "Danh sách đánh số"
-      },
-      "paragraph": {
-        "description": "Bắt đầu viết bằng văn bản thuần túy",
-        "title": "Văn bản"
-      },
-      "redo": {
-        "description": "Làm lại hành động cuối cùng",
-        "title": "Làm lại"
-      },
-      "strike": {
-        "description": "Đánh dấu là dòng xóa",
-        "title": "Xóa dòng"
-      },
-      "table": {
-        "description": "Chèn một bảng",
-        "title": "Bảng"
-      },
-      "taskList": {
-        "description": "Tạo một danh sách kiểm tra",
-        "title": "Daftar Tugas"
-      },
-      "underline": {
-        "description": "Đánh dấu gạch chân",
-        "title": "Subrayar"
-      },
-      "undo": {
-        "description": "Hoàn tác hành động cuối cùng",
-        "title": "Deshacer"
-      }
-    },
-    "dragHandle": "Kéo để di chuyển",
-    "frontMatter": {
-      "addProperty": "Ajouter une propriété",
-      "addTag": "Thêm thẻ",
-      "changeToBoolean": "Hộp kiểm",
-      "changeToDate": "Ngày",
-      "changeToNumber": "Số",
-      "changeToTags": "Thẻ",
-      "changeToText": "Văn bản",
-      "changeType": "Thay đổi loại",
-      "deleteProperty": "Xóa thuộc tính",
-      "editValue": "Chỉnh sửa giá trị",
-      "empty": "Trống",
-      "moreActions": "Thêm hành động",
-      "propertyName": "Nombre de la propiedad"
-    },
-    "image": {
-      "placeholder": "Thêm một bức ảnh"
-    },
-    "imageUploader": {
-      "embedImage": "Nhúng hình ảnh",
-      "embedLink": "Nhúng liên kết",
-      "embedSuccess": "Hình ảnh đã được nhúng thành công",
-      "invalidType": "Vui lòng chọn một tệp hình ảnh",
-      "invalidUrl": "URL hình ảnh không hợp lệ",
-      "processing": "Đang xử lý hình ảnh...",
-      "title": "Thêm một hình ảnh",
-      "tooLarge": "Kích thước hình ảnh không được vượt quá 10MB",
-      "upload": "Tải lên",
-      "uploadError": "Tải ảnh thất bại",
-      "uploadFile": "Tải lên tập tin",
-      "uploadHint": "Hỗ trợ định dạng JPG, PNG, GIF và các định dạng khác, tối đa 10MB",
-      "uploadSuccess": "Hình ảnh đã được tải lên thành công",
-      "uploadText": "Nhấp hoặc kéo ảnh vào đây để tải lên",
-      "uploading": "Tải lên hình ảnh",
-      "urlPlaceholder": "Dán liên kết hình ảnh",
-      "urlRequired": "Vui lòng nhập URL hình ảnh"
-    },
-    "link": {
-      "remove": "Xóa liên kết",
-      "text": "Tiêu đề Liên kết",
-      "textPlaceholder": "Vui lòng nhập tiêu đề liên kết",
-      "url": "Liên kết URL"
-    },
-    "math": {
-      "placeholder": "Nhập công thức LaTeX"
-    },
-    "placeholder": "Viết '/' cho các lệnh",
-    "plusButton": "Nhấp để thêm bên dưới",
-    "toolbar": {
-      "blockMath": "Toán học khối",
-      "blockquote": "Trích dẫn",
-      "bold": "Đậm",
-      "bulletList": "Danh sách đạn",
-      "clearMarks": "Xóa Định dạng",
-      "code": "Mã Nội tuyến",
-      "codeBlock": "Khối mã",
-      "heading1": "Tiêu đề 1",
-      "heading2": "Tiêu đề 2",
-      "heading3": "Tiêu đề 3",
-      "heading4": "Tiêu đề 4",
-      "heading5": "Tiêu đề 5",
-      "heading6": "Tiêu đề 6",
-      "image": "Hình ảnh",
-      "inlineMath": "Phương trình nội dòng",
-      "italic": "Nghiêng",
-      "link": "Liên kết",
-      "orderedList": "Danh sách có thứ tự",
-      "paragraph": "Đoạn văn",
-      "redo": "Làm lại",
-      "strike": "Gạch ngang",
-      "table": "Bảng",
-      "taskList": "Danh sách công việc",
-      "underline": "Gạch chân",
-      "undo": "Hoàn tác"
-    }
-  },
   "selection": {
     "action": {
       "builtin": {
@@ -5642,7 +5207,7 @@
           },
           "description": {
             "0": "Trợ lý Lựa chọn yêu cầu <strong>Quyền Trợ năng</strong> để hoạt động bình thường.",
-            "1": "Vui lòng nhấp vào \"<strong>Đi tới Cài đặt</strong>\" và nhấp vào nút \"<strong>Mở Cài đặt Hệ thống</strong>\" trong cửa sổ yêu cầu quyền xuất hiện sau đó. Sau đó, tìm \"<strong>Cherry Studio</strong>\" trong danh sách ứng dụng xuất hiện và bật công tắc quyền.",
+            "1": "Vui lòng nhấp vào \"<strong>Đi tới Cài đặt</strong>\" và nhấp vào nút \"<strong>Mở Cài đặt Hệ thống</strong>\" trong cửa sổ yêu cầu quyền xuất hiện sau đó. Sau đó, tìm \"<strong>Cherry Studio Lite</strong>\" trong danh sách ứng dụng xuất hiện và bật công tắc quyền.",
             "2": "Sau khi hoàn tất cài đặt, vui lòng mở lại trợ lý lựa chọn."
           },
           "title": "Quyền truy cập"
@@ -5666,7 +5231,7 @@
         "wayland_checklist_subtitle": "Đảm bảo các điều kiện sau được thỏa mãn để tối ưu hóa trải nghiệm Wayland:",
         "wayland_description": "Bạn đang ở trong phiên Wayland. Do giới hạn của hệ thống, thanh công cụ có thể chỉ xuất hiện ở giữa màn hình thay vì theo văn bản được chọn trên một số môi trường máy tính để bàn. Khuyến nghị chuyển sang phiên X11 để có trải nghiệm đầy đủ.",
         "wayland_title": "Thông báo phiên Wayland",
-        "xwayland_fail": "Chưa được kích hoạt, vui lòng khởi chạy Cherry Studio với cờ `--ozone-platform=x11`",
+        "xwayland_fail": "Chưa được kích hoạt, vui lòng khởi chạy Cherry Studio Lite với cờ `--ozone-platform=x11`",
         "xwayland_label": "Chế độ XWayland:",
         "xwayland_pass": "Đã bật"
       },
@@ -5815,28 +5380,13 @@
   },
   "settings": {
     "about": {
-      "careers": {
-        "button": "Xem",
-        "title": "Sự nghiệp"
-      },
       "checkUpdate": {
         "available": "Cập nhật",
         "label": "Kiểm tra cập nhật"
       },
       "checkingUpdate": "Đang kiểm tra cập nhật...",
-      "contact": {
-        "button": "Email",
-        "title": "Liên hệ"
-      },
-      "debug": {
-        "open": "Mở",
-        "title": "Gỡ lỗi"
-      },
       "description": "Một trợ lý AI mạnh mẽ cho nhà sản xuất",
       "downloading": "Đang tải xuống...",
-      "enterprise": {
-        "title": "Doanh nghiệp"
-      },
       "feedback": {
         "agent": {
           "description": "Trò chuyện với Cherry Assistant để chia sẻ phản hồi.",
@@ -5845,7 +5395,7 @@
         "agent_error": "Không thể mở Cherry Assistant để gửi phản hồi. Vui lòng thử lại.",
         "button": "Phản hồi",
         "dialog": {
-          "description": "Chọn cách chia sẻ phản hồi và giúp chúng tôi cải thiện Cherry Studio tốt hơn.",
+          "description": "Chọn cách chia sẻ phản hồi và giúp chúng tôi cải thiện Cherry Studio Lite tốt hơn.",
           "title": "Chọn kênh phản hồi"
         },
         "github": {
@@ -5871,11 +5421,7 @@
       "title": "Về",
       "updateAvailable": "Đã tìm thấy phiên bản mới {{version}}",
       "updateError": "Lỗi cập nhật",
-      "updateNotAvailable": "Bạn đang sử dụng phiên bản mới nhất",
-      "website": {
-        "button": "Trang web",
-        "title": "Trang web chính thức"
-      }
+      "updateNotAvailable": "Bạn đang sử dụng phiên bản mới nhất"
     },
     "advanced": {
       "auto_switch_to_topics": "Tự động chuyển sang chủ đề",
@@ -5927,7 +5473,7 @@
         "select": "Sửa đổi thư mục",
         "select_error": "Không thể thay đổi thư mục dữ liệu",
         "select_error_in_app_path": "Đường dẫn mới trùng với đường dẫn cài đặt ứng dụng, vui lòng chọn đường dẫn khác",
-        "select_error_protected_path": "Đường dẫn được chọn được bảo vệ bởi hệ điều hành hoặc Cherry Studio. Vui lòng chọn một thư mục khác.",
+        "select_error_protected_path": "Đường dẫn được chọn được bảo vệ bởi hệ điều hành hoặc Cherry Studio Lite. Vui lòng chọn một thư mục khác.",
         "select_error_root_path": "Nouveau chemin ne peut pas être le chemin racine",
         "select_error_same_path": "Đường dẫn mới giống với đường dẫn cũ, vui lòng chọn đường dẫn khác",
         "select_error_write_permission": "Đường dẫn mới không có quyền ghi",
@@ -6516,31 +6062,6 @@
       "installing": "Đang cài đặt...",
       "installingHint": "Lần cài đặt đầu tiên có thể tải xuống một runtime và mất vài phút",
       "invalidTool": "Tên công cụ hoặc khóa không hợp lệ",
-      "localModels": {
-        "cancel": "Hủy",
-        "description": "Các mô hình chạy trực tiếp trên thiết bị của bạn — tải xuống một lần, sau đó sử dụng ngoại tuyến không cần khóa API.",
-        "download": "Tải xuống",
-        "embedding": {
-          "name": "Nhúng cục bộ",
-          "subtitle": "Qwen3 Embedding 0.6B · ~614 MB"
-        },
-        "notice": {
-          "downloadFailed": "Tải xuống thất bại. Kiểm tra kết nối của bạn và thử lại.",
-          "inUse": "Vẫn được sử dụng bởi một cơ sở kiến thức; các trọng số đã được giữ lại.",
-          "removeFailed": "Xóa không thành công. Kiểm tra nhật ký để biết chi tiết."
-        },
-        "ocr": {
-          "name": "OCR cục bộ",
-          "subtitle": "PaddleOCR PP-OCRv6 · ~140 MB"
-        },
-        "remove": "Xóa",
-        "status": {
-          "downloading": "Đang tải xuống…",
-          "ready": "Sẵn sàng"
-        },
-        "title": "Mô hình cục bộ",
-        "unsupported": "Nền tảng này không hỗ trợ mô hình cục bộ."
-      },
       "notInstalled": "Chưa cài đặt",
       "openBinariesDir": "Open binaries directory",
       "remove": "Remove tool",
@@ -6578,7 +6099,7 @@
         "uv": "Python package manager for MCP services and dependency installation."
       },
       "uninstall": "Gỡ cài đặt",
-      "uninstallConfirmMessage": "Bạn có chắc chắn muốn gỡ cài đặt \"{{name}}\"? Bản sao backend của Cherry Studio sẽ bị xóa.",
+      "uninstallConfirmMessage": "Bạn có chắc chắn muốn gỡ cài đặt \"{{name}}\"? Bản sao backend của Cherry Studio Lite sẽ bị xóa.",
       "uninstallConfirmTitle": "Công cụ Gỡ cài đặt",
       "uninstallFailed": "Không thể gỡ cài đặt công cụ",
       "uninstallSuccess": "Công cụ đã được gỡ cài đặt",
@@ -7444,10 +6965,6 @@
     "power": {
       "prevent_sleep_when_busy": "Giữ hệ thống luôn hoạt động trong khi các tác vụ đang chạy"
     },
-    "privacy": {
-      "enable_privacy_mode": "Báo cáo lỗi và thống kê ẩn danh",
-      "title": "Cài đặt quyền riêng tư"
-    },
     "prompts": {
       "add": "Thêm Lời Nhắc",
       "contentLabel": "Nội dung",
@@ -7586,8 +7103,7 @@
       "base_url": {
         "invalid": "Nhập URL HTTP hoặc HTTPS hợp lệ",
         "label": "URL cơ sở",
-        "placeholder": "https://api.example.com",
-        "required": "Vui lòng nhập URL cơ sở"
+        "placeholder": "https://api.example.com"
       },
       "basic_auth": {
         "label": "Xác thực HTTP",
@@ -7687,13 +7203,6 @@
           "text_endpoint_required": "Cấu hình ít nhất một điểm cuối văn bản",
           "url_help": "Nhập URL gốc API để xem trước đường dẫn yêu cầu cuối cùng"
         },
-        "preset_instance": {
-          "description": "Đối với dịch vụ Coding Plan, nhiều tài khoản hoặc cách ly dự án; hãy cấu hình độc lập từng Base URL và API key",
-          "empty": "Không có cài đặt trước của Nhà cung cấp phù hợp",
-          "placeholder": "Tạo từ cài đặt trước của Nhà cung cấp…",
-          "search_placeholder": "Cài đặt trước của Nhà cung cấp Tìm kiếm",
-          "title": "Bắt đầu từ một cài đặt trước (tùy chọn)"
-        },
         "request_preview": "Đường dẫn yêu cầu: {{path}}",
         "title": "Thêm Nhà Cung Cấp Tùy Chỉnh"
       },
@@ -7709,12 +7218,6 @@
       },
       "docs_check": "Kiểm tra",
       "docs_more_details": "để biết thêm chi tiết",
-      "duplicate": {
-        "add_another": "Thêm phiên bản {{name}}",
-        "drawer_title": "Thêm phiên bản {{name}}",
-        "fill_after_create": "Các trường xác thực có thể được điền sau khi tạo",
-        "menu_label": "Thêm phiên bản"
-      },
       "enable_failed_after_connection": "Kết nối thành công, nhưng nhà cung cấp không thể được kích hoạt.",
       "filter": {
         "agent": "Được hỗ trợ bởi đại lý",
@@ -7751,8 +7254,7 @@
         "anthropic": "Tin nhắn Anthropic",
         "gemini": "Google Gemini",
         "openai_chat": "Hoàn thành Trò chuyện của OpenAI",
-        "openai_responses": "Phản hồi của OpenAI",
-        "toggle": "Thêm các điểm cuối"
+        "openai_responses": "Phản hồi của OpenAI"
       },
       "no_models_for_check": "Không có mô hình nào khả dụng để kiểm tra (ví dụ: mô hình chat)",
       "not_checked": "Chưa kiểm tra",
@@ -8079,13 +7581,6 @@
           "doc2x": {
             "description": "Công cụ khôi phục tập tin nâng cao.",
             "name": "Doc2x"
-          },
-          "local_paddleocr": {
-            "description": "PaddleOCR (PP-OCRv6 medium) chạy trong tiến trình — hoàn toàn offline, không cần API key, với nhận dạng trên luồng nền để giao diện người dùng luôn phản hồi. Tải xuống mô hình (~140MB) trong Phụ thuộc Môi trường trước khi sử dụng lần đầu.",
-            "name": "PaddleOCR Cục bộ",
-            "status": {
-              "local": "Chạy hoàn toàn trên thiết bị của bạn"
-            }
           },
           "mineru": {
             "description": "Công cụ trích xuất PDF chất lượng cao mã nguồn mở của OpenDataLab.",

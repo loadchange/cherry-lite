@@ -49,8 +49,8 @@ function openConversationWindowImpl(appId: ConversationAppId, key: string, title
 }
 
 /**
- * Single boundary for "navigate to a conversation tab" intents (chat topic / agent
- * session), bound to one app. Built on the SIDEBAR_APPS registry's key↔URL mapping
+ * Single boundary for "navigate to a conversation tab" intents (chat topic), bound
+ * to one app. Built on the SIDEBAR_APPS registry's key↔URL mapping
  * (`conversationRoute`), so pages and lists stop touching the tabs context, `openTab`, or URL
  * helpers directly.
  *

@@ -1,6 +1,3 @@
-import { agentSessionTable } from '@data/db/schemas/agentSession'
-import { AGENT_SESSION_MESSAGE_FTS_STATEMENTS, agentSessionMessageTable } from '@data/db/schemas/agentSessionMessage'
-import { agentWorkspaceTable } from '@data/db/schemas/agentWorkspace'
 import { MESSAGE_FTS_STATEMENTS, messageTable } from '@data/db/schemas/message'
 import { topicTable } from '@data/db/schemas/topic'
 import { setupTestDatabase, withRoot } from '@test-helpers/db'
@@ -11,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 /**
  * Regression guard for the FTS5-rowid-reshuffle bug.
  *
- * Both chat FTS tables are external-content and keyed on a stable `fts_rowid` column (NOT the
+ * The chat FTS table is external-content and keyed on a stable `fts_rowid` column (NOT the
  * implicit rowid). SQLite reshuffles the implicit rowid on a table rebuild (drizzle's
  * `INSERT...SELECT` drops it) and on VACUUM; an index keyed on the implicit rowid would then
  * silently point at the wrong rows. These tests reproduce a rowid-reshuffling rebuild and assert
@@ -126,72 +123,6 @@ describe('FTS5 rowid-reshuffle resistance (fts_rowid keying)', () => {
     expect(ftsMatchIds(dbh.sqlite, 'message', 'message_fts', 'date')).toEqual(['m4'])
     const noNullAfter = await dbh.db.select().from(messageTable).where(isNull(messageTable.ftsRowid))
     expect(noNullAfter).toHaveLength(0)
-  })
-
-  it('agent_session_message_fts stays aligned after a rowid-reshuffling table rebuild', async () => {
-    await dbh.db
-      .insert(agentWorkspaceTable)
-      .values({ id: 'ws-1', name: 'ws-1', path: '/tmp/ws-1', type: 'user', orderKey: 'w0' })
-    await dbh.db
-      .insert(agentSessionTable)
-      .values({ id: 'sess-1', name: 'Session', workspaceId: 'ws-1', orderKey: 'a0' })
-    await dbh.db.insert(agentSessionMessageTable).values([
-      {
-        id: 'a1',
-        sessionId: 'sess-1',
-        role: 'user',
-        data: { parts: [{ type: 'text', text: 'alpha apple' }] },
-        status: 'success',
-        createdAt: 10,
-        updatedAt: 10
-      },
-      {
-        id: 'a2',
-        sessionId: 'sess-1',
-        role: 'assistant',
-        data: { parts: [{ type: 'text', text: 'bravo banana' }] },
-        status: 'success',
-        createdAt: 20,
-        updatedAt: 20
-      },
-      {
-        id: 'a3',
-        sessionId: 'sess-1',
-        role: 'assistant',
-        data: { parts: [{ type: 'text', text: 'charlie cherry' }] },
-        status: 'success',
-        createdAt: 30,
-        updatedAt: 30
-      },
-      {
-        id: 'a4',
-        sessionId: 'sess-1',
-        role: 'assistant',
-        data: { parts: [{ type: 'text', text: 'delta date' }] },
-        status: 'success',
-        createdAt: 40,
-        updatedAt: 40
-      }
-    ])
-
-    const noNullBefore = await dbh.db
-      .select()
-      .from(agentSessionMessageTable)
-      .where(isNull(agentSessionMessageTable.ftsRowid))
-    expect(noNullBefore).toHaveLength(0)
-    expect(ftsMatchIds(dbh.sqlite, 'agent_session_message', 'agent_session_message_fts', 'cherry')).toEqual(['a3'])
-
-    dbh.sqlite.exec(`DELETE FROM agent_session_message WHERE id = 'a2'`)
-    rebuildWithRowidReshuffle(dbh.sqlite, 'agent_session_message', AGENT_SESSION_MESSAGE_FTS_STATEMENTS)
-
-    expect(integrityCheck1(dbh.sqlite, 'agent_session_message_fts')).toBeDefined()
-    expect(ftsMatchIds(dbh.sqlite, 'agent_session_message', 'agent_session_message_fts', 'cherry')).toEqual(['a3'])
-    expect(ftsMatchIds(dbh.sqlite, 'agent_session_message', 'agent_session_message_fts', 'date')).toEqual(['a4'])
-    const agentNoNullAfter = await dbh.db
-      .select()
-      .from(agentSessionMessageTable)
-      .where(isNull(agentSessionMessageTable.ftsRowid))
-    expect(agentNoNullAfter).toHaveLength(0)
   })
 
   it('integrity-check,1 catches a NULL fts_rowid desync (guards the nullable-window hazard)', async () => {

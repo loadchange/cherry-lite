@@ -4,17 +4,14 @@ import path from 'node:path'
 
 import { application } from '@application'
 import { mcpServerService } from '@data/services/McpServerService'
-import { modelService } from '@data/services/ModelService'
 import { providerService } from '@data/services/ProviderService'
 import { loggerService } from '@logger'
-import { createAgent as createAgentCommand } from '@main/ai/agents/createAgent'
 import { redactUrlToOrigin } from '@main/utils/redactUrl'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 import { CallToolRequestSchema, ErrorCode, ListToolsRequestSchema, McpError } from '@modelcontextprotocol/sdk/types.js'
-import { ErrorCode as DataApiErrorCode, isDataApiError } from '@shared/data/api/errors'
 import { ThemeMode } from '@shared/data/preference/preferenceTypes'
-import { parseUniqueModelId, type UniqueModelId, UniqueModelIdSchema } from '@shared/data/types/model'
+import { parseUniqueModelId, type UniqueModelId } from '@shared/data/types/model'
 import { isAllowedNavigationPath } from '@shared/utils/navigationPath'
 import { app } from 'electron'
 
@@ -164,42 +161,6 @@ const APPLY_SETTING_REGISTRY: Record<string, ApplySettingEntry> = {
   }
 }
 
-const CREATE_AGENT_TOOL: Tool = {
-  name: 'create_agent',
-  description: `Create a new Cherry Studio Agent on behalf of the user. Use this when the user explicitly asks to create / build / make a new agent (e.g. "帮我建一个专门做 Python 代码 review 的 Agent"). MUST collect requirements via conversation first, then SHOW the proposed config to the user for confirmation, and only call this tool after explicit user agreement.
-
-Safety rules:
-- type is fixed to 'claude-code' (channel-backed agents are out of scope here)
-- a workspace is selected when the user opens a session for the new agent
-- permission_mode defaults to 'default' (read-mostly); user can change later in the UI
-
-The tool returns the new agent id. After creation, query product_info and navigate to the current package's Agents route.`,
-  inputSchema: {
-    type: 'object',
-    properties: {
-      name: {
-        type: 'string',
-        description: 'Short human-readable name (e.g. "Python Reviewer", "周报助手"). Required.'
-      },
-      description: {
-        type: 'string',
-        description: 'One-line description shown in the agent list. Optional but recommended.'
-      },
-      instructions: {
-        type: 'string',
-        description:
-          "The agent's system prompt — role, behavior, output format. Required. Write it in the user's preferred language. Keep concise (under ~300 lines)."
-      },
-      model: {
-        type: 'string',
-        description:
-          'Optional model id in the form "providerId::modelId" (e.g. "cherryin::agent/glm-5.1", "anthropic::claude-sonnet"). When omitted, the new agent uses Cherry Assistant\'s current model.'
-      }
-    },
-    required: ['name', 'instructions']
-  }
-}
-
 const APPLY_SETTING_TOOL: Tool = {
   name: 'apply_setting',
   description: `Apply a low-risk Cherry Studio setting change directly. Only the whitelist below is supported; destructive operations are never exposed here.
@@ -232,7 +193,7 @@ const HEALTH_CACHE_TTL = 30_000 // 30 seconds
 class AssistantServer {
   public mcpServer: McpServer
 
-  constructor(private readonly defaultModel?: UniqueModelId) {
+  constructor() {
     this.mcpServer = new McpServer(
       {
         name: 'assistant',
@@ -249,7 +210,7 @@ class AssistantServer {
 
   private setupHandlers() {
     this.mcpServer.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: [NAVIGATE_TOOL, DIAGNOSE_TOOL, PRODUCT_INFO_TOOL, APPLY_SETTING_TOOL, CREATE_AGENT_TOOL]
+      tools: [NAVIGATE_TOOL, DIAGNOSE_TOOL, PRODUCT_INFO_TOOL, APPLY_SETTING_TOOL]
     }))
 
     this.mcpServer.server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -266,8 +227,6 @@ class AssistantServer {
             return await this.productInfo(args)
           case 'apply_setting':
             return await this.applySetting(args as Record<string, string | undefined>)
-          case 'create_agent':
-            return await this.createAgent(args as Record<string, string | undefined>)
           default:
             throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${toolName}`)
         }
@@ -431,62 +390,6 @@ class AssistantServer {
     logger.info('apply_setting succeeded', { setting, value })
     return {
       content: [{ type: 'text' as const, text: message }]
-    }
-  }
-
-  private async createAgent(args: Record<string, string | undefined>) {
-    const name = args.name?.trim()
-    const instructions = args.instructions?.trim()
-    const model = args.model?.trim() || this.defaultModel
-    const description = args.description?.trim() || undefined
-
-    if (!name) throw new McpError(ErrorCode.InvalidParams, "'name' is required for create_agent")
-    if (!instructions) throw new McpError(ErrorCode.InvalidParams, "'instructions' is required for create_agent")
-    if (!model) {
-      throw new McpError(ErrorCode.InvalidParams, "'model' is required when no default model is configured")
-    }
-
-    const parsedModel = UniqueModelIdSchema.safeParse(model)
-    if (!parsedModel.success) {
-      throw new McpError(ErrorCode.InvalidParams, `'model' must be in the form "providerId::modelId" (got "${model}")`)
-    }
-
-    const { providerId, modelId } = parseUniqueModelId(parsedModel.data)
-    try {
-      modelService.getByKey(providerId, modelId)
-    } catch (error) {
-      if (isDataApiError(error) && error.code === DataApiErrorCode.NOT_FOUND) {
-        throw new McpError(ErrorCode.InvalidParams, `Model is not configured in Cherry Studio: ${parsedModel.data}`)
-      }
-      throw error
-    }
-
-    try {
-      const result = await createAgentCommand({
-        type: 'claude-code',
-        name,
-        description,
-        instructions,
-        model: parsedModel.data,
-        configuration: {
-          permission_mode: 'default',
-          max_turns: 100,
-          env_vars: {}
-        }
-      })
-      logger.info('create_agent succeeded', { agentId: result.id, name })
-      return {
-        content: [
-          {
-            type: 'text' as const,
-            text: `Agent created. id=${result.id}, name=${result.name}, model=${result.model}. Query product_info for the current Agents route, then use navigate to open it.`
-          }
-        ]
-      }
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error)
-      logger.error('create_agent failed', { error: msg, name })
-      throw new McpError(ErrorCode.InternalError, `Failed to create agent: ${msg}`)
     }
   }
 

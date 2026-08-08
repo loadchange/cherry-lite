@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import type { HistoryRecordDescriptor } from './historyRecordsDescriptor'
 import { ALL_SOURCE_ID, findAdjacentHistoryRecordAfterBulkDelete } from './historyRecordsHelpers'
-import type { HistorySourceStatus } from './historyRecordsTypes'
 
 interface UseHistoryRecordsControllerParams<T> {
   descriptor: HistoryRecordDescriptor<T>
@@ -20,8 +19,6 @@ export interface HistoryRecordsController<T> {
   setSearchText: (value: string) => void
   selectedSourceId: string
   setSelectedSourceId: (id: string) => void
-  selectedStatus: HistorySourceStatus
-  setSelectedStatus: (status: HistorySourceStatus) => void
   visibleItems: readonly T[]
   selectedIds: string[]
   selectedCount: number
@@ -36,8 +33,8 @@ export interface HistoryRecordsController<T> {
 }
 
 /**
- * Owns the state, filtering, selection and batch handlers shared by both history modes. The
- * mode-specific data wiring lives in the descriptor; this hook stays entity-agnostic.
+ * Owns the state, filtering, selection and batch handlers of the history surface. The
+ * record-specific data wiring lives in the descriptor; this hook stays entity-agnostic.
  *
  * It reads the descriptor's fields individually (rather than depending on the descriptor object) so
  * that `visibleItems` stays referentially stable as long as the wrapper memoizes the filter
@@ -49,39 +46,24 @@ export function useHistoryRecordsController<T>({
   sourceSorted,
   activeRecordId
 }: UseHistoryRecordsControllerParams<T>): HistoryRecordsController<T> {
-  const {
-    getId,
-    isPinned,
-    getSourceId,
-    statusOf,
-    matchesSearch,
-    sources,
-    onBulkDelete,
-    onActiveRecordChange,
-    onBulkMove
-  } = descriptor
+  const { getId, isPinned, getSourceId, matchesSearch, sources, onBulkDelete, onActiveRecordChange, onBulkMove } =
+    descriptor
 
   const [searchText, setSearchText] = useState('')
   const [selectedSourceId, setSelectedSourceId] = useState<string>(ALL_SOURCE_ID)
-  const [selectedStatus, setSelectedStatus] = useState<HistorySourceStatus>(ALL_SOURCE_ID)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
 
   const visibleItems = useMemo(() => {
     const base = selectedSourceId === ALL_SOURCE_ID ? timeSorted : sourceSorted
 
-    const afterStatus =
-      statusOf && selectedStatus !== ALL_SOURCE_ID ? base.filter((item) => statusOf(item) === selectedStatus) : base
-
     const afterSource =
-      selectedSourceId === ALL_SOURCE_ID
-        ? afterStatus
-        : afterStatus.filter((item) => getSourceId(item) === selectedSourceId)
+      selectedSourceId === ALL_SOURCE_ID ? base : base.filter((item) => getSourceId(item) === selectedSourceId)
 
     const keywords = searchText.trim().toLowerCase()
     if (!keywords) return afterSource
 
     return afterSource.filter((item) => matchesSearch(item, keywords))
-  }, [getSourceId, matchesSearch, searchText, selectedSourceId, selectedStatus, sourceSorted, statusOf, timeSorted])
+  }, [getSourceId, matchesSearch, searchText, selectedSourceId, sourceSorted, timeSorted])
 
   // Reset the source filter when the selected source disappears (e.g. its assistant was deleted).
   useEffect(() => {
@@ -172,8 +154,6 @@ export function useHistoryRecordsController<T>({
     setSearchText,
     selectedSourceId,
     setSelectedSourceId,
-    selectedStatus,
-    setSelectedStatus,
     visibleItems,
     selectedIds,
     selectedCount: selectedIds.length,

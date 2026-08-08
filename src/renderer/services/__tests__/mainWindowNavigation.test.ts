@@ -50,10 +50,10 @@ describe('openRoute', () => {
     const handler = vi.fn((event: Event) => event.preventDefault())
     window.addEventListener(OPEN_MAIN_ROUTE_EVENT, handler)
 
-    openRoute('/app/paintings', { source: 'assistant', prompt: 'red cherry' })
+    openRoute('/app/translate', { source: 'assistant', prompt: 'red cherry' })
 
     const event = handler.mock.calls[0][0] as OpenMainRouteEvent
-    expect(event.detail).toEqual({ path: '/app/paintings?source=assistant&prompt=red+cherry' })
+    expect(event.detail).toEqual({ path: '/app/translate?source=assistant&prompt=red+cherry' })
 
     window.removeEventListener(OPEN_MAIN_ROUTE_EVENT, handler)
   })

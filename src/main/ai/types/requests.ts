@@ -63,13 +63,6 @@ export interface AiBaseRequest {
   reasoningEffort?: ReasoningEffortOption
   /** Whether the turn requests the provider-model pair's Fast transport. */
   fastMode?: boolean
-  /**
-   * Knowledge bases selected for this turn. Scope is resolved by `resolveKnowledgeBaseScope`: when
-   * the assistant has its own bound bases they are a ceiling — these ids may narrow that binding but
-   * never widen it, and are ignored entirely when none of them falls inside it. Only when the
-   * assistant has no binding does this selection define the scope on its own.
-   */
-  knowledgeBaseIds?: string[]
   requestOptions?: AiTransportOptions
   /**
    * Main-internal context ownership. Omitted means Cherry-managed; caller-owned
@@ -109,5 +102,4 @@ export interface AiStreamRequest extends AiBaseRequest {
    * consumers fall back to scanning `messages`.
    */
   retainedContext?: RetainedContext
-  runtime?: { kind: 'agent-session'; sessionId: string; turnId: string }
 }

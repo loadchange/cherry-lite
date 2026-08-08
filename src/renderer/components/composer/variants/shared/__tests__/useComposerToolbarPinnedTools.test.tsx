@@ -64,9 +64,9 @@ describe('useComposerToolbarPinnedTools', () => {
 
   it('surfaces a toast when persisting fails', async () => {
     const setPreference = vi.fn().mockRejectedValue(new Error('persist failed'))
-    MockUsePreferenceUtils.mockPreferenceReturn('agent.input.toolbar.pinned_tools', ['skills'], setPreference)
+    MockUsePreferenceUtils.mockPreferenceReturn('chat.input.toolbar.pinned_tools', ['web-search'], setPreference)
 
-    const { result } = renderHook(() => useComposerToolbarPinnedTools('agent.input.toolbar.pinned_tools'))
+    const { result } = renderHook(() => useComposerToolbarPinnedTools('chat.input.toolbar.pinned_tools'))
 
     act(() => {
       result.current.setPinnedIds([])

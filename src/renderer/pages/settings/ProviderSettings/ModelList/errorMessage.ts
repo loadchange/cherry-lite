@@ -1,12 +1,10 @@
 import { ErrorCode, isDataApiError, isSerializedDataApiError, toDataApiError } from '@shared/data/api/errors'
 import { createUniqueModelId, type UniqueModelId } from '@shared/data/types/model'
 
-const MODEL_IN_USE_BY_KNOWLEDGE_BASE_REASON = 'model is in use by a knowledge base'
 const MODEL_IN_USE_AS_DEFAULT_REASON = 'model is in use as the default model'
 
 interface ModelOperationErrorMessages {
   fallback: string
-  modelInUseByKnowledgeBase: string
   modelInUseAsDefault: string
 }
 
@@ -54,13 +52,6 @@ export function getModelInUseAsDefaultUniqueModelId(error: unknown): UniqueModel
 export function getModelOperationErrorMessage(error: unknown, messages: ModelOperationErrorMessages): string {
   if (isDataApiError(error) || isSerializedDataApiError(error)) {
     const dataError = toDataApiError(error)
-    if (
-      dataError.code === ErrorCode.INVALID_OPERATION &&
-      getInvalidOperationReason(dataError.details) === MODEL_IN_USE_BY_KNOWLEDGE_BASE_REASON
-    ) {
-      return messages.modelInUseByKnowledgeBase
-    }
-
     if (
       dataError.code === ErrorCode.INVALID_OPERATION &&
       getInvalidOperationReason(dataError.details) === MODEL_IN_USE_AS_DEFAULT_REASON

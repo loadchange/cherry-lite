@@ -1,13 +1,7 @@
 import type { ResolvedAction } from '@renderer/components/chat/actions/actionTypes'
 import type { ReactElement, ReactNode } from 'react'
 
-import type {
-  HistoryBulkMoveTarget,
-  HistoryRecordsMode,
-  HistorySourceOption,
-  HistorySourceStatus,
-  HistoryStatusOption
-} from './historyRecordsTypes'
+import type { HistoryBulkMoveTarget, HistoryRecordsMode, HistorySourceOption } from './historyRecordsTypes'
 
 /** Callback the row passes to the menu preset so a menu item can open the rename dialog. */
 export type HistoryOpenRename = (id: string, name: string) => void
@@ -18,13 +12,13 @@ export interface HistoryRowActions {
   onAction: (action: ResolvedAction) => void | Promise<void>
 }
 
-/** i18n strings that differ between assistant (topic) and agent (session) modes. */
+/** i18n strings the history surface renders. */
 export interface HistoryRecordsStrings {
-  /** Filter-bar source field label ("Assistant" / "Agent"). */
+  /** Filter-bar source field label. */
   sourceLabel: string
   /** Keyword search placeholder. */
   searchPlaceholder: string
-  /** Title-column header label ("Topic" / "Session"). */
+  /** Title-column header label. */
   titleColumnLabel: string
   emptyTitle: string
   emptyDescription: string
@@ -37,8 +31,8 @@ export interface HistoryRecordsStrings {
 }
 
 /**
- * Captures every genuine difference between the two history modes (assistant topics vs. agent
- * sessions) as data, so the controller, content, filter bar, toolbar, and list stay generic.
+ * Captures the record-type specifics as data, so the controller, content, filter bar, toolbar,
+ * and list stay generic.
  */
 export interface HistoryRecordDescriptor<T> {
   mode: HistoryRecordsMode
@@ -47,8 +41,6 @@ export interface HistoryRecordDescriptor<T> {
   getId: (item: T) => string
   isPinned: (id: string) => boolean
   getSourceId: (item: T) => string
-  /** Agent mode only: derive the stream status used by the status filter. */
-  statusOf?: (item: T) => HistorySourceStatus
   matchesSearch: (item: T, keywords: string) => boolean
   /** Runs the mode's bulk-delete mutation; resolves to the deleted ids, or undefined on failure/no-op. */
   onBulkDelete: (ids: string[]) => Promise<readonly string[] | undefined>
@@ -70,18 +62,15 @@ export interface HistoryRecordDescriptor<T> {
   renderRowMenu: (item: T, row: ReactElement, actions: HistoryRowActions) => ReactElement
 
   // --- filter bar + toolbar ---
-  /** Valid source ids (assistants/agents that exist) — drives the "selected source vanished" reset. */
+  /** Valid source ids (assistants that exist) — drives the "selected source vanished" reset. */
   sources: HistorySourceOption[]
-  /** Renders the shared assistant/agent selector as the source filter (null = all). */
+  /** Renders the shared assistant selector as the source filter (null = all). */
   renderSourceFilter: (selectedId: string | null, onSelect: (id: string | null) => void) => ReactNode
-  statusOptions?: HistoryStatusOption[]
   bulkMoveTargets?: readonly HistoryBulkMoveTarget[]
-  /** Assistant mode only: move `ids` to `targetId`; resolves to the ids actually moved (for selection pruning). */
+  /** Move `ids` to `targetId`; resolves to the ids actually moved (for selection pruning). */
   onBulkMove?: (targetId: string, ids: string[]) => Promise<readonly string[] | undefined>
 
   // --- rename dialog + strings ---
   onRename: (id: string, name: string) => void | Promise<void>
   strings: HistoryRecordsStrings
 }
-
-export type { HistorySourceStatus }

@@ -1,7 +1,6 @@
 import { cacheService } from '@data/CacheService'
 import { MessageEditingProvider, useMessageEditing } from '@renderer/components/chat/editing/MessageEditingContext'
 import { toast } from '@renderer/services/toast'
-import type { KnowledgeBase } from '@shared/data/types/knowledge'
 import { type Model, MODEL_CAPABILITY } from '@shared/data/types/model'
 import { IpcChannel } from '@shared/IpcChannel'
 import { MockCacheUtils } from '@test-mocks/renderer/CacheService'
@@ -23,7 +22,6 @@ const mocks = vi.hoisted(() => ({
   setDefaultModel: vi.fn(),
   setFiles: vi.fn(),
   setMentionedModels: vi.fn(),
-  setSelectedKnowledgeBases: vi.fn(),
   setIsExpanded: vi.fn(),
   updateAssistant: vi.fn(),
   updateAssistantSettings: vi.fn(),
@@ -39,8 +37,6 @@ const mocks = vi.hoisted(() => ({
   eventEmit: vi.fn(),
   eventOn: vi.fn(),
   mentionedModels: undefined as Model[] | undefined,
-  selectedKnowledgeBases: undefined as KnowledgeBase[] | undefined,
-  knowledgeBases: [] as KnowledgeBase[],
   assistant: undefined as any,
   model: undefined as Model | undefined,
   assistantLoading: false,
@@ -65,7 +61,6 @@ const mocks = vi.hoisted(() => ({
   topicLayout: undefined as string | undefined,
   inputAdapterFocus: vi.fn(),
   assistantHookArgs: [] as unknown[][],
-  knowledgeBaseHookArgs: [] as unknown[][],
   modelHookArgs: [] as unknown[][],
   providerHookArgs: [] as unknown[][],
   speedControlProps: undefined as
@@ -209,16 +204,13 @@ vi.mock('@renderer/components/composer/ComposerToolRuntime', () => ({
     initialState
   }: {
     children: ReactNode
-    initialState?: { files?: any[]; mentionedModels?: Model[]; selectedKnowledgeBases?: KnowledgeBase[] }
+    initialState?: { files?: any[]; mentionedModels?: Model[] }
   }) => {
     if (mocks.files === undefined) {
       mocks.files = initialState?.files ?? []
     }
     if (mocks.mentionedModels === undefined) {
       mocks.mentionedModels = initialState?.mentionedModels ?? []
-    }
-    if (mocks.selectedKnowledgeBases === undefined) {
-      mocks.selectedKnowledgeBases = initialState?.selectedKnowledgeBases ?? []
     }
     return <>{children}</>
   },
@@ -242,7 +234,6 @@ vi.mock('@renderer/components/composer/ComposerToolRuntime', () => ({
   useComposerToolState: () => ({
     files: mocks.files ?? [],
     mentionedModels: mocks.mentionedModels ?? [],
-    selectedKnowledgeBases: mocks.selectedKnowledgeBases ?? [],
     isExpanded: false,
     couldAddImageFile: false,
     extensions: []
@@ -250,7 +241,6 @@ vi.mock('@renderer/components/composer/ComposerToolRuntime', () => ({
   useComposerToolDispatch: () => ({
     setFiles: mocks.setFiles,
     setMentionedModels: mocks.setMentionedModels,
-    setSelectedKnowledgeBases: mocks.setSelectedKnowledgeBases,
     setIsExpanded: mocks.setIsExpanded,
     addNewTopic: vi.fn(),
     onTextChange: vi.fn(),
@@ -493,13 +483,6 @@ vi.mock('@renderer/hooks/useAssistant', () => ({
   }
 }))
 
-vi.mock('@renderer/hooks/useKnowledgeBase', () => ({
-  useKnowledgeBases: (...args: unknown[]) => {
-    mocks.knowledgeBaseHookArgs.push(args)
-    return { bases: mocks.knowledgeBases, isLoading: false }
-  }
-}))
-
 vi.mock('@renderer/hooks/useModel', () => ({
   useDefaultModel: () => ({ setDefaultModel: mocks.setDefaultModel }),
   useModels: (...args: unknown[]) => {
@@ -664,13 +647,6 @@ describe('ChatComposer', () => {
     mocks.setMentionedModels.mockImplementation((nextModels: Model[] | ((previous: Model[]) => Model[])) => {
       mocks.mentionedModels = typeof nextModels === 'function' ? nextModels(mocks.mentionedModels ?? []) : nextModels
     })
-    mocks.setSelectedKnowledgeBases.mockReset()
-    mocks.setSelectedKnowledgeBases.mockImplementation(
-      (nextBases: KnowledgeBase[] | ((previousBases: KnowledgeBase[]) => KnowledgeBase[])) => {
-        const previousBases = mocks.selectedKnowledgeBases ?? []
-        mocks.selectedKnowledgeBases = typeof nextBases === 'function' ? nextBases(previousBases) : nextBases
-      }
-    )
     mocks.setIsExpanded.mockReset()
     mocks.updateAssistant.mockReset()
     mocks.updateAssistantSettings.mockReset()
@@ -682,31 +658,6 @@ describe('ChatComposer', () => {
     mocks.getDraft.mockReset()
     mocks.getDraft.mockReturnValue({ text: 'original draft', tokens: [] })
     mocks.reconcileTokens.mockReset()
-    mocks.reconcileTokens.mockImplementation((draftTokens: readonly ComposerSerializedToken[]) => {
-      const knowledgeTokenIds = new Set(
-        draftTokens.filter((token) => token.kind === 'knowledge').map((token) => token.id)
-      )
-      const configuredKnowledgeBaseIds = new Set(mocks.assistant?.knowledgeBaseIds ?? [])
-      const selectableKnowledgeBases =
-        configuredKnowledgeBaseIds.size === 0
-          ? mocks.knowledgeBases
-          : mocks.knowledgeBases.filter((base) => configuredKnowledgeBaseIds.has(base.id))
-      mocks.setSelectedKnowledgeBases((previousBases: KnowledgeBase[]) => {
-        const nextBases = previousBases.filter((base) => knowledgeTokenIds.has(`knowledge:${base.id}`))
-        const nextBaseIds = new Set(nextBases.map((base) => `knowledge:${base.id}`))
-        let changed = nextBases.length !== previousBases.length
-
-        for (const base of selectableKnowledgeBases) {
-          const tokenId = `knowledge:${base.id}`
-          if (!knowledgeTokenIds.has(tokenId) || nextBaseIds.has(tokenId)) continue
-          nextBases.push(base)
-          nextBaseIds.add(tokenId)
-          changed = true
-        }
-
-        return changed ? nextBases : previousBases
-      })
-    })
     mocks.commandHandlers.clear()
     mocks.commandOptions.clear()
     mocks.eventListeners.clear()
@@ -717,16 +668,13 @@ describe('ChatComposer', () => {
       return () => mocks.eventListeners.delete(eventName)
     })
     mocks.mentionedModels = undefined
-    mocks.selectedKnowledgeBases = undefined
     mocks.files = undefined
-    mocks.knowledgeBases = []
     mocks.assistant = {
       id: 'assistant-1',
       name: 'Assistant 1',
       emoji: 'A',
       modelId: model.id,
-      settings: { enableWebSearch: true },
-      knowledgeBaseIds: []
+      settings: { enableWebSearch: true }
     }
     mocks.model = model
     mocks.assistantLoading = false
@@ -749,7 +697,6 @@ describe('ChatComposer', () => {
     mocks.chatWrite = undefined
     mocks.topicLayout = undefined
     mocks.assistantHookArgs = []
-    mocks.knowledgeBaseHookArgs = []
     mocks.modelHookArgs = []
     mocks.providerHookArgs = []
     mocks.speedControlProps = undefined
@@ -868,7 +815,6 @@ describe('ChatComposer', () => {
   it('defers optional resource catalogs on a normal single-model conversation', () => {
     render(<ChatComposer topic={topic} onSend={vi.fn()} />)
 
-    expect(mocks.knowledgeBaseHookArgs.at(-1)).toEqual([{ enabled: false }])
     expect(mocks.modelHookArgs.at(-1)).toEqual([{ enabled: true }, { fetchEnabled: false }])
     expect(mocks.providerHookArgs.at(-1)).toEqual([undefined, { enabled: false }])
   })
@@ -1851,38 +1797,6 @@ describe('ChatComposer', () => {
     expect(mocks.surfaceProps?.queueContent).toBeTruthy()
   })
 
-  it('restores queued knowledge selection from the user-message parts', async () => {
-    const knowledgeBase = {
-      id: 'kb-1',
-      name: 'Knowledge One',
-      documentCount: 1
-    } as KnowledgeBase
-    mocks.topicPending = true
-    mocks.knowledgeBases = [knowledgeBase]
-
-    const view = render(<ChatComposer topic={topic} onSend={vi.fn()} />)
-
-    mocks.selectedKnowledgeBases = [knowledgeBase]
-    view.rerender(<ChatComposer topic={topic} onSend={vi.fn()} />)
-
-    const [knowledgeToken] = mocks.surfaceProps?.tokens ?? []
-    expect(knowledgeToken).toMatchObject({ id: 'knowledge:kb-1', kind: 'knowledge' })
-    await act(async () => {
-      await mocks.surfaceProps?.onSendDraft({
-        text: 'queued knowledge question',
-        tokens: [serializeComposerToken(knowledgeToken)]
-      })
-    })
-
-    mocks.selectedKnowledgeBases = []
-    const queueContent = mocks.surfaceProps?.queueContent as any
-    await act(async () => {
-      await queueContent.props.onEdit(queueContent.props.items[0].id)
-    })
-
-    expect(mocks.selectedKnowledgeBases).toEqual([knowledgeBase])
-  })
-
   it('restores queued model, reasoning, and Fast controls when editing the item', async () => {
     mocks.topicPending = true
     mocks.model = {
@@ -2097,39 +2011,6 @@ describe('ChatComposer', () => {
       await waitFor(() => {
         expect(MockUseCacheUtils.getPersistCacheValue('ui.composer.input_history')).toEqual(['final message'])
       })
-    })
-
-    it('strips the knowledge sentence from the saved entry', async () => {
-      // Input history is the one composer path backed by localStorage, so it is the only place a
-      // knowledge token's prompt text could outlive its `data-knowledge-scope` part across a restart —
-      // replayed as prose it would claim a base the kb_* tools were never authorized for.
-      const knowledgePrompt = 'The user attached knowledge base "Base 1" (id: base-1).'
-      const onSend = vi.fn().mockResolvedValue(undefined)
-
-      render(<ChatComposer topic={topic} onSend={onSend} />)
-
-      await act(async () => {
-        await mocks.surfaceProps?.onSendDraft({
-          text: `summarize ${knowledgePrompt} now`,
-          tokens: [
-            {
-              id: 'knowledge:base-1',
-              kind: 'knowledge',
-              label: 'Base 1',
-              promptText: knowledgePrompt,
-              index: 0,
-              textOffset: 'summarize '.length
-            } as ComposerSerializedToken
-          ]
-        })
-      })
-
-      await waitFor(() => expect(onSend).toHaveBeenCalled())
-      const [saved = ''] = MockUseCacheUtils.getPersistCacheValue('ui.composer.input_history') ?? []
-      expect(saved).not.toContain('base-1')
-      expect(saved).not.toContain(knowledgePrompt)
-      expect(saved).toContain('summarize')
-      expect(saved).toContain('now')
     })
 
     it('does NOT save input history when onSend rejects', async () => {
@@ -2405,13 +2286,7 @@ describe('ChatComposer', () => {
   it('clears chat tool state while previewing plain-text history and restores the entry draft tools', async () => {
     seedInputHistory(['history entry'])
     const file = { fileTokenSourceId: 'source-1', name: 'doc.pdf', path: '/tmp/doc.pdf' } as any
-    const knowledgeBase = { id: 'kb-1', name: 'Knowledge One', documentCount: 1 } as KnowledgeBase
     mocks.files = [file]
-    mocks.knowledgeBases = [knowledgeBase]
-    mocks.assistant = {
-      ...mocks.assistant,
-      knowledgeBaseIds: ['kb-1']
-    }
     mocks.getDraft.mockImplementation(() => ({
       text: mocks.surfaceProps?.text ?? '',
       tokens: mocks.surfaceProps?.tokens.map(serializeComposerToken) ?? []
@@ -2419,14 +2294,9 @@ describe('ChatComposer', () => {
 
     const onSend = vi.fn()
     const view = render(<ChatComposer topic={topic} onSend={onSend} />)
-    mocks.selectedKnowledgeBases = [knowledgeBase]
     view.rerender(<ChatComposer topic={topic} onSend={onSend} />)
 
-    expect(mocks.surfaceProps?.tokens).toEqual([
-      expect.objectContaining({ id: 'file:source-1' }),
-      expect.objectContaining({ id: 'knowledge:kb-1' })
-    ])
-    expect(mocks.selectedKnowledgeBases).toEqual([knowledgeBase])
+    expect(mocks.surfaceProps?.tokens).toEqual([expect.objectContaining({ id: 'file:source-1' })])
 
     act(() => {
       mocks.surfaceProps?.onTextChange('chat draft')
@@ -2438,7 +2308,6 @@ describe('ChatComposer', () => {
     })
     await waitFor(() => expect(mocks.surfaceProps?.text).toBe('history entry'))
     expect(mocks.files).toEqual([])
-    expect(mocks.selectedKnowledgeBases).toEqual([])
     expect(mocks.surfaceProps?.tokens).toEqual([])
 
     act(() => {
@@ -2446,11 +2315,7 @@ describe('ChatComposer', () => {
     })
     await waitFor(() => expect(mocks.surfaceProps?.text).toBe('chat draft'))
     expect(mocks.files).toEqual([file])
-    expect(mocks.selectedKnowledgeBases).toEqual([knowledgeBase])
-    expect(mocks.surfaceProps?.tokens).toEqual([
-      expect.objectContaining({ id: 'file:source-1' }),
-      expect.objectContaining({ id: 'knowledge:kb-1' })
-    ])
+    expect(mocks.surfaceProps?.tokens).toEqual([expect.objectContaining({ id: 'file:source-1' })])
   })
 
   it('preserves mentioned models while previewing plain-text history before sending', async () => {
@@ -2629,86 +2494,6 @@ describe('ChatComposer', () => {
         providerMetadata: { cherry: { fileEntryId: 'fe-1', fileTokenSourceId: 'source-1' } }
       }
     ])
-  })
-
-  it('does not restore knowledge tokens from the draft cache', () => {
-    vi.mocked(cacheService.getCasual).mockImplementation((key: string) =>
-      key === 'inputbar-draft'
-        ? {
-            text: 'hello',
-            tokens: [{ id: 'knowledge:base-1', kind: 'knowledge', label: 'Base 1', index: 0, textOffset: 0 }],
-            files: []
-          }
-        : ''
-    )
-
-    render(<ChatComposer topic={topic} onSend={vi.fn()} />)
-
-    expect(mocks.surfaceProps?.text).toBe('hello')
-    expect(mocks.surfaceProps?.draftTokens).toBeUndefined()
-    expect(mocks.selectedKnowledgeBases).toEqual([])
-  })
-
-  it('persists the live draft minus knowledge tokens with the current files', async () => {
-    const cachedFile = {
-      name: 'doc.pdf',
-      origin_name: 'doc.pdf',
-      path: '/tmp/doc.pdf',
-      fileTokenSourceId: 'source-1'
-    } as any
-    const cachedFileToken = {
-      id: 'file:source-1',
-      kind: 'file',
-      label: 'doc.pdf',
-      index: 0,
-      textOffset: 0
-    } as ComposerSerializedToken
-    vi.mocked(cacheService.getCasual).mockImplementation((key: string) =>
-      key === 'inputbar-draft' ? { text: '', tokens: [cachedFileToken], files: [cachedFile] } : ''
-    )
-
-    render(<ChatComposer topic={topic} onSend={vi.fn()} />)
-    expect(mocks.files).toEqual([cachedFile])
-
-    // Deleting the file token in the editor prunes the attached file through reconcile.
-    mocks.reconcileTokens.mockImplementation((draftTokens: readonly ComposerSerializedToken[]) => {
-      const fileTokenIds = new Set(draftTokens.filter((token) => token.kind === 'file').map((token) => token.id))
-      mocks.setFiles((previousFiles: any[]) =>
-        previousFiles.filter((file) => fileTokenIds.has(`file:${file.fileTokenSourceId}`))
-      )
-    })
-    act(() => {
-      mocks.surfaceProps?.onTokensChange([])
-    })
-    expect(mocks.files).toEqual([])
-
-    const quoteToken = {
-      id: 'quote-1',
-      kind: 'quote',
-      label: 'Quote',
-      promptText: 'quoted text',
-      index: 0,
-      textOffset: 0
-    } as ComposerSerializedToken
-    const knowledgeToken = {
-      id: 'knowledge:base-1',
-      kind: 'knowledge',
-      label: 'Base 1',
-      index: 1,
-      textOffset: 11
-    } as ComposerSerializedToken
-    mocks.getDraft.mockReturnValue({ text: 'quoted text', tokens: [quoteToken, knowledgeToken] })
-    act(() => {
-      mocks.surfaceProps?.onTextChange('quoted text')
-    })
-
-    await waitFor(() => {
-      expect(cacheService.setCasual).toHaveBeenCalledWith(
-        'inputbar-draft',
-        { text: 'quoted text', tokens: [quoteToken], files: [] },
-        expect.any(Number)
-      )
-    })
   })
 
   it('persists token-only draft changes when the serialized text stays unchanged', async () => {
@@ -3157,11 +2942,8 @@ describe('ChatComposer', () => {
     }
     const liveDraft = { text: 'live draft', tokens: [liveQuote] }
     const liveFile = { fileTokenSourceId: 'live-file', name: 'live.pdf', path: '/tmp/live.pdf' } as any
-    const liveKnowledgeBase = { id: 'kb-live', name: 'Live KB', documentCount: 1 } as KnowledgeBase
     mocks.files = [liveFile]
     mocks.mentionedModels = [model, modelB]
-    mocks.selectedKnowledgeBases = [liveKnowledgeBase]
-    mocks.knowledgeBases = [liveKnowledgeBase]
     mocks.getDraft.mockReturnValue(liveDraft)
     const message = {
       id: 'message-history-edit',
@@ -3193,7 +2975,6 @@ describe('ChatComposer', () => {
     expect(mocks.replaceDraft).toHaveBeenLastCalledWith(liveDraft)
     expect(mocks.files).toEqual([liveFile])
     expect(mocks.mentionedModels).toEqual([model, modelB])
-    expect(mocks.selectedKnowledgeBases).toEqual([liveKnowledgeBase])
 
     act(() => {
       expect(mocks.surfaceProps?.onInputHistoryNavigate?.('down')).toBe(false)
@@ -3228,7 +3009,6 @@ describe('ChatComposer', () => {
 
     await waitFor(() => expect(mocks.surfaceProps).toBeDefined())
     mocks.setFiles.mockClear()
-    mocks.setSelectedKnowledgeBases.mockClear()
     mocks.getDraft.mockClear()
 
     fireEvent.click(screen.getByRole('button', { name: 'start editing' }))
@@ -3236,7 +3016,6 @@ describe('ChatComposer', () => {
     await waitFor(() => expect(mocks.surfaceProps?.text).toBe('old'))
 
     expect(mocks.setFiles).toHaveBeenCalledTimes(1)
-    expect(mocks.setSelectedKnowledgeBases).toHaveBeenCalledTimes(1)
     expect(mocks.getDraft).toHaveBeenCalledTimes(1)
   })
 
@@ -3691,108 +3470,6 @@ describe('ChatComposer', () => {
     expect(resend).not.toHaveBeenCalled()
   })
 
-  it('keeps editable knowledge tokens when forking and resending an edited message', async () => {
-    const editMessage = vi.fn().mockResolvedValue(undefined)
-    const resend = vi.fn().mockResolvedValue(undefined)
-    const forkAndResend = vi.fn().mockResolvedValue(undefined)
-    const knowledgeBase = {
-      id: 'kb-1',
-      name: 'Knowledge One',
-      documentCount: 1
-    } as KnowledgeBase
-    mocks.chatWrite = { pause: vi.fn(), editMessage, resend, forkAndResend }
-    mocks.assistant = {
-      ...mocks.assistant,
-      knowledgeBaseIds: ['kb-1']
-    }
-    mocks.knowledgeBases = [knowledgeBase]
-    const message = {
-      id: 'message-1',
-      role: 'user',
-      topicId: topic.id,
-      createdAt: '2026-01-01T00:00:00.000Z',
-      status: 'success'
-    } as const
-
-    render(
-      <MessageEditingProvider>
-        <StartEditingOnMount
-          message={message as any}
-          parts={
-            [
-              {
-                type: 'text',
-                text: 'question with knowledge',
-                providerMetadata: {
-                  cherry: {
-                    composer: {
-                      version: 1,
-                      tokens: [
-                        {
-                          id: 'knowledge:kb-1',
-                          kind: 'knowledge',
-                          label: 'Knowledge One',
-                          index: 0,
-                          textOffset: 0
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            ] as any
-          }
-        />
-        <ChatComposer topic={topic} onSend={vi.fn()} />
-      </MessageEditingProvider>
-    )
-
-    await waitFor(() => expect(mocks.surfaceProps?.editingState?.messageId).toBe('message-1'))
-    await waitFor(() =>
-      expect(mocks.surfaceProps?.tokens).toEqual([
-        expect.objectContaining({
-          id: 'knowledge:kb-1',
-          kind: 'knowledge',
-          label: 'Knowledge One'
-        })
-      ])
-    )
-
-    const [knowledgeToken] = mocks.surfaceProps?.tokens ?? []
-    await act(async () => {
-      await mocks.surfaceProps?.onSendDraft({
-        text: 'edited question with knowledge',
-        tokens: [serializeComposerToken(knowledgeToken)]
-      })
-    })
-
-    const editedParts = forkAndResend.mock.calls[0]?.[1] as Array<Record<string, any>>
-    expect(forkAndResend).toHaveBeenCalledWith('message-1', expect.any(Array), {
-      reasoningEffort: 'default',
-      fastMode: false
-    })
-    expect(editedParts[0]).toMatchObject({
-      type: 'text',
-      text: 'edited question with knowledge',
-      providerMetadata: {
-        cherry: {
-          composer: {
-            tokens: [
-              expect.objectContaining({
-                id: 'knowledge:kb-1',
-                kind: 'knowledge',
-                label: 'Knowledge One'
-              })
-            ]
-          }
-        }
-      }
-    })
-    expect(editedParts[1]).toEqual({ type: 'data-knowledge-scope', data: { baseIds: ['kb-1'] } })
-    expect(editMessage).not.toHaveBeenCalled()
-    expect(resend).not.toHaveBeenCalled()
-  })
-
   it('forks and resends the edited message with current turn controls and without boundary blank lines', async () => {
     const editMessage = vi.fn().mockResolvedValue(undefined)
     const resend = vi.fn().mockResolvedValue(undefined)
@@ -4225,200 +3902,6 @@ describe('ChatComposer', () => {
     expect(forkAndResend).not.toHaveBeenCalled()
     expect(mocks.surfaceProps?.editingState?.messageId).toBe('message-1')
     expect(toast.error).toHaveBeenCalledWith('message.error.operation_unavailable')
-  })
-
-  it('does not auto-enable assistant knowledge bases and keeps manual deletion', async () => {
-    const knowledgeBase = {
-      id: 'kb-1',
-      name: 'Knowledge One',
-      documentCount: 1
-    } as KnowledgeBase
-    mocks.assistant = {
-      ...mocks.assistant,
-      knowledgeBaseIds: ['kb-1']
-    }
-    mocks.knowledgeBases = [knowledgeBase]
-    const view = render(<ChatComposer topic={topic} onSend={vi.fn()} />)
-
-    await act(async () => {
-      await Promise.resolve()
-    })
-    expect(mocks.selectedKnowledgeBases).toEqual([])
-    expect(mocks.setSelectedKnowledgeBases).not.toHaveBeenCalledWith([knowledgeBase])
-    expect(mocks.surfaceProps?.tokens).toEqual([])
-
-    mocks.selectedKnowledgeBases = [knowledgeBase]
-    view.rerender(<ChatComposer topic={topic} onSend={vi.fn()} />)
-    expect(mocks.surfaceProps?.tokens).toEqual([
-      expect.objectContaining({
-        id: 'knowledge:kb-1',
-        kind: 'knowledge'
-      })
-    ])
-
-    act(() => {
-      mocks.surfaceProps?.onTokensChange([])
-    })
-
-    expect(mocks.selectedKnowledgeBases).toEqual([])
-    mocks.setSelectedKnowledgeBases.mockClear()
-    mocks.knowledgeBases = [{ ...knowledgeBase }]
-
-    view.rerender(<ChatComposer topic={topic} onSend={vi.fn()} />)
-    await act(async () => {
-      await Promise.resolve()
-    })
-
-    expect(mocks.setSelectedKnowledgeBases).not.toHaveBeenCalled()
-    expect(mocks.surfaceProps?.tokens).toEqual([])
-  })
-
-  it('keeps selected knowledge bases after sending a draft', async () => {
-    const knowledgeBase = {
-      id: 'kb-1',
-      name: 'Knowledge One',
-      documentCount: 1
-    } as KnowledgeBase
-    mocks.assistant = {
-      ...mocks.assistant,
-      knowledgeBaseIds: ['kb-1']
-    }
-    mocks.knowledgeBases = [knowledgeBase]
-    const onSend = vi.fn().mockResolvedValue(undefined)
-    const view = render(<ChatComposer topic={topic} onSend={onSend} />)
-
-    mocks.selectedKnowledgeBases = [knowledgeBase]
-    view.rerender(<ChatComposer topic={topic} onSend={onSend} />)
-
-    const [knowledgeToken] = mocks.surfaceProps?.tokens ?? []
-    expect(knowledgeToken).toMatchObject({
-      id: 'knowledge:kb-1',
-      kind: 'knowledge'
-    })
-
-    await mocks.surfaceProps?.onSendDraft({ text: 'hello', tokens: [serializeComposerToken(knowledgeToken)] })
-
-    expect(onSend).toHaveBeenCalledWith(
-      'hello',
-      expect.objectContaining({
-        userMessageParts: [
-          expect.objectContaining({ type: 'text', text: 'hello' }),
-          { type: 'data-knowledge-scope', data: { baseIds: ['kb-1'] } }
-        ]
-      })
-    )
-    expect(mocks.selectedKnowledgeBases).toEqual([knowledgeBase])
-  })
-
-  it('does not render stale knowledge tokens during same-topic assistant switches', () => {
-    const knowledgeBase = {
-      id: 'kb-1',
-      name: 'Knowledge One',
-      documentCount: 1
-    } as KnowledgeBase
-    mocks.assistant = {
-      ...mocks.assistant,
-      knowledgeBaseIds: ['kb-1']
-    }
-    mocks.knowledgeBases = [knowledgeBase]
-    const onSend = vi.fn()
-    const view = render(<ChatComposer topic={topic} onSend={onSend} />)
-
-    mocks.selectedKnowledgeBases = [knowledgeBase]
-    view.rerender(<ChatComposer topic={topic} onSend={onSend} />)
-    expect(mocks.surfaceProps?.tokens).toEqual([
-      expect.objectContaining({
-        id: 'knowledge:kb-1',
-        kind: 'knowledge'
-      })
-    ])
-
-    mocks.assistant = {
-      ...mocks.assistant,
-      id: 'assistant-2',
-      knowledgeBaseIds: []
-    }
-    view.rerender(<ChatComposer topic={{ ...topic, assistantId: 'assistant-2' }} onSend={onSend} />)
-
-    expect(mocks.surfaceProps?.tokens).toEqual([])
-  })
-
-  it('drops selected knowledge bases that are no longer configured before sending', async () => {
-    const knowledgeBase = {
-      id: 'kb-1',
-      name: 'Knowledge One',
-      documentCount: 1
-    } as KnowledgeBase
-    mocks.assistant = {
-      ...mocks.assistant,
-      knowledgeBaseIds: ['kb-1']
-    }
-    mocks.knowledgeBases = [knowledgeBase]
-    const onSend = vi.fn().mockResolvedValue(undefined)
-    const view = render(<ChatComposer topic={topic} onSend={onSend} />)
-
-    mocks.selectedKnowledgeBases = [knowledgeBase]
-    view.rerender(<ChatComposer topic={topic} onSend={onSend} />)
-    const [staleKnowledgeToken] = mocks.surfaceProps?.tokens ?? []
-    expect(staleKnowledgeToken).toMatchObject({
-      id: 'knowledge:kb-1',
-      kind: 'knowledge'
-    })
-
-    mocks.assistant = {
-      ...mocks.assistant,
-      knowledgeBaseIds: ['kb-2']
-    }
-    view.rerender(<ChatComposer topic={topic} onSend={onSend} />)
-
-    expect(mocks.surfaceProps?.tokens).toEqual([])
-
-    await mocks.surfaceProps?.onSendDraft({ text: 'hello', tokens: [serializeComposerToken(staleKnowledgeToken)] })
-
-    expect(onSend).toHaveBeenCalledWith('hello', expect.any(Object))
-    expect(onSend.mock.calls[0]?.[1]?.userMessageParts).not.toContainEqual(
-      expect.objectContaining({ type: 'data-knowledge-scope' })
-    )
-  })
-
-  it('restores pasted knowledge tokens into selected knowledge base state before sending', async () => {
-    const knowledgeBase = {
-      id: 'kb-1',
-      name: 'Knowledge One',
-      documentCount: 1
-    } as KnowledgeBase
-    mocks.assistant = {
-      ...mocks.assistant,
-      knowledgeBaseIds: ['kb-1']
-    }
-    mocks.knowledgeBases = [knowledgeBase]
-    const onSend = vi.fn().mockResolvedValue(undefined)
-    const view = render(<ChatComposer topic={topic} onSend={onSend} />)
-
-    act(() => {
-      mocks.surfaceProps?.onTokensChange([
-        {
-          id: 'knowledge:kb-1',
-          kind: 'knowledge',
-          label: 'Knowledge One',
-          index: 0,
-          textOffset: 0
-        }
-      ])
-    })
-
-    expect(mocks.selectedKnowledgeBases).toEqual([knowledgeBase])
-
-    view.rerender(<ChatComposer topic={topic} onSend={onSend} />)
-    const [knowledgeToken] = mocks.surfaceProps?.tokens ?? []
-    await mocks.surfaceProps?.onSendDraft({ text: 'hello', tokens: [serializeComposerToken(knowledgeToken)] })
-
-    expect(onSend).toHaveBeenCalledWith(
-      'hello',
-      expect.objectContaining({
-        userMessageParts: expect.arrayContaining([{ type: 'data-knowledge-scope', data: { baseIds: ['kb-1'] } }])
-      })
-    )
   })
 
   it('keeps the draft home model selector empty after manual clear', () => {

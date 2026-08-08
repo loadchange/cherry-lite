@@ -30,7 +30,6 @@ function createAssistant(overrides: Partial<Assistant> = {}): Assistant {
     groupId: '11111111-1111-4111-8111-111111111111',
     orderKey: 'a0',
     mcpServerIds: ['mcp-1'],
-    knowledgeBaseIds: ['kb-1'],
     createdAt: '2026-04-20T00:00:00.000Z',
     updatedAt: '2026-04-20T00:00:00.000Z',
     modelName: 'GPT-4o',
@@ -88,34 +87,6 @@ describe('assistantTransfer', () => {
     )
 
     expect(draft.dto.emoji).toBe('🤖')
-  })
-
-  it('ignores v2-only fields from imported content and still uses legacy defaults', () => {
-    const [draft] = parseAssistantImportContent(
-      JSON.stringify({
-        name: '新助手',
-        prompt: 'still required',
-        settings: { temperature: 0.6, enableTemperature: true },
-        modelId: 'custom::model',
-        mcpServerIds: ['mcp-1'],
-        knowledgeBaseIds: ['kb-1'],
-        group: ['编程']
-      })
-    )
-
-    expect(draft.dto).toMatchObject({
-      name: '新助手',
-      prompt: 'still required'
-    })
-    // Fields we don't carry across the import boundary.
-    expect(draft.dto).not.toHaveProperty('modelId')
-    expect(draft.dto).not.toHaveProperty('mcpServerIds')
-    expect(draft.dto).not.toHaveProperty('knowledgeBaseIds')
-    expect(draft.dto.settings).toMatchObject({
-      temperature: 1,
-      enableTemperature: false
-    })
-    expect(draft.groupName).toBe('编程')
   })
 
   it('throws invalid_format when required legacy fields are missing', () => {

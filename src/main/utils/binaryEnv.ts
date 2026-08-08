@@ -61,14 +61,14 @@ export function getBinarySearchDirs(): string[] {
 }
 
 /**
- * Env injected into every process that *runs* a managed binary (the CLIs, the
- * mise shims, ripgrep, …). Carries only `MISE_*` so the shims resolve against
- * Cherry's isolated mise data dir.
+ * Env injected into every process that *runs* a managed binary (the mise shims,
+ * ripgrep, …). Carries only `MISE_*` so the shims resolve against Cherry's
+ * isolated mise data dir.
  *
- * Deliberately does NOT relocate `HOME`/`XDG_*`: the tools we launch
- * (claude/codex/gemini/qwen, the OpenClaw gateway) must read the user's real
- * home for their config and credentials. HOME/XDG isolation belongs only to the
- * mise *install* subprocess — see `getBinaryIsolatedHomeEnv()`.
+ * Deliberately does NOT relocate `HOME`/`XDG_*`: the tools we launch must read
+ * the user's real home for their config and credentials. HOME/XDG isolation
+ * belongs only to the mise *install* subprocess — see
+ * `getBinaryIsolatedHomeEnv()`.
  */
 export function getBinaryExecutionEnv(): Record<string, string> {
   const dataDir = binaryDataDir()
@@ -89,7 +89,7 @@ export function getBinaryExecutionEnv(): Record<string, string> {
  * the mise install subprocess (`BinaryManager.buildIsolatedEnv`) so mise and the
  * package managers it drives cannot read user-level config/creds
  * (`~/.npmrc`, `~/.netrc`, …). Never fold this into the shared execution env, or
- * the launched CLIs read their config/creds from the isolated dir and appear
+ * the launched tools read their config/creds from the isolated dir and appear
  * logged-out on every run.
  */
 export function getBinaryIsolatedHomeEnv(): Record<string, string> {

@@ -51,7 +51,6 @@ function createAssistant(overrides: Partial<Assistant> = {}): Assistant {
     modelId: 'openai::gpt-4o',
     groupId: null,
     mcpServerIds: ['mcp-1'],
-    knowledgeBaseIds: ['kb-1'],
     createdAt: '2026-04-20T00:00:00.000Z',
     updatedAt: '2026-04-20T00:00:00.000Z',
     modelName: 'GPT-4o',
@@ -92,7 +91,6 @@ describe('useAssistantMutations', () => {
         modelId: 'openai::gpt-4o',
         settings: source.settings,
         mcpServerIds: ['mcp-1'],
-        knowledgeBaseIds: ['kb-1'],
         groupId
       }
     })

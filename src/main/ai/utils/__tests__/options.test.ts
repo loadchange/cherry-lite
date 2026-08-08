@@ -220,7 +220,7 @@ describe('OpenAI-compatible reasoning normalization', () => {
     const capabilityOptions = buildCapabilityProviderOptions(
       model,
       provider,
-      { enableReasoning: true, enableWebSearch: false, enableGenerateImage: false },
+      { enableReasoning: true, enableWebSearch: false },
       {
         aiSdkProviderId: runtimeProviderId,
         runtimeProviderId,
@@ -284,8 +284,7 @@ describe('buildCapabilityProviderOptions', () => {
       provider,
       {
         enableReasoning: true,
-        enableWebSearch: false,
-        enableGenerateImage: false
+        enableWebSearch: false
       },
       {
         aiSdkProviderId: 'openai',
@@ -323,8 +322,7 @@ describe('buildCapabilityProviderOptions', () => {
       { id: 'minimax', name: 'MiniMax', settings: {} } as Provider,
       {
         enableReasoning: true,
-        enableWebSearch: false,
-        enableGenerateImage: false
+        enableWebSearch: false
       },
       {
         aiSdkProviderId: 'openai-compatible',
@@ -358,8 +356,7 @@ describe('buildCapabilityProviderOptions', () => {
       { id: 'dashscope', name: 'Bailian', settings: {} } as Provider,
       {
         enableReasoning: true,
-        enableWebSearch: false,
-        enableGenerateImage: false
+        enableWebSearch: false
       },
       {
         aiSdkProviderId: 'openai-compatible',
@@ -388,7 +385,7 @@ describe('buildCapabilityProviderOptions', () => {
         capabilities: [MODEL_CAPABILITY.REASONING]
       } as unknown as Model,
       { id: 'copilot', name: 'GitHub Copilot', settings: {} } as Provider,
-      { enableReasoning: true, enableWebSearch: false, enableGenerateImage: false },
+      { enableReasoning: true, enableWebSearch: false },
       {
         // adapterFamily/runtime id is `github-copilot-openai-compatible`, but the language model's
         // providerOptionsName is `copilot` (= actualProvider.id passed as `name`).
@@ -424,7 +421,7 @@ describe('buildCapabilityProviderOptions', () => {
         capabilities: [MODEL_CAPABILITY.REASONING]
       } as unknown as Model,
       { id: 'dmxapi', name: 'DMXAPI', settings: {} } as Provider,
-      { enableReasoning: true, enableWebSearch: false, enableGenerateImage: false },
+      { enableReasoning: true, enableWebSearch: false },
       {
         aiSdkProviderId: 'dmxapi',
         runtimeProviderId: 'dmxapi',
@@ -459,8 +456,7 @@ describe('buildCapabilityProviderOptions', () => {
       { id: 'nvidia', name: 'NVIDIA', settings: {} } as Provider,
       {
         enableReasoning: true,
-        enableWebSearch: false,
-        enableGenerateImage: false
+        enableWebSearch: false
       },
       {
         aiSdkProviderId: 'openai-compatible',
@@ -503,8 +499,7 @@ describe('buildCapabilityProviderOptions', () => {
         } as Provider,
         {
           enableReasoning: false,
-          enableWebSearch: false,
-          enableGenerateImage: false
+          enableWebSearch: false
         },
         {
           aiSdkProviderId: runtimeProviderId,
@@ -540,8 +535,7 @@ describe('buildCapabilityProviderOptions', () => {
       } as Provider,
       {
         enableReasoning: false,
-        enableWebSearch: false,
-        enableGenerateImage: false
+        enableWebSearch: false
       },
       {
         aiSdkProviderId: 'ollama',
@@ -574,8 +568,7 @@ describe('buildCapabilityProviderOptions', () => {
       } as Provider,
       {
         enableReasoning: false,
-        enableWebSearch: false,
-        enableGenerateImage: false
+        enableWebSearch: false
       },
       {
         aiSdkProviderId: 'ollama',

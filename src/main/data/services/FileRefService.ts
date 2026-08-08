@@ -2,8 +2,8 @@
  * FileRefService — cross-source read facade.
  *
  * Persistent business refs are owned by their source domains and stored in
- * FK-constrained association tables (`chat_message_file_ref`, `painting_file_ref`,
- * `job_file_ref`, …). This service does not create, copy, or replace those
+ * FK-constrained association tables (`chat_message_file_ref`, …). This service
+ * does not create, copy, or replace those
  * persistent relationships; source services/migrators write their own tables. It
  * only aggregates a unified FileRef projection across sources, because File
  * DataApi and the file sweep need one.
@@ -12,10 +12,6 @@
 import { application } from '@application'
 import {
   chatMessageFileRefTable,
-  jobFileRefTable,
-  type MiniAppLogoFileRefRow,
-  miniAppLogoFileRefTable,
-  paintingFileRefTable,
   type PersistentFileRefSourceType,
   persistentFileRefTablesBySourceType,
   type ProviderLogoFileRefRow,
@@ -23,14 +19,7 @@ import {
 } from '@data/db/schemas/fileRelations'
 import type { DbOrTx } from '@data/db/types'
 import type { FileEntryId, FileRef, FileRefSourceType } from '@shared/data/types/file'
-import {
-  chatMessageSourceType,
-  FileRefSchema,
-  jobSourceType,
-  miniAppLogoRef,
-  paintingSourceType,
-  providerLogoRef
-} from '@shared/data/types/file'
+import { chatMessageSourceType, FileRefSchema, providerLogoRef } from '@shared/data/types/file'
 import { asc, count, eq, inArray } from 'drizzle-orm'
 
 export interface FileRefSourceKey {
@@ -42,7 +31,7 @@ export interface FileRefService {
   /** All refs pointing at a given file_entry. */
   findByEntryId(fileEntryId: FileEntryId): FileRef[]
 
-  /** All refs owned by a business source (chat message, painting, job, logo). */
+  /** All refs owned by a business source (chat message, logo). */
   findBySource(source: FileRefSourceKey): FileRef[]
 
   /** Ref-count aggregation for a batch of entry ids. */
@@ -55,8 +44,6 @@ export interface FileRefService {
 const SQLITE_INARRAY_CHUNK = 500
 
 type ChatMessageFileRefRow = typeof chatMessageFileRefTable.$inferSelect
-type PaintingFileRefRow = typeof paintingFileRefTable.$inferSelect
-type JobFileRefRow = typeof jobFileRefTable.$inferSelect
 
 function compareRefs(left: FileRef, right: FileRef): number {
   const createdDelta = left.createdAt - right.createdAt
@@ -68,24 +55,13 @@ function chatMessageRowToFileRef(row: ChatMessageFileRefRow): FileRef {
   return FileRefSchema.parse({ ...row, sourceType: chatMessageSourceType })
 }
 
-function paintingRowToFileRef(row: PaintingFileRefRow): FileRef {
-  return FileRefSchema.parse({ ...row, sourceType: paintingSourceType })
-}
-
 /**
- * The two single-file logo association tables share one row shape (no
- * `sourceType` column — the table is the discriminator), so one mapper stamps
- * the caller-supplied `sourceType` and validates against its variant schema.
+ * The single-file logo association table carries no `sourceType` column — the
+ * table is the discriminator — so the mapper stamps the caller-supplied
+ * `sourceType` and validates against its variant schema.
  */
-function singleFileRowToFileRef(
-  row: ProviderLogoFileRefRow | MiniAppLogoFileRefRow,
-  sourceType: typeof providerLogoRef.sourceType | typeof miniAppLogoRef.sourceType
-): FileRef {
+function singleFileRowToFileRef(row: ProviderLogoFileRefRow, sourceType: typeof providerLogoRef.sourceType): FileRef {
   return FileRefSchema.parse({ ...row, sourceType })
-}
-
-function jobRowToFileRef(row: JobFileRefRow): FileRef {
-  return FileRefSchema.parse({ ...row, sourceType: jobSourceType })
 }
 
 class FileRefServiceImpl implements FileRefService {
@@ -108,15 +84,6 @@ class FileRefServiceImpl implements FileRefService {
           .all()
         return rows.map(chatMessageRowToFileRef)
       },
-      [paintingSourceType]: () => {
-        const rows = this.getDb()
-          .select()
-          .from(paintingFileRefTable)
-          .where(eq(paintingFileRefTable.fileEntryId, fileEntryId))
-          .orderBy(asc(paintingFileRefTable.createdAt), asc(paintingFileRefTable.id))
-          .all()
-        return rows.map(paintingRowToFileRef)
-      },
       [providerLogoRef.sourceType]: () => {
         const rows = this.getDb()
           .select()
@@ -125,24 +92,6 @@ class FileRefServiceImpl implements FileRefService {
           .orderBy(asc(providerLogoFileRefTable.createdAt), asc(providerLogoFileRefTable.id))
           .all()
         return rows.map((row) => singleFileRowToFileRef(row, providerLogoRef.sourceType))
-      },
-      [miniAppLogoRef.sourceType]: () => {
-        const rows = this.getDb()
-          .select()
-          .from(miniAppLogoFileRefTable)
-          .where(eq(miniAppLogoFileRefTable.fileEntryId, fileEntryId))
-          .orderBy(asc(miniAppLogoFileRefTable.createdAt), asc(miniAppLogoFileRefTable.id))
-          .all()
-        return rows.map((row) => singleFileRowToFileRef(row, miniAppLogoRef.sourceType))
-      },
-      [jobSourceType]: () => {
-        const rows = this.getDb()
-          .select()
-          .from(jobFileRefTable)
-          .where(eq(jobFileRefTable.fileEntryId, fileEntryId))
-          .orderBy(asc(jobFileRefTable.createdAt), asc(jobFileRefTable.id))
-          .all()
-        return rows.map(jobRowToFileRef)
       }
     } satisfies Record<PersistentFileRefSourceType, () => FileRef[]>
 
@@ -162,15 +111,6 @@ class FileRefServiceImpl implements FileRefService {
           .all()
         return rows.map(chatMessageRowToFileRef)
       }
-      case paintingSourceType: {
-        const rows = this.getDb()
-          .select()
-          .from(paintingFileRefTable)
-          .where(eq(paintingFileRefTable.sourceId, source.sourceId))
-          .orderBy(asc(paintingFileRefTable.createdAt), asc(paintingFileRefTable.id))
-          .all()
-        return rows.map(paintingRowToFileRef)
-      }
       case providerLogoRef.sourceType: {
         const rows = this.getDb()
           .select()
@@ -179,24 +119,6 @@ class FileRefServiceImpl implements FileRefService {
           .orderBy(asc(providerLogoFileRefTable.createdAt), asc(providerLogoFileRefTable.id))
           .all()
         return rows.map((row) => singleFileRowToFileRef(row, providerLogoRef.sourceType))
-      }
-      case miniAppLogoRef.sourceType: {
-        const rows = this.getDb()
-          .select()
-          .from(miniAppLogoFileRefTable)
-          .where(eq(miniAppLogoFileRefTable.sourceId, source.sourceId))
-          .orderBy(asc(miniAppLogoFileRefTable.createdAt), asc(miniAppLogoFileRefTable.id))
-          .all()
-        return rows.map((row) => singleFileRowToFileRef(row, miniAppLogoRef.sourceType))
-      }
-      case jobSourceType: {
-        const rows = this.getDb()
-          .select()
-          .from(jobFileRefTable)
-          .where(eq(jobFileRefTable.sourceId, source.sourceId))
-          .orderBy(asc(jobFileRefTable.createdAt), asc(jobFileRefTable.id))
-          .all()
-        return rows.map(jobRowToFileRef)
       }
     }
   }
@@ -219,33 +141,12 @@ class FileRefServiceImpl implements FileRefService {
             .where(inArray(chatMessageFileRefTable.fileEntryId, chunk))
             .groupBy(chatMessageFileRefTable.fileEntryId)
             .all(),
-        [paintingSourceType]: () =>
-          this.getDb()
-            .select({ entryId: paintingFileRefTable.fileEntryId, refCount: count() })
-            .from(paintingFileRefTable)
-            .where(inArray(paintingFileRefTable.fileEntryId, chunk))
-            .groupBy(paintingFileRefTable.fileEntryId)
-            .all(),
         [providerLogoRef.sourceType]: () =>
           this.getDb()
             .select({ entryId: providerLogoFileRefTable.fileEntryId, refCount: count() })
             .from(providerLogoFileRefTable)
             .where(inArray(providerLogoFileRefTable.fileEntryId, chunk))
             .groupBy(providerLogoFileRefTable.fileEntryId)
-            .all(),
-        [miniAppLogoRef.sourceType]: () =>
-          this.getDb()
-            .select({ entryId: miniAppLogoFileRefTable.fileEntryId, refCount: count() })
-            .from(miniAppLogoFileRefTable)
-            .where(inArray(miniAppLogoFileRefTable.fileEntryId, chunk))
-            .groupBy(miniAppLogoFileRefTable.fileEntryId)
-            .all(),
-        [jobSourceType]: () =>
-          this.getDb()
-            .select({ entryId: jobFileRefTable.fileEntryId, refCount: count() })
-            .from(jobFileRefTable)
-            .where(inArray(jobFileRefTable.fileEntryId, chunk))
-            .groupBy(jobFileRefTable.fileEntryId)
             .all()
       } satisfies Record<PersistentFileRefSourceType, () => Array<{ entryId: FileEntryId; refCount: number }>>
 

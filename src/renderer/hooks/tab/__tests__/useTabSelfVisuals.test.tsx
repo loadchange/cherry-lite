@@ -112,15 +112,15 @@ describe('useTabSelfVisuals', () => {
       {
         id: 'tab-1',
         type: 'route',
-        url: '/app/agents?sessionId=session-1',
-        title: 'Session title',
+        url: '/app/chat?topicId=topic-1',
+        title: 'Topic title',
         icon: 'icon:spark'
       }
     ]
 
     render(
       <TabIdProvider tabId="tab-1">
-        <TabVisualsWriter title="Session title" emoji="spark" appId="agents" />
+        <TabVisualsWriter title="Topic title" emoji="spark" appId="assistants" />
       </TabIdProvider>
     )
 

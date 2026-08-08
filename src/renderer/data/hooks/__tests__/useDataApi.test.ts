@@ -980,12 +980,12 @@ describe('useMutation trigger identity & option freshness', () => {
 
   it('keeps trigger identity on template paths with function-form refresh (crash-site shape)', () => {
     const { Wrapper } = makeWrapper()
-    // Mirrors useUpdateAgent (useAgent.ts), the consumer that crashed in
-    // classic layout: template path + inline function-form refresh.
+    // Reproduces the classic-layout crash shape: template path + inline
+    // function-form refresh.
     const { result, rerender } = renderHook(
       () =>
-        useMutation('PATCH', '/agents/:agentId', {
-          refresh: ({ args }) => ['/agents', `/agents/${args?.params?.agentId}`]
+        useMutation('PATCH', '/assistants/:id', {
+          refresh: ({ args }) => ['/assistants', `/assistants/${args?.params?.id}`]
         }),
       { wrapper: Wrapper }
     )

@@ -34,14 +34,13 @@ const ASSISTANT_MUTABLE_FIELDS = {
   settings: true,
   modelId: true,
   groupId: true,
-  mcpServerIds: true,
-  knowledgeBaseIds: true
+  mcpServerIds: true
 } as const
 
 /**
  * DTO for creating a new assistant.
  * - `name` is required (non-empty)
- * - `mcpServerIds` / `knowledgeBaseIds` are synced to junction tables
+ * - `mcpServerIds` is synced to junction tables
  */
 export const CreateAssistantSchema = AssistantSchema.pick(ASSISTANT_MUTABLE_FIELDS).partial().required({ name: true })
 export type CreateAssistantDto = z.infer<typeof CreateAssistantSchema>
@@ -75,7 +74,7 @@ export type ImportAssistantDto = z.infer<typeof ImportAssistantSchema>
  * keeps a corrupt-but-historically-tolerated field (e.g. `maxTokens: 0`)
  * from blocking unrelated updates.
  *
- * Relation arrays (`mcpServerIds`, `knowledgeBaseIds`), if provided,
+ * The relation array (`mcpServerIds`), if provided,
  * replace existing junction table rows. Update picks directly from the entity,
  * not Create, so Create defaults do not bleed into partial updates.
  */
@@ -124,7 +123,7 @@ export const ListAssistantsQuerySchema = z.strictObject({
 /**
  * Renderer-facing query params (schema input — `page`/`limit` are optional,
  * filled by `.parse()` at the handler boundary).
- * Follows the `{...QueryParams, ...Query}` split used by KnowledgeService.
+ * Follows the `{...QueryParams, ...Query}` split used across list endpoints.
  */
 export type ListAssistantsQueryParams = z.input<typeof ListAssistantsQuerySchema>
 /**

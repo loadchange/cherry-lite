@@ -10,8 +10,7 @@ export class NotificationService {
   public async send(notification: Notification): Promise<void> {
     const notificationSettings = await preferenceService.getMultiple({
       assistant: 'app.notification.assistant.enabled',
-      backup: 'app.notification.backup.enabled',
-      knowledge: 'app.notification.knowledge.enabled'
+      backup: 'app.notification.backup.enabled'
     })
 
     // TODO(notification): sources without a configured preference key (e.g. 'update')

@@ -33,7 +33,7 @@
     },
     "builtin": {
       "cherry_assistant": {
-        "description": "Cherry Studio 内置使用顾问。诊断问题、引导操作、收录 FAQ、提交 Bug/需求、搜索和创建 Skills"
+        "description": "Cherry Studio Lite 内置使用顾问。诊断问题、引导操作、收录 FAQ、提交 Bug/需求、搜索和创建 Skills"
       }
     },
     "channels": {
@@ -1085,55 +1085,6 @@
       "server_not_running_description": "智能体功能需要 API 网关运行。你可以直接启动网关，或前往设置页面检查配置。"
     }
   },
-  "apiGateway": {
-    "actions": {
-      "regenerate": "重新生成",
-      "restart": {
-        "button": "重启",
-        "tooltip": "重启网关"
-      },
-      "start": "启动",
-      "stop": "停止"
-    },
-    "authHeader": {
-      "title": "授权标头"
-    },
-    "description": "通过 OpenAI 和 Anthropic 兼容的 HTTP API 暴露 Cherry Studio 的 AI 功能",
-    "documentation": {
-      "title": "API 文档"
-    },
-    "fields": {
-      "apiKey": {
-        "copyTooltip": "复制 API 密钥",
-        "label": "API 密钥",
-        "placeholder": "API 密钥将自动生成"
-      },
-      "port": {
-        "label": "端口"
-      },
-      "url": {
-        "copyTooltip": "复制 URL",
-        "label": "URL"
-      }
-    },
-    "messages": {
-      "apiKeyRegenerated": "API 密钥已重新生成",
-      "notEnabled": "请先启动网关，再通过此地址连接。",
-      "operationFailed": "API 网关操作失败：",
-      "restartError": "重启 API 网关失败：",
-      "restartFailed": "API 网关重启失败：",
-      "restartSuccess": "API 网关重启成功",
-      "startError": "启动 API 网关失败：",
-      "startSuccess": "API 网关启动成功",
-      "stopError": "停止 API 网关失败：",
-      "stopSuccess": "API 网关停止成功"
-    },
-    "status": {
-      "running": "运行中",
-      "stopped": "已停止"
-    },
-    "title": "API 网关"
-  },
   "assistants": {
     "abbr": "助手",
     "clear": {
@@ -2137,11 +2088,6 @@
       },
       "select_placeholder": "请选择…"
     },
-    "api_gateway": {
-      "description": "任意 CLI，畅用全部模型",
-      "requires_running": "启用后请保持 Cherry Studio 运行，外部 CLI 才能连接到它托管的网关。",
-      "title": "统一网关"
-    },
     "apply_failed": "写入 CLI 配置到系统文件失败",
     "auto_update_to_latest": "检查更新并安装最新版本",
     "bun_required_message": "运行 CLI 工具需要安装 Bun 环境",
@@ -2448,9 +2394,6 @@
     "yesterday": "昨天",
     "you": "用户"
   },
-  "docs": {
-    "title": "帮助文档"
-  },
   "emoji_picker": {
     "categories": {
       "activities": "活动",
@@ -2519,12 +2462,12 @@
       "content": "消息内容被安全系统拦截，请修改后重试",
       "context_length": "对话上下文过长，请清理历史消息或开启新对话",
       "deprecated": "该模型已下线或弃用，请更换其他模型",
-      "free_model_unavailable": "AI 诊断暂时不可用",
       "go_to_settings": "前往设置",
       "knowledge": "知识库向量化失败",
       "mcp": "MCP 服务器连接失败，请检查服务是否已启动",
       "model": "模型不存在或你没有访问权限",
       "model_conflict": "诊断模型与出错模型相同，无法进行诊断",
+      "model_unavailable": "AI 诊断暂时不可用",
       "network": "无法连接到服务器，请检查网络或代理设置",
       "ocr": "OCR 识别引擎未初始化，请检查 OCR 设置",
       "parse": "AI 返回的格式异常，请重试或更换模型",
@@ -3986,9 +3929,6 @@
           "specified": "导出 Markdown 文件失败"
         }
       },
-      "notes": {
-        "export": "导出笔记失败"
-      },
       "notion": {
         "export": "导出 Notion 错误，请检查连接状态并对照文档检查配置",
         "no_api_key": "未配置 Notion API Key 或 Notion Database ID",
@@ -4092,9 +4032,6 @@
           "preconf": "成功导出 Markdown 文件到预先设定的路径",
           "specified": "成功导出 Markdown 文件"
         }
-      },
-      "notes": {
-        "export": "成功导出到笔记"
       },
       "notion": {
         "export": "成功导出到 Notion"
@@ -4493,159 +4430,6 @@
   "navigate": {
     "provider_settings": "跳转到服务商设置界面"
   },
-  "notes": {
-    "auto_rename": {
-      "empty_note": "笔记为空，无法生成名称",
-      "failed": "生成笔记名称失败",
-      "label": "生成笔记名称",
-      "success": "笔记名称生成成功"
-    },
-    "characters": "字符",
-    "collapse": "收起",
-    "conflict": {
-      "description": "该笔记已在编辑器之外被修改。可重新加载以获取最新版本（未保存的编辑将被丢弃），或继续编辑。",
-      "keep_draft": "继续编辑",
-      "reload": "重新加载",
-      "title": "笔记已在磁盘上更改"
-    },
-    "content_placeholder": "请输入笔记内容...",
-    "copyContent": "复制内容",
-    "create_folder_failed": "创建文件夹失败",
-    "create_note_failed": "创建笔记失败",
-    "crossPlatformRestoreWarning": "检测到从其他设备恢复配置，但笔记目录为空。请将笔记文件复制到: {{path}}",
-    "delete": "删除",
-    "delete_confirm": "确定要删除这个{{type}}吗？",
-    "delete_failed": "删除笔记失败",
-    "delete_folder_confirm": "确定要删除文件夹 \"{{name}}\" 及其所有内容吗？",
-    "delete_note_confirm": "确定要删除笔记 \"{{name}}\" 吗？",
-    "drop_markdown_hint": "拖拽 .md 文件或目录到此处导入",
-    "empty": "暂无笔记",
-    "expand": "展开",
-    "exportToPDF": "导出为 PDF",
-    "exportToWord": "导出为 Word",
-    "export_failed": "导出到知识库失败",
-    "export_knowledge": "导出笔记到知识库",
-    "export_success": "成功导出到知识库",
-    "export_to_pdf_failed": "导出为 PDF 失败",
-    "export_to_pdf_success": "已导出为 PDF",
-    "export_to_word_failed": "导出为 Word 失败",
-    "file_removed_draft": "该笔记已从磁盘删除，未保存的草稿仍保留在编辑器中。",
-    "folder": "文件夹",
-    "leave": {
-      "description": "离开当前笔记将丢失尚未保存的编辑。是否继续？",
-      "discard_and_continue": "放弃并继续",
-      "title": "放弃未保存的笔记修改？"
-    },
-    "load_failed": "笔记加载失败",
-    "load_failed_description": "无法读取该文件。为保护笔记内容，已禁用编辑。",
-    "metadata_sync_failed": "文件已更新，但笔记状态同步失败，请重试该操作。",
-    "metadata_update_failed": "笔记状态更新失败",
-    "move_failed": "移动笔记失败",
-    "new_folder": "新建文件夹",
-    "new_note": "新建笔记",
-    "no_content_to_copy": "没有内容可复制",
-    "no_content_to_export": "没有内容可导出",
-    "no_file_selected": "请选择要上传的文件",
-    "no_note_selected": "请先选择一个笔记",
-    "no_valid_files": "没有上传有效的文件",
-    "open_folder": "打开外部文件夹",
-    "open_outside": "从外部打开",
-    "print": "打印",
-    "print_failed": "打印笔记失败",
-    "rename": "重命名",
-    "rename_changed": "由于安全策略，文件名已从 {{original}} 更改为 {{final}}",
-    "rename_failed": "重命名笔记失败",
-    "save": "保存到笔记",
-    "save_blocked_load_failed": "笔记加载失败，已阻止保存",
-    "save_failed": "保存笔记失败",
-    "save_failure": {
-      "description": "该笔记无法保存。编辑内容仍保留在编辑器中，自动保存已暂停。",
-      "metadata_pending": "笔记已保存，但文件元数据仍在恢复中。请勿重试本次保存。"
-    },
-    "search": {
-      "both": "名称+内容",
-      "content": "内容",
-      "found_results": "找到 {{count}} 个结果 (名称: {{nameCount}}, 内容: {{contentCount}})",
-      "more_matches": "个匹配",
-      "searching": "搜索中...",
-      "show_less": "收起"
-    },
-    "settings": {
-      "data": {
-        "apply": "应用",
-        "apply_path_failed": "应用路径失败",
-        "current_work_directory": "当前工作目录",
-        "invalid_directory": "选择的目录无效或无权限",
-        "path_required": "请选择工作目录",
-        "path_updated": "工作目录更新成功",
-        "reset_failed": "重置失败",
-        "reset_to_default": "重置为默认",
-        "select": "选择",
-        "select_directory_failed": "选择目录失败",
-        "title": "数据设置",
-        "work_directory_description": "工作目录是存储所有笔记文件的位置。更改工作目录不会移动现有文件，请手动迁移文件。",
-        "work_directory_placeholder": "选择笔记工作目录"
-      },
-      "display": {
-        "compress_content": "缩减栏宽",
-        "compress_content_description": "开启后将限制每行字数，使屏幕显示的内容减少",
-        "default_font": "默认字体",
-        "font_size": "字体大小",
-        "font_size_description": "调整字体大小以获得更好的阅读体验 (10-30px)",
-        "font_size_large": "大",
-        "font_size_medium": "中",
-        "font_size_small": "小",
-        "font_title": "字体设置",
-        "serif_font": "衬线字体",
-        "show_table_of_contents": "显示目录大纲",
-        "show_table_of_contents_description": "显示目录大纲侧边栏，方便文档内导航",
-        "title": "显示设置"
-      },
-      "editor": {
-        "edit_mode": {
-          "description": "在编辑视图下，新笔记默认采用的编辑模式",
-          "preview_mode": "实时预览",
-          "source_mode": "源码模式",
-          "title": "默认编辑视图"
-        },
-        "title": "编辑器设置",
-        "view_mode": {
-          "description": "新笔记默认的视图模式",
-          "edit_mode": "编辑模式",
-          "read_mode": "阅读模式",
-          "title": "默认视图"
-        },
-        "view_mode_description": "设置新标签页的默认视图模式。"
-      },
-      "save_failed": "保存笔记设置失败",
-      "title": "笔记"
-    },
-    "show_starred": "显示收藏的笔记",
-    "sort_a2z": "文件名（A-Z）",
-    "sort_created_asc": "创建时间（从旧到新）",
-    "sort_created_desc": "创建时间（从新到旧）",
-    "sort_updated_asc": "更新时间（从旧到新）",
-    "sort_updated_desc": "更新时间（从新到旧）",
-    "sort_z2a": "文件名（Z-A）",
-    "spell_check": "拼写检查",
-    "spell_check_tooltip": "启用/禁用拼写检查",
-    "star": "收藏笔记",
-    "starred_notes": "收藏的笔记",
-    "target_name_exists": "已存在同名笔记或文件夹",
-    "title": "笔记",
-    "tree_load_failed": "加载笔记目录失败",
-    "unsaved_changes": "你有未保存的内容，确定要离开吗？",
-    "unstar": "取消收藏",
-    "untitled_folder": "新文件夹",
-    "untitled_note": "无标题笔记",
-    "upload_all_failed": "{{failed}} 个笔记上传失败",
-    "upload_failed": "笔记上传失败",
-    "upload_files": "上传文件",
-    "upload_folder": "上传文件夹",
-    "upload_partial_failed": "已上传 {{uploaded}} 个笔记，{{failed}} 个失败",
-    "upload_success": "笔记上传成功",
-    "uploading_files": "正在上传 {{count}} 个文件..."
-  },
   "notification": {
     "assistant": "助手响应",
     "knowledge": {
@@ -4692,22 +4476,19 @@
     },
     "skip": "稍后设置",
     "toast": {
-      "complete_failed": "无法完成引导，请重试",
-      "connected": "成功连接 CherryIN"
+      "complete_failed": "无法完成引导，请重试"
     },
     "welcome": {
-      "login_cherryin": "连接 CherryIN",
       "or_continue_with": "或",
-      "other_provider": "配置其他服务商",
       "select_other_provider": "选择其他服务商",
       "setup_hint": "您可以随时在设置中更换服务商",
       "subtitle": "连接服务商，开启您的全能 AI 工作站",
-      "title": "欢迎使用 Cherry Studio"
+      "title": "欢迎使用 Cherry Studio Lite"
     }
   },
   "openclaw": {
     "checking_installation": "正在检查 OpenClaw 安装状态...",
-    "description": "使用 Cherry Studio 服务商为 OpenClaw 提供支持，OpenClaw 是您的个人 AI 助手，可在 WhatsApp、Telegram、Slack、Discord 等平台上使用。",
+    "description": "使用 Cherry Studio Lite 服务商为 OpenClaw 提供支持，OpenClaw 是您的个人 AI 助手，可在 WhatsApp、Telegram、Slack、Discord 等平台上使用。",
     "error": {
       "select_provider_model": "请先选择服务商和模型"
     },
@@ -4728,7 +4509,7 @@
     },
     "installed_at": "OpenClaw 安装路径",
     "migration": {
-      "description": "检测到 PATH 中存在外部 OpenClaw 安装，但 Cherry Studio 只使用托管的 OpenClaw 二进制文件。请安装托管版本后继续。",
+      "description": "检测到 PATH 中存在外部 OpenClaw 安装，但 Cherry Studio Lite 只使用托管的 OpenClaw 二进制文件。请安装托管版本后继续。",
       "install_button": "重新安装 OpenClaw",
       "title": "OpenClaw 需要更新"
     },
@@ -5231,7 +5012,6 @@
     "baidu-cloud": "百度云千帆",
     "burncloud": "BurnCloud",
     "cerebras": "Cerebras AI",
-    "cherryai": "CherryAI",
     "cherryin": "CherryIN",
     "claude-code": "Claude Code",
     "copilot": "GitHub Copilot",
@@ -5352,221 +5132,6 @@
     },
     "title": "数据恢复"
   },
-  "richEditor": {
-    "action": {
-      "table": {
-        "deleteColumn": "删除列",
-        "deleteRow": "删除行",
-        "insertColumnAfter": "在右侧插入",
-        "insertColumnBefore": "在左侧插入",
-        "insertRowAfter": "在下方插入",
-        "insertRowBefore": "在上方插入"
-      }
-    },
-    "commands": {
-      "blockMath": {
-        "description": "插入数学公式",
-        "title": "数学公式"
-      },
-      "blockquote": {
-        "description": "插入引用文本",
-        "title": "引用"
-      },
-      "bold": {
-        "description": "标记为粗体",
-        "title": "粗体"
-      },
-      "bulletList": {
-        "description": "创建简单的项目符号列表",
-        "title": "无序列表"
-      },
-      "calloutInfo": {
-        "description": "添加信息提示框",
-        "title": "信息提示框"
-      },
-      "calloutWarning": {
-        "description": "添加警告提示框",
-        "title": "警告提示框"
-      },
-      "code": {
-        "description": "插入代码片段",
-        "title": "代码"
-      },
-      "codeBlock": {
-        "description": "插入代码片段",
-        "title": "代码块"
-      },
-      "columns": {
-        "description": "创建分栏布局",
-        "title": "分栏"
-      },
-      "date": {
-        "description": "插入当前日期",
-        "title": "日期"
-      },
-      "divider": {
-        "description": "添加水平分割线",
-        "title": "分割线"
-      },
-      "hardBreak": {
-        "description": "插入换行符",
-        "title": "换行符"
-      },
-      "heading1": {
-        "description": "大段落标题",
-        "title": "一级标题"
-      },
-      "heading2": {
-        "description": "中段落标题",
-        "title": "二级标题"
-      },
-      "heading3": {
-        "description": "小段落标题",
-        "title": "三级标题"
-      },
-      "heading4": {
-        "description": "较小的段落标题",
-        "title": "四级标题"
-      },
-      "heading5": {
-        "description": "更小的段落标题",
-        "title": "五级标题"
-      },
-      "heading6": {
-        "description": "最小的段落标题",
-        "title": "六级标题"
-      },
-      "image": {
-        "description": "插入图片",
-        "title": "图片"
-      },
-      "inlineCode": {
-        "description": "添加行内代码",
-        "title": "行内代码"
-      },
-      "inlineMath": {
-        "description": "插入行内数学公式",
-        "title": "行内数学公式"
-      },
-      "italic": {
-        "description": "标记为斜体",
-        "title": "斜体"
-      },
-      "link": {
-        "description": "添加链接",
-        "title": "链接"
-      },
-      "noCommandsFound": "未找到命令",
-      "orderedList": {
-        "description": "创建带编号的列表",
-        "title": "有序列表"
-      },
-      "paragraph": {
-        "description": "开始编写普通文本",
-        "title": "正文"
-      },
-      "redo": {
-        "description": "重做上一步操作",
-        "title": "重做"
-      },
-      "strike": {
-        "description": "标记为删除线",
-        "title": "删除线"
-      },
-      "table": {
-        "description": "插入表格",
-        "title": "表格"
-      },
-      "taskList": {
-        "description": "创建待办事项清单",
-        "title": "任务列表"
-      },
-      "underline": {
-        "description": "标记为下划线",
-        "title": "下划线"
-      },
-      "undo": {
-        "description": "撤销上一步操作",
-        "title": "撤销"
-      }
-    },
-    "dragHandle": "拖拽块",
-    "frontMatter": {
-      "addProperty": "添加属性",
-      "addTag": "添加标签",
-      "changeToBoolean": "复选框",
-      "changeToDate": "日期",
-      "changeToNumber": "数字",
-      "changeToTags": "标签",
-      "changeToText": "文本",
-      "changeType": "更改类型",
-      "deleteProperty": "删除属性",
-      "editValue": "编辑值",
-      "empty": "空",
-      "moreActions": "更多操作",
-      "propertyName": "属性名称"
-    },
-    "image": {
-      "placeholder": "添加图片"
-    },
-    "imageUploader": {
-      "embedImage": "嵌入图片",
-      "embedLink": "嵌入链接",
-      "embedSuccess": "图片嵌入成功",
-      "invalidType": "请选择图片文件",
-      "invalidUrl": "无效的图片链接",
-      "processing": "正在处理图片...",
-      "title": "添加图片",
-      "tooLarge": "图片大小不能超过 10MB",
-      "upload": "上传",
-      "uploadError": "图片上传失败",
-      "uploadFile": "上传文件",
-      "uploadHint": "支持 JPG、PNG、GIF 等格式，最大 10MB",
-      "uploadSuccess": "图片上传成功",
-      "uploadText": "点击或拖拽图片到此处上传",
-      "uploading": "正在上传图片",
-      "urlPlaceholder": "粘贴图片链接地址",
-      "urlRequired": "请输入图片链接地址"
-    },
-    "link": {
-      "remove": "移除链接",
-      "text": "链接标题",
-      "textPlaceholder": "请输入链接标题",
-      "url": "链接地址"
-    },
-    "math": {
-      "placeholder": "输入 LaTeX 公式"
-    },
-    "placeholder": "输入'/'调用命令",
-    "plusButton": "点击在下方添加",
-    "toolbar": {
-      "blockMath": "数学公式块",
-      "blockquote": "引用",
-      "bold": "粗体",
-      "bulletList": "无序列表",
-      "clearMarks": "清除格式",
-      "code": "行内代码",
-      "codeBlock": "代码块",
-      "heading1": "一级标题",
-      "heading2": "二级标题",
-      "heading3": "三级标题",
-      "heading4": "四级标题",
-      "heading5": "五级标题",
-      "heading6": "六级标题",
-      "image": "图片",
-      "inlineMath": "行内数学公式",
-      "italic": "斜体",
-      "link": "链接",
-      "orderedList": "有序列表",
-      "paragraph": "正文",
-      "redo": "重做",
-      "strike": "删除线",
-      "table": "表格",
-      "taskList": "任务清单",
-      "underline": "下划线",
-      "undo": "撤销"
-    }
-  },
   "selection": {
     "action": {
       "builtin": {
@@ -5642,7 +5207,7 @@
           },
           "description": {
             "0": "划词助手需「<strong>辅助功能权限</strong>」才能正常工作。",
-            "1": "请点击「<strong>去设置</strong>」，并在稍后弹出的权限请求弹窗中点击 「<strong>打开系统设置</strong>」 按钮，然后在之后的应用列表中找到 「<strong>Cherry Studio</strong>」，并打开权限开关。",
+            "1": "请点击「<strong>去设置</strong>」，并在稍后弹出的权限请求弹窗中点击 「<strong>打开系统设置</strong>」 按钮，然后在之后的应用列表中找到 「<strong>Cherry Studio Lite</strong>」，并打开权限开关。",
             "2": "完成设置后，请再次开启划词助手。"
           },
           "title": "辅助功能权限"
@@ -5666,7 +5231,7 @@
         "wayland_checklist_subtitle": "确认以下条件已满足，以尽可能优化 Wayland 下的体验：",
         "wayland_description": "当前为 Wayland 模式，受系统限制，部分桌面环境下工具栏只能显示在屏幕中央，无法跟随选中文本定位。建议切换到 X11 模式以获得完整体验。",
         "wayland_title": "Wayland 模式提示",
-        "xwayland_fail": "未启用，请使用 `--ozone-platform=x11` 参数启动 Cherry Studio",
+        "xwayland_fail": "未启用，请使用 `--ozone-platform=x11` 参数启动 Cherry Studio Lite",
         "xwayland_label": "XWayland 模式：",
         "xwayland_pass": "已启用"
       },
@@ -5815,28 +5380,13 @@
   },
   "settings": {
     "about": {
-      "careers": {
-        "button": "查看",
-        "title": "加入我们"
-      },
       "checkUpdate": {
         "available": "立即更新",
         "label": "检查更新"
       },
       "checkingUpdate": "正在检查更新...",
-      "contact": {
-        "button": "邮件",
-        "title": "邮件联系"
-      },
-      "debug": {
-        "open": "打开",
-        "title": "调试面板"
-      },
       "description": "一款为创造者而生的 AI 助手",
       "downloading": "正在下载更新...",
-      "enterprise": {
-        "title": "企业版"
-      },
       "feedback": {
         "agent": {
           "description": "通过与 Cherry Assistant 对话反馈问题。",
@@ -5845,7 +5395,7 @@
         "agent_error": "无法为反馈打开 Cherry Assistant，请重试。",
         "button": "反馈",
         "dialog": {
-          "description": "选择一种方式反馈问题，帮助我们把 Cherry Studio 做得更好。",
+          "description": "选择一种方式反馈问题，帮助我们把 Cherry Studio Lite 做得更好。",
           "title": "选择反馈方式"
         },
         "github": {
@@ -5871,11 +5421,7 @@
       "title": "关于我们",
       "updateAvailable": "发现新版本 {{version}}",
       "updateError": "更新出错",
-      "updateNotAvailable": "你的软件已是最新版本",
-      "website": {
-        "button": "查看",
-        "title": "官方网站"
-      }
+      "updateNotAvailable": "你的软件已是最新版本"
     },
     "advanced": {
       "auto_switch_to_topics": "自动切换到对话",
@@ -5925,9 +5471,9 @@
         "path_changed_without_copy": "路径已更改成功",
         "restart_notice": "应用可能会重启多次以应用更改",
         "select": "修改目录",
-        "select_error": "所选目录可能正被另一个 Cherry Studio 实例使用。请关闭其他实例后重试；若确认没有实例运行，请删除该目录中遗留的 SingletonLock 和 SingletonSocket 文件。",
+        "select_error": "所选目录可能正被另一个 Cherry Studio Lite 实例使用。请关闭其他实例后重试；若确认没有实例运行，请删除该目录中遗留的 SingletonLock 和 SingletonSocket 文件。",
         "select_error_in_app_path": "新路径与应用安装路径相同，请选择其他路径",
-        "select_error_protected_path": "所选路径受操作系统或 Cherry Studio 保护，请选择其他文件夹",
+        "select_error_protected_path": "所选路径受操作系统或 Cherry Studio Lite 保护，请选择其他文件夹",
         "select_error_root_path": "新路径不能是根路径",
         "select_error_same_path": "新路径与旧路径相同，请选择其他路径",
         "select_error_write_permission": "新路径没有写入权限",
@@ -6520,42 +6066,17 @@
       "installing": "安装中...",
       "installingHint": "首次安装可能需要下载运行时，耗时数分钟",
       "invalidTool": "工具名称或标识无效",
-      "localModels": {
-        "cancel": "取消",
-        "description": "在本地运行的模型，下载后即可离线使用，无需 API Key。",
-        "download": "下载",
-        "embedding": {
-          "name": "本地嵌入模型",
-          "subtitle": "Qwen3 Embedding 0.6B · 约 614 MB"
-        },
-        "notice": {
-          "downloadFailed": "下载失败，请检查网络后重试。",
-          "inUse": "该模型仍被知识库使用，已保留权重。",
-          "removeFailed": "删除失败，请查看日志。"
-        },
-        "ocr": {
-          "name": "本地 OCR 模型",
-          "subtitle": "PaddleOCR PP-OCRv6 · 约 140 MB"
-        },
-        "remove": "删除",
-        "status": {
-          "downloading": "下载中…",
-          "ready": "已就绪"
-        },
-        "title": "本地模型",
-        "unsupported": "当前平台不支持本地模型。"
-      },
       "notInstalled": "未安装",
       "openBinariesDir": "打开二进制文件目录",
       "remove": "移除工具",
-      "removeConfirmMessage": "要从 Cherry Studio 中移除 \"{{name}}\" 吗？其可移植工具定义将被删除；如果存在 Cherry 管理的 mise 副本，也会一并清理。系统和应用内置的可执行文件不会被修改。",
+      "removeConfirmMessage": "要从 Cherry Studio Lite 中移除 \"{{name}}\" 吗？其可移植工具定义将被删除；如果存在 Cherry 管理的 mise 副本，也会一并清理。系统和应用内置的可执行文件不会被修改。",
       "removeConfirmTitle": "移除工具",
       "removeDefinitionOnlyConfirmMessage": "Cherry 无法安全清理 \"{{name}}\"：{{details}} 仅移除定义会隐藏该卡片，但后端文件仍会保留。是否继续？",
       "removeDefinitionOnlyConfirmTitle": "仅移除定义？",
       "removeDefinitionOnlyDependents": "以下已安装工具依赖它：{{dependents}}。",
       "removeError": "工具移除失败",
       "removeErrorHint": "清理命令执行失败。复制下方日志以便排查或寻求帮助。",
-      "removeRuntimeConfirmMessage": "要从 Cherry Studio 中移除 \"{{name}}\" 吗？Cherry 只会清理其管理的 mise 副本，系统和应用内置的运行时不会被修改。如果已安装的 npm 或 pip 工具依赖此运行时，移除操作会被阻止。",
+      "removeRuntimeConfirmMessage": "要从 Cherry Studio Lite 中移除 \"{{name}}\" 吗？Cherry 只会清理其管理的 mise 副本，系统和应用内置的运行时不会被修改。如果已安装的 npm 或 pip 工具依赖此运行时，移除操作会被阻止。",
       "runtimeDependency": "运行时依赖",
       "runtimeDependencyHint": "npm/pip 工具使用的运行时",
       "searchFailed": "搜索失败，请查看日志",
@@ -6582,7 +6103,7 @@
         "uv": "用于 MCP 服务与依赖安装的 Python 包管理工具。"
       },
       "uninstall": "卸载",
-      "uninstallConfirmMessage": "确定要卸载 \"{{name}}\" 吗？Cherry Studio 管理的后端副本将被删除。",
+      "uninstallConfirmMessage": "确定要卸载 \"{{name}}\" 吗？Cherry Studio Lite 管理的后端副本将被删除。",
       "uninstallConfirmTitle": "卸载工具",
       "uninstallFailed": "工具卸载失败",
       "uninstallSuccess": "工具已卸载",
@@ -7450,10 +6971,6 @@
     "power": {
       "prevent_sleep_when_busy": "运行任务时保持系统唤醒"
     },
-    "privacy": {
-      "enable_privacy_mode": "匿名发送错误报告和数据统计",
-      "title": "隐私设置"
-    },
     "prompts": {
       "add": "添加提示词",
       "contentLabel": "内容",
@@ -7592,8 +7109,7 @@
       "base_url": {
         "invalid": "请输入有效的 HTTP 或 HTTPS 地址",
         "label": "Base URL",
-        "placeholder": "Base URL：https://example.com",
-        "required": "请输入 Base URL"
+        "placeholder": "Base URL：https://example.com"
       },
       "basic_auth": {
         "label": "HTTP 认证",
@@ -7693,13 +7209,6 @@
           "text_endpoint_required": "请至少配置一个文本端点",
           "url_help": "填写 API 根地址后会显示实际请求路径"
         },
-        "preset_instance": {
-          "description": "适用于 Coding Plan 接入、多个账号管理或项目隔离；Base URL 和 API Key 可独立配置",
-          "empty": "没有匹配的 Provider 预设",
-          "placeholder": "从 Provider 预设创建…",
-          "search_placeholder": "搜索 Provider 预设",
-          "title": "从预设创建（可选）"
-        },
         "request_preview": "请求路径：{{path}}",
         "title": "添加自定义提供商"
       },
@@ -7715,12 +7224,6 @@
       },
       "docs_check": "查看",
       "docs_more_details": "获取更多详情",
-      "duplicate": {
-        "add_another": "添加 {{name}} 实例",
-        "drawer_title": "添加 {{name}} 实例",
-        "fill_after_create": "创建后请在详情页填写认证字段",
-        "menu_label": "添加实例"
-      },
       "enable_failed_after_connection": "连接成功，但服务商启用失败。",
       "filter": {
         "agent": "支持 Agent",
@@ -7757,8 +7260,7 @@
         "anthropic": "Anthropic",
         "gemini": "Gemini",
         "openai_chat": "OpenAI",
-        "openai_responses": "OpenAI Responses",
-        "toggle": "更多端点"
+        "openai_responses": "OpenAI Responses"
       },
       "no_models_for_check": "没有可以被检测的模型（例如对话模型）",
       "not_checked": "未检测",
@@ -8085,13 +7587,6 @@
           "doc2x": {
             "description": "高级文件还原引擎。",
             "name": "Doc2x"
-          },
-          "local_paddleocr": {
-            "description": "在本地进程内运行的 PaddleOCR（PP-OCRv6 中等模型），完全离线、无需 API Key，识别在后台线程进行不阻塞界面。首次使用请先在「环境依赖」中下载模型（约 140MB）。",
-            "name": "本地 PaddleOCR",
-            "status": {
-              "local": "完全本地离线运行"
-            }
           },
           "mineru": {
             "description": "OpenDataLab 开源的高质量 PDF 提取工具。",

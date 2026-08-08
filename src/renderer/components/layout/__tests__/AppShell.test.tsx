@@ -87,10 +87,6 @@ vi.mock('../../GlobalSearch/globalSearchGroups', () => ({
   upsertGlobalSearchRecentEntry: (items: unknown[]) => items
 }))
 
-vi.mock('../../MiniApp/MiniAppTabsPool', () => ({
-  default: () => <div data-testid="mini-app-pool" />
-}))
-
 vi.mock('../../ResourceViewSourceProvider', () => ({
   ResourceViewSourceProvider: ({ children }: { children: ReactNode }) => (
     <div data-testid="resource-view-source-provider">{children}</div>
@@ -137,7 +133,6 @@ describe('AppShell', () => {
     const provider = screen.getByTestId('resource-view-source-provider')
 
     expect(provider).toContainElement(screen.getByTestId('tab-router'))
-    expect(provider).not.toContainElement(screen.getByTestId('mini-app-pool'))
     expect(provider).not.toContainElement(screen.getByTestId('sidebar'))
     expect(provider).not.toContainElement(screen.getByTestId('tab-bar'))
   })

@@ -11,11 +11,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 let currentLanguage = 'en'
 
-const PINNED_FILES_TAB: Tab = {
-  id: 'files',
+const PINNED_TRANSLATE_TAB: Tab = {
+  id: 'translate',
   type: 'route',
-  url: '/app/files',
-  title: 'Files',
+  url: '/app/translate',
+  title: 'Translate',
   lastAccessTime: 0,
   isDormant: false,
   isPinned: true
@@ -63,7 +63,7 @@ const HOME_TAB: Tab = {
 // Stable reference: re-renders are then driven only by the i18n.language change,
 // not by a fresh pinnedTabs identity — which is what makes the test catch a dropped
 // i18n.language dependency in the tabs useMemo.
-let pinnedTabsValue: Tab[] = [PINNED_FILES_TAB]
+let pinnedTabsValue: Tab[] = [PINNED_TRANSLATE_TAB]
 const setPinnedTabsMock = vi.fn()
 
 // Restore-session keys (normal tabs + active id). Default to empty (fresh launch); individual
@@ -103,10 +103,9 @@ vi.mock('react-i18next', async (importOriginal) => {
 vi.mock('@renderer/utils/routeTitle', async () => {
   const actual = await vi.importActual<typeof RouteTitle>('@renderer/utils/routeTitle')
   const titles: Record<string, Record<string, string>> = {
-    '/app/agents': { en: 'Agent', zh: '代理' },
     '/app/chat': { en: 'Chat', zh: '聊天' },
-    '/app/files': { en: 'Files', zh: '文件' },
-    '/app/launchpad': { en: 'Launchpad', zh: '启动台' }
+    '/app/launchpad': { en: 'Launchpad', zh: '启动台' },
+    '/app/translate': { en: 'Translate', zh: '翻译' }
   }
   return {
     ...actual,
@@ -138,7 +137,7 @@ function TabTitleWriter() {
 
 function PinnedRouteTitle() {
   const { tabs } = useTabsContext()
-  return <div data-testid="files-title">{tabs.find((tab) => tab.id === 'files')?.title}</div>
+  return <div data-testid="translate-title">{tabs.find((tab) => tab.id === 'translate')?.title}</div>
 }
 
 function TabIds() {
@@ -206,8 +205,8 @@ function BatchCloseControls() {
       <button type="button" onClick={() => closeTabs(['d'])}>
         Close D
       </button>
-      <button type="button" onClick={() => closeTabs(['home', 'b', 'c', 'd'], 'files')}>
-        Close all normals to Files
+      <button type="button" onClick={() => closeTabs(['home', 'b', 'c', 'd'], 'translate')}>
+        Close all normals to Translate
       </button>
       <div data-testid="active-tab-id">{activeTabId}</div>
       <div data-testid="tab-ids">{tabs.map((tab) => tab.id).join(',')}</div>
@@ -254,11 +253,11 @@ function CloseHomeAfterSecondTabOpens() {
   useEffect(() => {
     if (didOpenRef.current) return
     didOpenRef.current = true
-    openTab('/app/agents', { id: 'agents', forceNew: true })
+    openTab('/app/translate', { id: 'translate-2', forceNew: true })
   }, [openTab])
 
   useEffect(() => {
-    if (didCloseRef.current || !tabs.some((tab) => tab.id === 'agents')) return
+    if (didCloseRef.current || !tabs.some((tab) => tab.id === 'translate-2')) return
     didCloseRef.current = true
     closeTab('home')
   }, [closeTab, tabs])
@@ -296,7 +295,7 @@ function PinnedTabMaterializer() {
 
 beforeEach(() => {
   currentLanguage = 'en'
-  pinnedTabsValue = [PINNED_FILES_TAB]
+  pinnedTabsValue = [PINNED_TRANSLATE_TAB]
   normalTabsValue = []
   activeTabIdValue = ''
 })
@@ -313,7 +312,7 @@ describe('TabsProvider', () => {
         initialDefaultTab={{
           id: 'home',
           type: 'route',
-          url: '/app/agents',
+          url: '/app/chat',
           title: '',
           lastAccessTime: Date.now(),
           isDormant: false
@@ -335,14 +334,14 @@ describe('TabsProvider', () => {
     )
     const { rerender } = render(renderUi())
 
-    await waitFor(() => expect(screen.getByTestId('files-title')).toHaveTextContent('Files'))
+    await waitFor(() => expect(screen.getByTestId('translate-title')).toHaveTextContent('Translate'))
 
     // Switch language and re-render: the tabs useMemo must recompute via its
     // i18n.language dependency so the route-derived title re-localizes.
     currentLanguage = 'zh'
     rerender(renderUi())
 
-    await waitFor(() => expect(screen.getByTestId('files-title')).toHaveTextContent('文件'))
+    await waitFor(() => expect(screen.getByTestId('translate-title')).toHaveTextContent('翻译'))
   })
 
   it('keeps isPinned on a tab materialized in a sub-window so it round-trips on re-attach', async () => {
@@ -372,7 +371,7 @@ describe('TabsProvider', () => {
   it('removes a menu-closed pinned tab from the persistent pinned list', async () => {
     render(
       <TabsProvider initialDefaultTab={HOME_TAB}>
-        <CloseTabOnMount tabId="files" />
+        <CloseTabOnMount tabId="translate" />
       </TabsProvider>
     )
 
@@ -385,11 +384,11 @@ describe('TabsProvider', () => {
     // functional updater isn't necessarily the last call — find it explicitly.
     const updater = setPinnedTabsMock.mock.calls.map((call) => call[0]).find((arg) => typeof arg === 'function')
     expect(typeof updater).toBe('function')
-    expect(updater([PINNED_FILES_TAB])).toEqual([])
+    expect(updater([PINNED_TRANSLATE_TAB])).toEqual([])
   })
 
   it('drops legacy assistant-library pinned tabs when restoring the main tab list', async () => {
-    pinnedTabsValue = [LEGACY_LIBRARY_PINNED_TAB, PINNED_FILES_TAB]
+    pinnedTabsValue = [LEGACY_LIBRARY_PINNED_TAB, PINNED_TRANSLATE_TAB]
 
     render(
       <TabsProvider initialDefaultTab={HOME_TAB}>
@@ -397,15 +396,15 @@ describe('TabsProvider', () => {
       </TabsProvider>
     )
 
-    expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home')
-    await waitFor(() => expect(setPinnedTabsMock).toHaveBeenCalledWith([{ ...PINNED_FILES_TAB, isDormant: true }]))
+    expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home')
+    await waitFor(() => expect(setPinnedTabsMock).toHaveBeenCalledWith([{ ...PINNED_TRANSLATE_TAB, isDormant: true }]))
   })
 
-  // Reviewer B7: OpenClaw's sidebar entry + /app/openclaw route were removed (folded into Code), so a
-  // persisted OpenClaw pin must be redirected to /app/code on restore instead of resurrecting a dead
-  // route — and the reconciled list written back to the cache.
-  it('redirects a persisted OpenClaw pinned tab to the Code page on restore', async () => {
-    pinnedTabsValue = [PINNED_OPENCLAW_TAB, PINNED_FILES_TAB]
+  // The OpenClaw / Code / Agents / Paintings / Knowledge / Files / Notes routes were removed, so a
+  // persisted pin on any of them must be dropped on restore instead of resurrecting a dead route —
+  // and the reconciled list written back to the cache.
+  it('drops a persisted pinned tab whose route was removed on restore', async () => {
+    pinnedTabsValue = [PINNED_OPENCLAW_TAB, PINNED_TRANSLATE_TAB]
 
     render(
       <TabsProvider initialDefaultTab={HOME_TAB}>
@@ -413,13 +412,8 @@ describe('TabsProvider', () => {
       </TabsProvider>
     )
 
-    expect(screen.getByTestId('tab-urls')).toHaveTextContent('/app/code,/app/files,/app/chat')
-    await waitFor(() =>
-      expect(setPinnedTabsMock).toHaveBeenCalledWith([
-        { ...PINNED_OPENCLAW_TAB, url: '/app/code', title: '/app/code', isDormant: true },
-        { ...PINNED_FILES_TAB, isDormant: true }
-      ])
-    )
+    expect(screen.getByTestId('tab-urls')).toHaveTextContent('/app/translate,/app/chat')
+    await waitFor(() => expect(setPinnedTabsMock).toHaveBeenCalledWith([{ ...PINNED_TRANSLATE_TAB, isDormant: true }]))
   })
 
   it('closes active and adjacent tabs atomically when closing a batch', async () => {
@@ -430,14 +424,14 @@ describe('TabsProvider', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Seed tabs' }))
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home,b,c,d'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home,b,c,d'))
 
     fireEvent.click(screen.getByRole('button', { name: 'Activate C' }))
     await waitFor(() => expect(screen.getByTestId('active-tab-id')).toHaveTextContent('c'))
 
     fireEvent.click(screen.getByRole('button', { name: 'Close B and C' }))
 
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home,d'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home,d'))
     // Chrome-style: the surviving right neighbor takes over the active slot.
     expect(screen.getByTestId('active-tab-id')).toHaveTextContent('d')
   })
@@ -450,17 +444,17 @@ describe('TabsProvider', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Seed tabs' }))
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home,b,c,d'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home,b,c,d'))
 
     // Active tab (home) sits left of the designated survivor (c) with the
-    // pinned files tab further left — without activateId the nearest-left rule
+    // pinned translate tab further left — without activateId the nearest-left rule
     // would land on the pinned tab instead of c.
     fireEvent.click(screen.getByRole('button', { name: 'Activate Home' }))
     await waitFor(() => expect(screen.getByTestId('active-tab-id')).toHaveTextContent('home'))
 
     fireEvent.click(screen.getByRole('button', { name: 'Close others around C' }))
 
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,c'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,c'))
     expect(screen.getByTestId('active-tab-id')).toHaveTextContent('c')
   })
 
@@ -472,7 +466,7 @@ describe('TabsProvider', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Seed tabs' }))
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home,b,c,d'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home,b,c,d'))
 
     fireEvent.click(screen.getByRole('button', { name: 'Hibernate C' }))
     await waitFor(() => expect(screen.getByTestId('dormant-ids')).toHaveTextContent('c'))
@@ -485,7 +479,7 @@ describe('TabsProvider', () => {
     // The dormant survivor must be woken, not just pointed at — a dormant tab
     // is not rendered, so activating without waking would blank the content.
     await waitFor(() => expect(screen.getByTestId('active-tab-id')).toHaveTextContent('c'))
-    expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,c')
+    expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,c')
     expect(screen.getByTestId('dormant-ids')).toHaveTextContent(/^$/)
   })
 
@@ -515,7 +509,7 @@ describe('TabsProvider', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Seed tabs' }))
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home,b,c,d'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home,b,c,d'))
 
     fireEvent.click(screen.getByRole('button', { name: 'Activate C' }))
     await waitFor(() => expect(screen.getByTestId('active-tab-id')).toHaveTextContent('c'))
@@ -524,7 +518,7 @@ describe('TabsProvider', () => {
     // Chrome-style fallback selects the right neighbor that slides into place.
     fireEvent.click(screen.getByRole('button', { name: 'Close B and C keeping C' }))
 
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home,d'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home,d'))
     expect(screen.getByTestId('active-tab-id')).toHaveTextContent('d')
   })
 
@@ -536,18 +530,18 @@ describe('TabsProvider', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Seed tabs' }))
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home,b,c,d'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home,b,c,d'))
 
     fireEvent.click(screen.getByRole('button', { name: 'Activate D' }))
     await waitFor(() => expect(screen.getByTestId('active-tab-id')).toHaveTextContent('d'))
     fireEvent.click(screen.getByRole('button', { name: 'Close D' }))
 
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home,b,c'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home,b,c'))
     expect(screen.getByTestId('active-tab-id')).toHaveTextContent('c')
   })
 
   it('wakes a dormant pinned survivor through the pinned store', async () => {
-    pinnedTabsValue = [{ ...PINNED_FILES_TAB, isDormant: true }]
+    pinnedTabsValue = [{ ...PINNED_TRANSLATE_TAB, isDormant: true }]
 
     render(
       <TabsProvider initialDefaultTab={HOME_TAB}>
@@ -556,21 +550,21 @@ describe('TabsProvider', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Seed tabs' }))
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('files,home,b,c,d'))
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate,home,b,c,d'))
 
     fireEvent.click(screen.getByRole('button', { name: 'Activate Home' }))
     await waitFor(() => expect(screen.getByTestId('active-tab-id')).toHaveTextContent('home'))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close all normals to Files' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Close all normals to Translate' }))
 
-    await waitFor(() => expect(screen.getByTestId('active-tab-id')).toHaveTextContent('files'))
+    await waitFor(() => expect(screen.getByTestId('active-tab-id')).toHaveTextContent('translate'))
 
     // The pinned store is mocked, so assert on the updater sent to it: the
     // dormant pinned survivor must come back woken.
     const updater = setPinnedTabsMock.mock.calls.at(-1)?.[0] as (prev: Tab[]) => Tab[]
     expect(typeof updater).toBe('function')
-    const next = updater([{ ...PINNED_FILES_TAB, isDormant: true }])
-    expect(next.find((tab) => tab.id === 'files')?.isDormant).toBe(false)
+    const next = updater([{ ...PINNED_TRANSLATE_TAB, isDormant: true }])
+    expect(next.find((tab) => tab.id === 'translate')?.isDormant).toBe(false)
   })
 
   it('opens launchpad when closing the only tab', async () => {
@@ -592,10 +586,10 @@ describe('TabsProvider', () => {
       </TabsProvider>
     )
 
-    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('agents'))
-    expect(screen.getByTestId('tab-urls')).toHaveTextContent('/app/agents')
+    await waitFor(() => expect(screen.getByTestId('tab-ids')).toHaveTextContent('translate-2'))
+    expect(screen.getByTestId('tab-urls')).toHaveTextContent('/app/translate')
     expect(screen.getByTestId('tab-urls')).not.toHaveTextContent('/app/launchpad')
-    expect(screen.getByTestId('active-tab-id')).toHaveTextContent('agents')
+    expect(screen.getByTestId('active-tab-id')).toHaveTextContent('translate-2')
   })
 
   it('creates a second tab for an already-open URL when forceNew is set', async () => {
@@ -624,7 +618,7 @@ describe('TabsProvider', () => {
 describe('TabsProvider session restore', () => {
   it('restores the persisted session and keeps only the active tab awake', async () => {
     const tabA: Tab = { id: 'a', type: 'route', url: '/app/chat', title: '', lastAccessTime: 1, isDormant: false }
-    const tabB: Tab = { id: 'b', type: 'route', url: '/app/agents', title: '', lastAccessTime: 2, isDormant: false }
+    const tabB: Tab = { id: 'b', type: 'route', url: '/app/translate', title: '', lastAccessTime: 2, isDormant: false }
     normalTabsValue = [tabA, tabB]
     activeTabIdValue = 'b'
 
@@ -645,7 +639,7 @@ describe('TabsProvider session restore', () => {
     // Active id points at a tab that no longer exists in either the pinned or normal set. The
     // resolved active tab (first normal tab) must still be awake, or AppShell renders no TabRouter.
     const tabA: Tab = { id: 'a', type: 'route', url: '/app/chat', title: '', lastAccessTime: 1, isDormant: false }
-    const tabB: Tab = { id: 'b', type: 'route', url: '/app/agents', title: '', lastAccessTime: 2, isDormant: false }
+    const tabB: Tab = { id: 'b', type: 'route', url: '/app/translate', title: '', lastAccessTime: 2, isDormant: false }
     normalTabsValue = [tabA, tabB]
     activeTabIdValue = 'ghost'
 
@@ -660,11 +654,11 @@ describe('TabsProvider session restore', () => {
   })
 
   it('honors a pinned active tab when no unpinned tabs were open', async () => {
-    // Last session had zero normal tabs but the active tab was the pinned "files" tab — restore must
-    // reselect it (the default tab stays present but dormant) instead of falling back to default.
-    pinnedTabsValue = [{ ...PINNED_FILES_TAB, isDormant: true }]
+    // Last session had zero normal tabs but the active tab was the pinned "translate" tab — restore
+    // must reselect it (the default tab stays present but dormant) instead of falling back to default.
+    pinnedTabsValue = [{ ...PINNED_TRANSLATE_TAB, isDormant: true }]
     normalTabsValue = []
-    activeTabIdValue = 'files'
+    activeTabIdValue = 'translate'
 
     render(
       <TabsProvider>
@@ -672,9 +666,9 @@ describe('TabsProvider session restore', () => {
       </TabsProvider>
     )
 
-    await waitFor(() => expect(screen.getByTestId('active')).toHaveTextContent('files'))
+    await waitFor(() => expect(screen.getByTestId('active')).toHaveTextContent('translate'))
     const dump = screen.getByTestId('session-tabs').textContent ?? ''
-    expect(dump).toContain('files:awake')
+    expect(dump).toContain('translate:awake')
     expect(dump).toContain('home:dormant')
   })
 
@@ -733,31 +727,32 @@ describe('TabsProvider session restore', () => {
 })
 
 describe('migratePinnedTabs', () => {
-  it('redirects an OpenClaw pin to the Code page and flags the change', () => {
-    const { tabs, changed } = migratePinnedTabs([PINNED_OPENCLAW_TAB, PINNED_FILES_TAB])
+  it('drops a pin on a removed route and flags the change', () => {
+    const { tabs, changed } = migratePinnedTabs([PINNED_OPENCLAW_TAB, PINNED_TRANSLATE_TAB])
     expect(changed).toBe(true)
-    expect(tabs).toEqual([{ ...PINNED_OPENCLAW_TAB, url: '/app/code', title: '/app/code' }, PINNED_FILES_TAB])
+    expect(tabs).toEqual([PINNED_TRANSLATE_TAB])
   })
 
-  it('drops the OpenClaw pin instead of duplicating an existing Code pin', () => {
+  it('drops every pin on a removed route', () => {
     const { tabs, changed } = migratePinnedTabs([PINNED_CODE_TAB, PINNED_OPENCLAW_TAB])
     expect(changed).toBe(true)
-    expect(tabs).toEqual([PINNED_CODE_TAB])
+    expect(tabs).toEqual([])
   })
 
-  it('collapses two OpenClaw pins into a single Code pin', () => {
-    const { tabs } = migratePinnedTabs([PINNED_OPENCLAW_TAB, { ...PINNED_OPENCLAW_TAB, id: 'openclaw2' }])
-    expect(tabs).toEqual([{ ...PINNED_OPENCLAW_TAB, url: '/app/code', title: '/app/code' }])
+  it('drops a pin on a sub-route of a removed route', () => {
+    const { tabs, changed } = migratePinnedTabs([{ ...PINNED_CODE_TAB, id: 'mini', url: '/app/mini-app/qwen' }])
+    expect(changed).toBe(true)
+    expect(tabs).toEqual([])
   })
 
   it('drops legacy library pins', () => {
-    const { tabs, changed } = migratePinnedTabs([LEGACY_LIBRARY_PINNED_TAB, PINNED_FILES_TAB])
+    const { tabs, changed } = migratePinnedTabs([LEGACY_LIBRARY_PINNED_TAB, PINNED_TRANSLATE_TAB])
     expect(changed).toBe(true)
-    expect(tabs).toEqual([PINNED_FILES_TAB])
+    expect(tabs).toEqual([PINNED_TRANSLATE_TAB])
   })
 
   it('is a no-op when nothing needs migrating', () => {
-    const input = [PINNED_FILES_TAB, PINNED_CODE_TAB]
+    const input = [PINNED_TRANSLATE_TAB, { ...PINNED_TRANSLATE_TAB, id: 'chat', url: '/app/chat', title: 'Chat' }]
     const { tabs, changed } = migratePinnedTabs(input)
     expect(changed).toBe(false)
     expect(tabs).toEqual(input)

@@ -1,6 +1,6 @@
 import { fileEntryTable } from '@data/db/schemas/file'
-import { paintingFileRefTable } from '@data/db/schemas/fileRelations'
-import { paintingTable } from '@data/db/schemas/painting'
+import { providerLogoFileRefTable } from '@data/db/schemas/fileRelations'
+import { userProviderTable } from '@data/db/schemas/userProvider'
 import { DataApiError, ErrorCode } from '@shared/data/api/errors'
 import type { FileEntryStats } from '@shared/data/api/schemas/files'
 import { ContentHashSchema, type FileEntryId } from '@shared/data/types/file'
@@ -41,19 +41,13 @@ describe('fileHandlers (DataApi)', () => {
     })
   }
 
-  // Give an entry a persistent (painting) ref so the ref endpoints report it.
-  // Returns the painting sourceId for source-key filtered queries.
-  async function seedPaintingRef(fileEntryId: FileEntryId): Promise<string> {
-    const paintingId = uuidv4()
-    await dbh.db.insert(paintingTable).values({
-      id: paintingId,
-      providerId: 'provider',
-      modelId: null,
-      prompt: 'prompt',
-      orderKey: paintingId
-    })
-    await dbh.db.insert(paintingFileRefTable).values({ fileEntryId, sourceId: paintingId, role: 'output' })
-    return paintingId
+  // Give an entry a persistent (provider logo) ref so the ref endpoints report it.
+  // Returns the provider sourceId for source-key filtered queries.
+  async function seedProviderLogoRef(fileEntryId: FileEntryId): Promise<string> {
+    const providerId = `provider-${uuidv4()}`
+    await dbh.db.insert(userProviderTable).values({ providerId, name: 'P', orderKey: providerId })
+    await dbh.db.insert(providerLogoFileRefTable).values({ fileEntryId, sourceId: providerId })
+    return providerId
   }
 
   describe('GET /files/entries', () => {
@@ -230,8 +224,8 @@ describe('fileHandlers (DataApi)', () => {
       const idB = '019606a0-0000-7000-8000-000000000c02' as FileEntryId
       await seedEntry(idA)
       await seedEntry(idB)
-      await seedPaintingRef(idA)
-      await seedPaintingRef(idA)
+      await seedProviderLogoRef(idA)
+      await seedProviderLogoRef(idA)
 
       const result = (await fileHandlers['/files/entries/ref-counts'].GET({
         query: { entryIds: [idA, idB] }
@@ -263,7 +257,7 @@ describe('fileHandlers (DataApi)', () => {
     it('returns refs for the entry', async () => {
       const id = '019606a0-0000-7000-8000-000000000d01' as FileEntryId
       await seedEntry(id)
-      await seedPaintingRef(id)
+      await seedProviderLogoRef(id)
       const refs = (await fileHandlers['/files/entries/:id/refs'].GET({
         params: { id }
       } as never)) as Array<{ fileEntryId: string }>
@@ -276,9 +270,9 @@ describe('fileHandlers (DataApi)', () => {
     it('returns refs filtered by source key', async () => {
       const id = '019606a0-0000-7000-8000-000000000e01' as FileEntryId
       await seedEntry(id)
-      const paintingId = await seedPaintingRef(id)
+      const providerId = await seedProviderLogoRef(id)
       const refs = (await fileHandlers['/files/refs'].GET({
-        query: { sourceType: 'painting', sourceId: paintingId }
+        query: { sourceType: 'provider_logo', sourceId: providerId }
       } as never)) as unknown[]
       expect(refs.length).toBe(1)
     })
@@ -297,7 +291,7 @@ describe('fileHandlers (DataApi)', () => {
     it('rejects an empty sourceId with ZodError', async () => {
       await expect(
         fileHandlers['/files/refs'].GET({
-          query: { sourceType: 'painting', sourceId: '' }
+          query: { sourceType: 'provider_logo', sourceId: '' }
         } as never)
       ).rejects.toHaveProperty('name', 'ZodError')
     })

@@ -18,7 +18,6 @@ import { useAppUpdateHandler } from './hooks/useAppUpdateHandler'
 import { useAutoBackupEvents } from './hooks/useAutoBackupEvents'
 import { useTopicNamingErrorNotification } from './hooks/useTopicNamingErrorNotification'
 import OnboardingPage from './onboarding/OnboardingPage'
-import { PrivacyPolicyUpdateGate } from './privacy/PrivacyPolicyUpdateGate'
 
 const logger = loggerService.withContext('MainApp')
 // Behavior leaf inside the providers: the shared window runtime plus the main-only
@@ -67,7 +66,6 @@ export function MainWindowContent(): React.ReactElement {
       <MainWindowRuntime />
       <PopupHost />
       <ToastHost />
-      {providerSetupStatus === 'pending' ? null : <PrivacyPolicyUpdateGate />}
     </TabsProvider>
   )
 }

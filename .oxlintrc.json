@@ -42,12 +42,7 @@
       "env": {
         "browser": true
       },
-      "files": [
-        "src/renderer/**/*.{ts,tsx}",
-        "packages/aiCore/**",
-        "packages/extension-table-plus/**",
-        "packages/ui/**"
-      ]
+      "files": ["src/renderer/**/*.{ts,tsx}", "packages/aiCore/**", "packages/ui/**"]
     },
     {
       "env": {

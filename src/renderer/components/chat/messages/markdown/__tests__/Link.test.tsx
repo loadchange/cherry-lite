@@ -56,12 +56,12 @@ describe('Link', () => {
 
   it('renders a Cherry Studio route link as an in-app navigation entry', async () => {
     const user = userEvent.setup()
-    render(<Link href="/app/paintings?source=assistant">打开画图功能</Link>)
+    render(<Link href="/app/translate?source=assistant">打开翻译功能</Link>)
 
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button'))
     expect(mocks.navigateToRoute).toHaveBeenCalledWith({
-      path: '/app/paintings',
+      path: '/app/translate',
       query: { source: 'assistant' }
     })
   })

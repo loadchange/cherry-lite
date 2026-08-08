@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { clearSingleFileRefTx, getSingleFileRefId, insertSingleFileRefTx, reconcileLogoSlotTx } from '../singleFileRef'
 
 // Test-only fixture tables standing in for two different owners' slot tables
-// (`provider_logo_file_ref` / `mini_app_logo_file_ref`). Not part of the
+// (two owners' `*_logo_file_ref` tables). Not part of the
 // production schema — driving the helpers with fixtures is what proves they are
 // schema-agnostic rather than wired to one specific pair of tables.
 const slotColumns = {

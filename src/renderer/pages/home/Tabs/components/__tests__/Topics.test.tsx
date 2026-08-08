@@ -93,12 +93,6 @@ vi.mock('@dnd-kit/utilities', () => ({
   }
 }))
 
-const notesSettingsMocks = vi.hoisted(() => ({
-  useNotesSettings: vi.fn(() => ({ notesPath: '/notes' }))
-}))
-
-vi.mock('@renderer/hooks/useNotesSettings', () => notesSettingsMocks)
-
 const groupReorderMocks = vi.hoisted(() => ({
   reorderGroup: vi.fn().mockResolvedValue(undefined)
 }))
@@ -301,16 +295,11 @@ vi.mock('@renderer/components/popups/PromptPopup', () => ({
   default: { show: vi.fn() }
 }))
 
-vi.mock('@renderer/components/SaveToKnowledgePopup', () => ({
-  default: { showForTopic: vi.fn() }
-}))
-
 vi.mock('@renderer/services/ExportService', () => ({
   exportMarkdownToJoplin: vi.fn(),
   exportMarkdownToSiyuan: vi.fn(),
   exportMarkdownToYuque: vi.fn(),
   exportTopicAsMarkdown: vi.fn(),
-  exportTopicToNotes: vi.fn(),
   exportTopicToNotion: vi.fn(),
   topicToMarkdown: vi.fn().mockResolvedValue('# topic')
 }))
@@ -376,9 +365,6 @@ vi.mock('react-i18next', () => ({
         if (key === 'assistants.clear.title') return 'Clear conversations'
         if (key === 'assistants.clear.content') return 'Delete all assistant conversations?'
         if (key === 'chat.topics.clear.title') return 'Clear messages'
-        if (key === 'notes.save') return 'Save to notes'
-        if (key === 'chat.save.topic.knowledge.menu_title') return 'Save to knowledge base'
-        if (key === 'chat.save.topic.knowledge.title') return 'Save to knowledge base'
         if (key === 'chat.topics.copy.title') return 'Copy'
         if (key === 'chat.topics.copy.image') return 'Copy as Image'
         if (key === 'chat.topics.copy.md') return 'Copy as Markdown'
@@ -1375,8 +1361,6 @@ describe('Topics', () => {
       'Conversation positionLeftRight',
       'Clear messages',
       '',
-      'Save to notes',
-      'Save to knowledge base',
       'ExportExport as ImageExport as MarkdownExport as Markdown with ReasoningExport as WordExport to NotionExport to YuqueExport to ObsidianExport to JoplinExport to Siyuan',
       'CopyCopy as ImageCopy as MarkdownCopy as Plain Text',
       '',

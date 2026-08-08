@@ -44,18 +44,15 @@ vi.mock('react-i18next', () => ({
       ({
         'agent.settings.toolsMcp.mcp.tab': 'MCP',
         'selection.name': '划词助手',
-        'settings.channels.title': '频道',
         'settings.dependencies.title': '环境依赖',
-        'settings.dependencies.localModels.title': '本地模型',
         'settings.menuGroups.automation': '效率',
         'settings.menuGroups.capabilities': '工具',
         'settings.menuGroups.personal': '偏好',
         'settings.menuGroups.quickAccess': '快捷入口',
         'settings.model': '默认模型',
+        'settings.provider.title': '模型服务',
         'settings.quickAssistant.title': '快捷助手',
-        'settings.scheduledTasks.title': '定时任务',
         'settings.shortcuts.title': '快捷键',
-        'settings.skills.title': '技能',
         'settings.system.title': '系统',
         'settings.tool.file_processing.features.image_to_text.title': 'OCR',
         'settings.tool.file_processing.features.document_to_markdown.title': '文档处理'
@@ -69,7 +66,7 @@ describe('SettingsPage', () => {
     navigateMock.mockReset()
   })
 
-  it('places local models directly below the default model', () => {
+  it('closes the model group with the default model and opens its settings page', () => {
     const { container } = render(<SettingsPage />)
 
     expect(container.querySelector('[data-ui="settings.view"]')).toBeInTheDocument()
@@ -77,12 +74,13 @@ describe('SettingsPage', () => {
     expect(container.querySelector('[data-ui="settings.content"]')).toBeInTheDocument()
     expect(screen.getByText('偏好')).toBeInTheDocument()
 
+    const providerItem = screen.getByRole('button', { name: '模型服务' })
     const defaultModelItem = screen.getByRole('button', { name: '默认模型' })
-    const localModelsItem = screen.getByRole('button', { name: '本地模型' })
 
-    expect(defaultModelItem.nextElementSibling).toBe(localModelsItem)
-    fireEvent.click(localModelsItem)
-    expect(navigateMock).toHaveBeenCalledWith({ to: '/settings/local-models' })
+    expect(providerItem.nextElementSibling).toBe(defaultModelItem)
+    expect(defaultModelItem.nextElementSibling).toHaveAttribute('data-testid', 'menu-divider')
+    fireEvent.click(defaultModelItem)
+    expect(navigateMock).toHaveBeenCalledWith({ to: '/settings/model' })
   })
 
   it('keeps document processing and OCR together in tools and places dependencies below system', () => {
@@ -102,16 +100,16 @@ describe('SettingsPage', () => {
     expect(navigateMock).toHaveBeenCalledWith({ to: '/settings/dependencies' })
   })
 
-  it('places Skills directly below MCP and opens the Skills settings page', () => {
+  it('places MCP first in tools and opens the MCP settings page', () => {
     render(<SettingsPage />)
 
     const mcpItem = screen.getByText('MCP').closest('button')
-    const skillsItem = screen.getByRole('button', { name: '技能' })
+    const websearchItem = screen.getByRole('button', { name: 'settings.tool.websearch.title' })
 
     expect(mcpItem).not.toBeNull()
-    expect(mcpItem?.nextElementSibling).toBe(skillsItem)
-    fireEvent.click(skillsItem)
-    expect(navigateMock).toHaveBeenCalledWith({ to: '/settings/skills' })
+    expect(mcpItem?.nextElementSibling).toBe(websearchItem)
+    fireEvent.click(mcpItem as HTMLElement)
+    expect(navigateMock).toHaveBeenCalledWith({ to: '/settings/mcp' })
   })
 
   it('merges quick access into efficiency and places both assistants last', () => {
@@ -120,9 +118,7 @@ describe('SettingsPage', () => {
     expect(screen.getByText('效率')).toBeInTheDocument()
     expect(screen.queryByText('快捷入口')).not.toBeInTheDocument()
 
-    const efficiencyItems = ['频道', '定时任务', '快捷键', '快捷助手', '划词助手'].map((name) =>
-      screen.getByRole('button', { name })
-    )
+    const efficiencyItems = ['快捷键', '快捷助手', '划词助手'].map((name) => screen.getByRole('button', { name }))
     const menuItems = screen.getAllByTestId('menu-item')
     const efficiencyStart = menuItems.indexOf(efficiencyItems[0])
 

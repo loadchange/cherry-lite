@@ -1,5 +1,5 @@
 import type { LanguageModelV3ToolCall } from '@ai-sdk/provider'
-import { KB_SEARCH_TOOL_NAME } from '@shared/ai/builtinTools'
+import { WEB_SEARCH_TOOL_NAME } from '@shared/ai/builtinTools'
 import { InvalidToolInputError, NoSuchToolError } from 'ai'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -16,7 +16,7 @@ const repair = createAiRepair({
 })
 
 const inputErr = new InvalidToolInputError({
-  toolName: KB_SEARCH_TOOL_NAME,
+  toolName: WEB_SEARCH_TOOL_NAME,
   toolInput: '{}',
   cause: new Error('expected query, got q')
 })
@@ -53,7 +53,7 @@ describe('createAiRepair', () => {
   it('asks ai-core generateText with Output.object and returns the structured repair', async () => {
     generateText.mockResolvedValue({ output: { query: 'hello world' } })
 
-    const repaired = await callRepair(makeToolCall(KB_SEARCH_TOOL_NAME, { q: 'hello world' }))
+    const repaired = await callRepair(makeToolCall(WEB_SEARCH_TOOL_NAME, { q: 'hello world' }))
 
     expect(repaired).not.toBeNull()
     expect(JSON.parse(repaired!.input)).toEqual({ query: 'hello world' })
@@ -62,7 +62,7 @@ describe('createAiRepair', () => {
     expect(providerId).toBe('openai')
     expect(providerSettings).toEqual({ apiKey: 'test' })
     expect(params.model).toBe('gpt-4o-mini')
-    expect(params.prompt).toContain(KB_SEARCH_TOOL_NAME)
+    expect(params.prompt).toContain(WEB_SEARCH_TOOL_NAME)
     // Structured-output mode is engaged via output
     expect(params.output).toBeDefined()
   })
@@ -80,7 +80,7 @@ describe('createAiRepair', () => {
     const repaired = await repairWithUsage({
       system: undefined,
       messages: [],
-      toolCall: makeToolCall(KB_SEARCH_TOOL_NAME, { q: 'hello world' }),
+      toolCall: makeToolCall(WEB_SEARCH_TOOL_NAME, { q: 'hello world' }),
       tools: {} as never,
       inputSchema: async () => ({ type: 'object', properties: { query: { type: 'string' } } }) as never,
       error: inputErr
@@ -92,11 +92,11 @@ describe('createAiRepair', () => {
 
   it('returns null when generateText returns no structured output', async () => {
     generateText.mockResolvedValue({ output: undefined, text: 'sorry, cannot fix' })
-    expect(await callRepair(makeToolCall(KB_SEARCH_TOOL_NAME, {}))).toBeNull()
+    expect(await callRepair(makeToolCall(WEB_SEARCH_TOOL_NAME, {}))).toBeNull()
   })
 
   it('returns null on non-input errors (NoSuchTool is the model picking a wrong tool name)', async () => {
-    expect(await callRepair(makeToolCall(KB_SEARCH_TOOL_NAME, { q: 'hi' }), noSuchToolErr)).toBeNull()
+    expect(await callRepair(makeToolCall(WEB_SEARCH_TOOL_NAME, { q: 'hi' }), noSuchToolErr)).toBeNull()
     expect(generateText).not.toHaveBeenCalled()
   })
 
@@ -104,7 +104,7 @@ describe('createAiRepair', () => {
     const result = await repair({
       system: undefined,
       messages: [],
-      toolCall: makeToolCall(KB_SEARCH_TOOL_NAME, { q: 'hi' }),
+      toolCall: makeToolCall(WEB_SEARCH_TOOL_NAME, { q: 'hi' }),
       tools: {} as never,
       inputSchema: async () => {
         throw new Error('unknown tool')

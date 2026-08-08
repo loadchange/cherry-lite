@@ -191,10 +191,10 @@ describe('ModelListGroup', () => {
     expect(toast.error).toHaveBeenCalledWith('settings.models.manage.operation_failed')
   })
 
-  it('shows a localized knowledge base in-use message when deleting a group fails', async () => {
+  it('shows a localized default-model in-use message when deleting a group fails', async () => {
     const error = DataApiErrorFactory.invalidOperation(
       'delete model batch(2 items)',
-      'model is in use by a knowledge base'
+      'model is in use as the default model'
     )
     const onDeleteModels = vi.fn().mockRejectedValue(error)
 
@@ -212,7 +212,7 @@ describe('ModelListGroup', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'settings.models.manage.remove_whole_group' })[0])
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('settings.models.manage.model_in_use_by_knowledge_base')
+      expect(toast.error).toHaveBeenCalledWith('settings.models.manage.sync_apply_default_in_use')
     })
   })
 

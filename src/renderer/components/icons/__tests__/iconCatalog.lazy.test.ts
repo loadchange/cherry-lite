@@ -35,17 +35,6 @@ describe('icon catalog lazy boundary', () => {
   )
 
   it(
-    'miniAppsLogo stays catalog-free',
-    async () => {
-      const { getMiniAppsLogoRef } = await import('@renderer/components/icons/miniAppsLogo')
-      expect(getMiniAppsLogoRef('doubao')?.key).toBe('doubao')
-      expect(providerCatalogEvaluated).not.toHaveBeenCalled()
-      expect(modelCatalogEvaluated).not.toHaveBeenCalled()
-    },
-    PROBE_TIMEOUT
-  )
-
-  it(
     'the @cherrystudio/ui/icons public entry stays catalog-free',
     async () => {
       await import('@cherrystudio/ui/icons')

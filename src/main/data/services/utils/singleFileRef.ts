@@ -3,7 +3,7 @@
  *
  * A *single-file slot* is an association table where one owner row holds at
  * most one file. **"Single-file" is the category name**, opposed to the
- * collection ref tables (`chat_message_file_ref`, `painting_file_ref`) where one
+ * collection ref tables (`chat_message_file_ref`) where one
  * owner may hold many rows discriminated by a `role` column. A slot table is
  * roleless and unique on `sourceId`. The term predates this module — see
  * `defineSingleFileRef` in `@shared/data/types/file`.
@@ -28,7 +28,7 @@
  * mechanism. {@link reconcileLogoSlotTx} with {@link LogoBindInput} /
  * {@link LogoColumns} sits one level above and is logo-specific, because every
  * single-file slot that exists today IS a logo slot (`provider_logo`,
- * `mini_app_logo`; the user avatar deliberately has no slot table). The
+ * the user avatar deliberately has no slot table). The
  * mechanism is named for the category so a future non-logo slot reuses it
  * unchanged; the reconcile layer is named for what it actually resolves — the
  * owner row's `logo_key` column. Do NOT genericize the reconcile layer until a

@@ -1,7 +1,6 @@
 /**
  * Main-local copies of the v1 (legacy) data shapes that main-process code still
- * reads: the v1 → v2 migrators (`ProviderModelMigrator` / mappings) and the
- * legacy `OpenClawService`.
+ * reads: the v1 → v2 migrators (`ProviderModelMigrator` / mappings).
  *
  * v1 is throwaway (see CLAUDE.md "Coexistence Mindset"). These shapes are
  * deliberately NOT shared with the renderer (which keeps its own copy in

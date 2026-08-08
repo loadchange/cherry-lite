@@ -29,7 +29,6 @@ import {
   Languages,
   ListChecks,
   Menu,
-  NotebookPen,
   Save,
   Split,
   ThumbsUp,
@@ -209,14 +208,6 @@ registerCommand('message.saveFile', async ({ actions, mainTextContent, message }
   await actions.saveTextFile?.(fileName, mainTextContent)
 })
 
-registerCommand('message.saveKnowledge', async ({ actions, messageForExport }) => {
-  await actions.saveToKnowledge?.(messageForExport)
-})
-
-registerCommand('message.exportNotes', async ({ actions, messageForExport }) => {
-  await actions.exportToNotes?.(messageForExport)
-})
-
 registerCommand('message.copyPlainText', async ({ actions, messageForExport, t }) => {
   await actions.copyText?.(messageToPlainText(messageForExport), {
     successMessage: t('message.copy.success')
@@ -365,17 +356,6 @@ registerToolbarAction({
 })
 
 registerToolbarAction({
-  id: 'notes',
-  commandId: 'message.exportNotes',
-  label: ({ t }) => t('notes.save'),
-  icon: <NotebookPen size={15} />,
-  availability: toolbarAvailability(
-    'notes',
-    ({ actions, isAssistantMessage }) => isAssistantMessage && !!actions.exportToNotes
-  )
-})
-
-registerToolbarAction({
   id: 'delete',
   renderToolbar: renderDeleteToolbarAction,
   commandId: 'message.delete',
@@ -477,20 +457,6 @@ registerAction({
       label: ({ t }) => t('chat.save.file.title'),
       order: 10,
       availability: ({ actions }) => !!actions.saveTextFile
-    },
-    {
-      id: 'save.notes',
-      commandId: 'message.exportNotes',
-      label: ({ t }) => t('notes.save'),
-      order: 20,
-      availability: ({ actions, isAssistantMessage }) => isAssistantMessage && !!actions.exportToNotes
-    },
-    {
-      id: 'save.knowledge',
-      commandId: 'message.saveKnowledge',
-      label: ({ t }) => t('chat.save.knowledge.title'),
-      order: 30,
-      availability: ({ actions }) => !!actions.saveToKnowledge
     }
   ]
 })

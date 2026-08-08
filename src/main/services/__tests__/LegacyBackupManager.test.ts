@@ -46,14 +46,10 @@ const {
   mockLogger,
   mockDbService,
   mockCacheService,
-  mockChannelManager,
-  mockChannelHold,
   mockJobManager,
   mockJobHold,
   mockAiStreamManager,
   mockAiStreamHold,
-  mockAgentSessionRuntime,
-  mockAgentSessionHold,
   mockWindowManager,
   mockRelaunch,
   mockHashDbFile,
@@ -67,10 +63,8 @@ const {
   mockZipClose,
   MockStreamZipAsync
 } = vi.hoisted(() => {
-  const mockChannelHold = { dispose: vi.fn() }
   const mockJobHold = { dispose: vi.fn() }
   const mockAiStreamHold = { dispose: vi.fn() }
-  const mockAgentSessionHold = { dispose: vi.fn() }
   const mockZipExtract = vi.fn()
   const mockZipClose = vi.fn()
   return {
@@ -82,11 +76,6 @@ const {
     },
     mockDbService: { createSnapshot: vi.fn(), checkpointTruncate: vi.fn() },
     mockCacheService: { flushPersistForBackup: vi.fn() },
-    mockChannelManager: {
-      pause: vi.fn(() => mockChannelHold),
-      drainInFlight: vi.fn(async (): Promise<{ stragglerIds: string[] }> => ({ stragglerIds: [] }))
-    },
-    mockChannelHold,
     mockJobManager: {
       pause: vi.fn(() => mockJobHold),
       drainInFlight: vi.fn(async () => ({ stragglerIds: [], startupRecoveryPending: false }))
@@ -98,12 +87,6 @@ const {
       hasLiveStreams: vi.fn(() => false)
     },
     mockAiStreamHold,
-    mockAgentSessionRuntime: {
-      pause: vi.fn(() => mockAgentSessionHold),
-      drainInFlight: vi.fn(async (): Promise<{ stragglerIds: string[] }> => ({ stragglerIds: [] })),
-      hasBusySessions: vi.fn(() => false)
-    },
-    mockAgentSessionHold,
     mockWindowManager: { broadcastToType: vi.fn(), getWindowsByType: vi.fn(() => []) },
     mockRelaunch: vi.fn(),
     mockHashDbFile: vi.fn(),
@@ -250,17 +233,11 @@ vi.mock('@application', () => ({
       if (name === 'CacheService') {
         return mockCacheService
       }
-      if (name === 'ChannelManager') {
-        return mockChannelManager
-      }
       if (name === 'JobManager') {
         return mockJobManager
       }
       if (name === 'AiStreamManager') {
         return mockAiStreamManager
-      }
-      if (name === 'AgentSessionRuntimeService') {
-        return mockAgentSessionRuntime
       }
       throw new Error(`[MockApplication] Unknown service: ${name}`)
     }),
@@ -458,15 +435,8 @@ describe('BackupManager direct v2 data compatibility', () => {
     const result = await backupManager.backup({} as Electron.IpcMainInvokeEvent, 'backup.zip', '/backups')
 
     expect(result).toBe('/backups/backup.zip')
-    expect(mockChannelManager.pause).toHaveBeenCalledOnce()
-    expect(mockChannelManager.drainInFlight).toHaveBeenCalledWith({ timeoutMs: 30_000 })
-    expect(mockChannelManager.drainInFlight.mock.invocationCallOrder[0]).toBeLessThan(
-      mockAiStreamManager.pause.mock.invocationCallOrder[0]
-    )
     expect(mockAiStreamManager.pause).toHaveBeenCalledOnce()
     expect(mockAiStreamManager.drainInFlight).toHaveBeenCalledWith({ timeoutMs: 30_000 })
-    expect(mockAgentSessionRuntime.pause).toHaveBeenCalledOnce()
-    expect(mockAgentSessionRuntime.drainInFlight).toHaveBeenCalledWith({ timeoutMs: 30_000 })
     expect(mockJobManager.pause).toHaveBeenCalledOnce()
     expect(mockJobManager.drainInFlight).toHaveBeenCalledWith({ timeoutMs: 30_000 })
     expect(mockDbService.checkpointTruncate).toHaveBeenCalledTimes(2)
@@ -498,9 +468,7 @@ describe('BackupManager direct v2 data compatibility', () => {
       '/mock/temp/backup/create-operation-id/cherrystudio.sqlite'
     )
     expect(archive.directory).toHaveBeenCalledWith('/mock/temp/backup/create-operation-id', false)
-    expect(mockChannelHold.dispose).toHaveBeenCalledOnce()
     expect(mockAiStreamHold.dispose).toHaveBeenCalledOnce()
-    expect(mockAgentSessionHold.dispose).toHaveBeenCalledOnce()
     expect(mockJobHold.dispose).toHaveBeenCalledOnce()
   })
 
@@ -627,10 +595,8 @@ describe('BackupManager direct v2 data compatibility', () => {
     expect(mockJobHold.dispose).toHaveBeenCalledOnce()
   })
 
-  it.each([
-    ['AI stream', mockAiStreamManager.hasLiveStreams],
-    ['agent session', mockAgentSessionRuntime.hasBusySessions]
-  ])('fails immediately when an %s can still write data', async (_, markBusy) => {
+  it('fails immediately when an AI stream can still write data', async () => {
+    const markBusy = mockAiStreamManager.hasLiveStreams
     markBusy.mockReturnValue(true)
     mockAiStreamManager.drainInFlight.mockResolvedValue({ stragglerIds: ['should-not-wait'] })
 
@@ -639,9 +605,7 @@ describe('BackupManager direct v2 data compatibility', () => {
         BACKUP_ACTIVE_WRITERS_ERROR_CODE
       )
 
-      expect(mockChannelManager.pause).not.toHaveBeenCalled()
       expect(mockAiStreamManager.drainInFlight).not.toHaveBeenCalled()
-      expect(mockAgentSessionRuntime.drainInFlight).not.toHaveBeenCalled()
       expect(fs.ensureDir).not.toHaveBeenCalled()
     } finally {
       markBusy.mockReturnValue(false)
@@ -657,23 +621,8 @@ describe('BackupManager direct v2 data compatibility', () => {
     )
 
     expect(mockDbService.checkpointTruncate).not.toHaveBeenCalled()
-    expect(mockChannelHold.dispose).toHaveBeenCalledOnce()
     expect(mockAiStreamHold.dispose).toHaveBeenCalledOnce()
-    expect(mockAgentSessionHold.dispose).toHaveBeenCalledOnce()
     expect(mockJobHold.dispose).toHaveBeenCalledOnce()
-  })
-
-  it('does not pause AI writers until flushed channel messages finish admission', async () => {
-    mockChannelManager.drainInFlight.mockResolvedValueOnce({ stragglerIds: ['channel-admission-1'] })
-
-    await expect(backupManager.backup({} as Electron.IpcMainInvokeEvent, 'backup.zip', '/backups')).rejects.toThrow(
-      'Background data writes did not quiesce in time'
-    )
-
-    expect(mockAiStreamManager.pause).not.toHaveBeenCalled()
-    expect(mockAgentSessionRuntime.pause).not.toHaveBeenCalled()
-    expect(mockJobManager.pause).not.toHaveBeenCalled()
-    expect(mockChannelHold.dispose).toHaveBeenCalledOnce()
   })
 
   const arrangeDirectRestore = (restoreMetadata = metadata) => {

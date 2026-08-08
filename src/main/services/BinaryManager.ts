@@ -23,7 +23,6 @@ import {
   TOOL_KEY_RE,
   validateBinaryToolDefinition
 } from '@shared/data/presets/binaryTools'
-import { CODE_CLI_TOOL_PRESETS } from '@shared/data/presets/codeCliTools'
 import type {
   BinaryApplication,
   BinaryAvailability,
@@ -176,20 +175,16 @@ type FixedToolDefinition = { name: string; tool: string }
 type MiseInstallEntry = { version?: string; active?: boolean; install_path?: string }
 
 // Code-owned catalog of the fixed tools Cherry ships: every Dependencies preset
-// executable and every Code CLI executable mapped to its canonical mise recipe.
-// Derived from the two preset sources so their names and recipes stay the single
-// source of truth. Fixed definitions carry no requestedVersion — a version pin is
-// a per-install / runtime fact, never part of the canonical identity.
+// executable mapped to its canonical mise recipe. Derived from the preset source
+// so names and recipes stay the single source of truth. Fixed definitions carry
+// no requestedVersion — a version pin is a per-install / runtime fact, never part
+// of the canonical identity.
 const normalizeToolIdentity = (tool: string): string => (tool.startsWith('core:') ? tool.slice('core:'.length) : tool)
 
 const FIXED_CATALOG: ReadonlyMap<string, FixedToolDefinition> = new Map<string, FixedToolDefinition>([
   ...PRESETS_BINARY_TOOLS.map((preset): [string, FixedToolDefinition] => [
     preset.name,
     { name: preset.name, tool: preset.tool }
-  ]),
-  ...CODE_CLI_TOOL_PRESETS.map((preset): [string, FixedToolDefinition] => [
-    preset.executable,
-    { name: preset.executable, tool: preset.miseTool }
   ])
 ])
 // Re-exported for main-process callers and tests.
@@ -1628,7 +1623,6 @@ export class BinaryManager extends BaseService {
     const nameForSpec = (spec: string): string =>
       definitions.find((entry) => entry.tool === spec)?.name ??
       PRESETS_BINARY_TOOLS.find((preset) => preset.tool === spec)?.name ??
-      CODE_CLI_TOOL_PRESETS.find((preset) => preset.miseTool === spec)?.executable ??
       spec
 
     const dependents = new Set<string>()

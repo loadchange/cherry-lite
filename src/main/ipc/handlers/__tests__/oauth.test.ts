@@ -13,51 +13,34 @@ const runtimeService = {
   startDeepLinkFlow: vi.fn(() => Promise.resolve({ authUrl: 'https://open.cherryin.ai/auth', state: 'st' }))
 }
 
-const codeCliService = {
-  checkClaudeLogin: vi.fn(() => Promise.resolve(true))
-}
-
 beforeEach(() => {
   vi.clearAllMocks()
-  appGetMock.mockImplementation((name: string) => (name === 'CodeCliService' ? codeCliService : runtimeService))
+  appGetMock.mockImplementation(() => runtimeService)
 })
 
 const ctx = { senderId: 'w1' as const }
-const provider = { providerId: 'codex' }
+const provider = { providerId: 'cherryin' }
 
 describe('oauthHandlers', () => {
   it('dispatches sign_in to OAuthRuntimeService with the provider id', async () => {
-    await expect(oauthHandlers['oauth.sign_in'](provider, ctx)).resolves.toEqual({ accountId: 'codex-account' })
+    await expect(oauthHandlers['oauth.sign_in'](provider, ctx)).resolves.toEqual({ accountId: 'cherryin-account' })
     expect(appGetMock).toHaveBeenCalledWith('OAuthRuntimeService')
-    expect(runtimeService.signIn).toHaveBeenCalledWith('codex')
+    expect(runtimeService.signIn).toHaveBeenCalledWith('cherryin')
   })
 
   it('dispatches has_token to OAuthRuntimeService', async () => {
     await expect(oauthHandlers['oauth.has_token'](provider, ctx)).resolves.toBe(true)
-    expect(runtimeService.hasToken).toHaveBeenCalledWith('codex')
+    expect(runtimeService.hasToken).toHaveBeenCalledWith('cherryin')
   })
 
   it('dispatches get_account to OAuthRuntimeService', async () => {
     await expect(oauthHandlers['oauth.get_account'](provider, ctx)).resolves.toEqual({ accountId: 'acc-1' })
-    expect(runtimeService.getAccount).toHaveBeenCalledWith('codex')
+    expect(runtimeService.getAccount).toHaveBeenCalledWith('cherryin')
   })
 
   it('dispatches logout to OAuthRuntimeService', async () => {
     await oauthHandlers['oauth.logout'](provider, ctx)
-    expect(runtimeService.logout).toHaveBeenCalledWith('codex')
-  })
-
-  it('dispatches check_external_login to CodeCliService', async () => {
-    await expect(oauthHandlers['oauth.check_external_login']({ providerId: 'claude-code' }, ctx)).resolves.toBe(true)
-    expect(appGetMock).toHaveBeenCalledWith('CodeCliService')
-    expect(codeCliService.checkClaudeLogin).toHaveBeenCalledTimes(1)
-  })
-
-  it('rejects check_external_login for a non-external-cli provider', () => {
-    expect(() => oauthHandlers['oauth.check_external_login']({ providerId: 'codex' }, ctx)).toThrow(
-      /Unsupported external-cli/
-    )
-    expect(codeCliService.checkClaudeLogin).not.toHaveBeenCalled()
+    expect(runtimeService.logout).toHaveBeenCalledWith('cherryin')
   })
 
   it('forwards the initiator window id, provider, and hosts to startDeepLinkFlow', async () => {

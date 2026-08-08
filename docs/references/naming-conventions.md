@@ -42,7 +42,7 @@ The 90% case. See later sections for full rules and edge cases.
 | Business React component directory | `PascalCase` | `CodeEditor/` |
 | Bucket directory (categorical container) | camelCase, **plural** noun | `services/`, `utils/`, `hooks/` |
 | Business / domain module directory | `camelCase` | `apiServer/`, `fileProcessing/` |
-| Feature module directory (large, multi-file domain) | `features/<camelCase>/` | `features/apiGateway/` |
+| Feature module directory (large, multi-file domain) | `features/<camelCase>/` | `features/fileProcessing/` |
 | `packages/ui/` directory | `kebab-case` | `primitives/`, `button-group/` |
 | TanStack route file under `src/renderer/routes/` | `kebab-case.tsx` | `api-server.tsx`, `quick-assistant.tsx` |
 
@@ -154,7 +154,6 @@ Directory naming splits into category rules (§4.1–§4.3, §4.5–§4.7, §4.1
 ```
 packages/ai-sdk-provider/      ✅
 packages/mcp-trace/            ✅
-packages/extension-table-plus/ ✅
 packages/somePkg/              ❌ (camelCase not allowed)
 packages/SomePkg/              ❌ (PascalCase not allowed)
 ```
@@ -275,15 +274,16 @@ Do not pre-create a `features/<domain>/` for an anticipated module.
 `features/` holds high-cohesion domain code; the sibling type-buckets (`services/` + `utils/` in main; `components/` + `hooks/` + `services/` + `utils/` in the renderer) hold everything below that bar — single-file pieces and `services/<topic>/` capabilities.
 A large, multi-file domain left scattered across the `services/` and `utils/` buckets instead of gathered into one `features/<domain>/` is the §6.7 scattered/impure anti-pattern.
 
-**Canonical example** — `src/main/features/apiGateway/`:
+**Canonical example** — `src/main/features/fileProcessing/`:
 
 ```
-features/apiGateway/
-├── ApiGatewayService.ts   # the domain service (§5.2)
-├── adapters/              # domain-specific sub-modules
-├── middleware/
-├── routes/
-└── utils/                 # domain-local utils, not the global src/main/utils/ bucket
+features/fileProcessing/
+├── FileProcessingService.ts  # the domain service (§5.2)
+├── config/                   # domain-specific sub-modules
+├── persistence/
+├── processors/
+├── tasks/
+└── utils/                    # domain-local utils, not the global src/main/utils/ bucket
 ```
 
 For the main process, [Main Process Architecture](./main-process-architecture.md) covers `features/` vs the type-buckets (`services/` / `utils/`) and the dependency direction; for the renderer, [Renderer Architecture](./renderer-architecture.md) places `features/` within the full layering (windows → pages → features → components → packages/ui), with per-directory responsibilities and dependency rules.
@@ -477,7 +477,7 @@ Naming a new DIRECTORY
 ├─ Under packages/ui/?            → kebab-case      (primitives, button-group)
 ├─ Is itself a React component?   → PascalCase      (CodeEditor)
 ├─ Bucket / categorical container? → camelCase, plural noun  (services, utils)
-├─ Large/complex multi-file domain? → features/<camelCase>/  (apiGateway, §4.10)
+├─ Large/complex multi-file domain? → features/<camelCase>/  (fileProcessing, §4.10)
 ├─ Business domain module?        → camelCase       (apiServer, fileProcessing)
 └─ Unsure singular vs plural?     → see §4.9
 ```

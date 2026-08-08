@@ -17,7 +17,6 @@ export const appRequestSchemas = {
       isPackaged: z.boolean(),
       appPath: z.string(),
       homePath: z.string(),
-      notesPath: z.string(),
       configPath: z.string(),
       appDataPath: z.string(),
       resourcesPath: z.string(),

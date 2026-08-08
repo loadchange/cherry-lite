@@ -51,8 +51,6 @@ function createTopicActionFixture(overrides: Partial<TopicActionContext> = {}): 
     onExportWord: vi.fn(),
     onExportYuque: vi.fn(),
     onPinTopic: vi.fn(),
-    onSaveToKnowledge: vi.fn(),
-    onSaveToNotes: vi.fn(),
     onStartRename: vi.fn(),
     t,
     topic,
@@ -62,7 +60,7 @@ function createTopicActionFixture(overrides: Partial<TopicActionContext> = {}): 
 }
 
 describe('topic context menu actions', () => {
-  it('keeps Save to Notes independent from export and copy preferences', () => {
+  it('gates copy and export children by the export menu preferences', () => {
     const actions = resolveTopicMenuActions(
       createTopicActionFixture({
         exportMenuOptions: {
@@ -72,8 +70,6 @@ describe('topic context menu actions', () => {
         }
       })
     )
-
-    expect(actions.map((action) => action.id)).toContain('topic.save-notes')
 
     const copyAction = actions.find((action) => action.id === 'topic.copy')
     expect(copyAction?.children.map((action) => action.id)).toEqual(['topic.copy.markdown'])

@@ -228,10 +228,10 @@ describe('ModelListItem', () => {
     })
   })
 
-  it('shows a localized knowledge base in-use message when deleting a model fails', async () => {
+  it('shows a localized default-model in-use message when deleting a model fails', async () => {
     const error = DataApiErrorFactory.invalidOperation(
       'delete model openai/alpha',
-      'model is in use by a knowledge base'
+      'model is in use as the default model'
     )
     const onDelete = vi.fn().mockRejectedValue(error)
 
@@ -254,7 +254,7 @@ describe('ModelListItem', () => {
     fireEvent.click(screen.getByLabelText('settings.models.manage.remove_model'))
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith('settings.models.manage.model_in_use_by_knowledge_base')
+      expect(toast.error).toHaveBeenCalledWith('settings.models.manage.sync_apply_default_in_use')
     })
   })
 })

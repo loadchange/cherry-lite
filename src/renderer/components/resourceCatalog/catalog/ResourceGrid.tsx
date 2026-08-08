@@ -11,10 +11,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
   EmptyState,
   Input,
   Scrollbar,
@@ -31,19 +27,7 @@ import { RESOURCE_TYPE_META } from '@renderer/utils/resourceCatalog'
 import { cn } from '@renderer/utils/style'
 import type { Group } from '@shared/data/types/group'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  FolderSearch,
-  Import,
-  Library,
-  Pencil,
-  Plus,
-  Search,
-  Tag,
-  Trash2
-} from 'lucide-react'
+import { ChevronLeft, ChevronRight, Import, Library, Pencil, Plus, Tag, Trash2 } from 'lucide-react'
 import type { FC, ReactNode, RefObject } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -70,8 +54,6 @@ interface Props {
   onImportAssistant: () => void
   /** Open the community assistant library dialog. When omitted the add menu hides the library item. */
   onOpenAssistantLibrary?: () => void
-  onOpenSkillMarketplace: () => void
-  onOpenSystemSkills?: () => void
   groups: GroupItem[]
   activeGroupId: string | null
   onGroupFilter: (groupId: string | null) => void
@@ -152,44 +134,6 @@ function AssistantAddActions({ onNew, onImport, onOpenLibrary }: AssistantAddAct
   )
 }
 
-interface SkillAddActionsProps {
-  onSearchMarketplace: () => void
-  onSearchSystem?: () => void
-  onImportLocal: () => void
-}
-
-function SkillAddActions({ onSearchMarketplace, onSearchSystem, onImportLocal }: SkillAddActionsProps) {
-  const { t } = useTranslation()
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="default" size="sm" className="shrink-0">
-          <Plus size={12} className="lucide-custom" />
-          <span>{t('library.skill_add.add')}</span>
-          <ChevronDown size={12} className="text-primary-foreground" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-40">
-        <DropdownMenuItem onSelect={onSearchMarketplace} className="gap-2">
-          <Search size={13} />
-          <span>{t('library.skill_add.online_search')}</span>
-        </DropdownMenuItem>
-        {onSearchSystem ? (
-          <DropdownMenuItem onSelect={onSearchSystem} className="gap-2">
-            <FolderSearch size={13} />
-            <span>{t('library.skill_add.system_search')}</span>
-          </DropdownMenuItem>
-        ) : null}
-        <DropdownMenuItem onSelect={onImportLocal} className="gap-2">
-          <Import size={13} />
-          <span>{t('library.skill_add.local_import')}</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
-}
-
 export const ResourceGrid: FC<Props> = ({
   resources,
   isLoading = false,
@@ -203,8 +147,6 @@ export const ResourceGrid: FC<Props> = ({
   onCreate,
   onImportAssistant,
   onOpenAssistantLibrary,
-  onOpenSkillMarketplace,
-  onOpenSystemSkills,
   groups,
   activeGroupId,
   onGroupFilter,
@@ -321,12 +263,6 @@ export const ResourceGrid: FC<Props> = ({
         onNew={() => onCreate('assistant')}
         onImport={onImportAssistant}
         onOpenLibrary={onOpenAssistantLibrary}
-      />
-    ) : activeResourceType === 'skill' ? (
-      <SkillAddActions
-        onSearchMarketplace={onOpenSkillMarketplace}
-        onSearchSystem={onOpenSystemSkills}
-        onImportLocal={() => onCreate('skill')}
       />
     ) : (
       <Button
@@ -504,7 +440,7 @@ export const ResourceGrid: FC<Props> = ({
 
       <Scrollbar ref={scrollRef} className={cn('min-h-0 flex-1', isSettings ? 'pt-4 pb-3' : 'px-5 py-4')}>
         {isLoading ? (
-          <ResourceGridLoadingState columnCount={columnCount} resourceType={activeResourceType} />
+          <ResourceGridLoadingState columnCount={columnCount} />
         ) : resources.length === 0 ? (
           <EmptyState
             preset={search ? 'no-result' : 'no-resource'}
@@ -530,7 +466,7 @@ export const ResourceGrid: FC<Props> = ({
   )
 }
 
-function ResourceGridLoadingState({ columnCount, resourceType }: { columnCount: number; resourceType: ResourceType }) {
+function ResourceGridLoadingState({ columnCount }: { columnCount: number }) {
   const count = Math.max(columnCount, 1) * 4
 
   return (
@@ -539,12 +475,7 @@ function ResourceGridLoadingState({ columnCount, resourceType }: { columnCount: 
       data-testid="resource-grid-loading"
       style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
       {Array.from({ length: count }, (_, index) => (
-        <div
-          key={index}
-          className="rounded-lg border border-border-subtle bg-card p-3.5"
-          style={
-            resourceType === 'skill' ? { backgroundColor: 'var(--settings-group-background, var(--card))' } : undefined
-          }>
+        <div key={index} className="rounded-lg border border-border-subtle bg-card p-3.5">
           <div className="flex items-center gap-3">
             <Skeleton className="size-10 rounded-lg" />
             <div className="min-w-0 flex-1 space-y-2">

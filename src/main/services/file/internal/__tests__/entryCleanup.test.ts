@@ -4,10 +4,10 @@ import path from 'node:path'
 
 import { application } from '@application'
 import { fileEntryTable } from '@data/db/schemas/file'
-import { chatMessageFileRefTable, paintingFileRefTable } from '@data/db/schemas/fileRelations'
+import { chatMessageFileRefTable, providerLogoFileRefTable } from '@data/db/schemas/fileRelations'
 import { messageTable } from '@data/db/schemas/message'
-import { paintingTable } from '@data/db/schemas/painting'
 import { topicTable } from '@data/db/schemas/topic'
+import { userProviderTable } from '@data/db/schemas/userProvider'
 import { fileEntryService } from '@data/services/FileEntryService'
 import { fileRefService } from '@data/services/FileRefService'
 import { loggerService } from '@logger'
@@ -100,21 +100,12 @@ describe('entryCleanup', () => {
 
   async function seedRef(fileEntryId: FileEntryId): Promise<void> {
     const now = Date.now()
-    const paintingId = '11111111-1111-4111-8111-' + fileEntryId.slice(-12)
-    await dbh.db.insert(paintingTable).values({
-      id: paintingId,
-      providerId: 'provider',
-      modelId: null,
-      prompt: 'prompt',
-      orderKey: paintingId,
-      createdAt: now,
-      updatedAt: now
-    })
-    await dbh.db.insert(paintingFileRefTable).values({
+    const providerId = 'provider-' + fileEntryId.slice(-12)
+    await dbh.db.insert(userProviderTable).values({ providerId, name: 'P', orderKey: providerId })
+    await dbh.db.insert(providerLogoFileRefTable).values({
       id: '22222222-2222-4222-8222-' + fileEntryId.slice(-12),
       fileEntryId,
-      sourceId: paintingId,
-      role: 'output',
+      sourceId: providerId,
       createdAt: now,
       updatedAt: now
     })
@@ -324,7 +315,7 @@ describe('entryCleanup', () => {
     // Regression for the removed count-fraction abort (spec §5.3): an earlier
     // revision refused to reclaim when candidates were ≥20 and >50% of rows.
     // That false-positived on the primary legitimate case — a user deleting many
-    // chats/paintings whose attachments then genuinely should be reclaimed.
+    // chats whose attachments then genuinely should be reclaimed.
     for (let i = 0; i < 25; i++) await seedInternal(nthId(100 + i), 'delete_when_unreferenced')
     const report = await runEntryCleanup(makeDeps())
     expect(report.outcome).toBe('completed')

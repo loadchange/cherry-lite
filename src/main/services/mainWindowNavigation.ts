@@ -13,7 +13,6 @@ export const ALLOWED_ROUTE_PREFIXES = [
   '/settings',
   '/agents',
   '/knowledge',
-  '/paintings',
   '/translate',
   '/files',
   '/notes',

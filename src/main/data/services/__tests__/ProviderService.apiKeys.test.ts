@@ -7,7 +7,6 @@ import { providerService } from '@data/services/ProviderService'
 import { generateOrderKeyBetween } from '@data/services/utils/orderKey'
 import { ErrorCode } from '@shared/data/api/errors'
 import { AddProviderApiKeySchema, ReplaceProviderApiKeysSchema } from '@shared/data/api/schemas/providers'
-import { CHERRYAI_PROVIDER_ID } from '@shared/data/presets/cherryai'
 import { setupTestDatabase } from '@test-helpers/db'
 import { MockMainCacheServiceUtils } from '@test-mocks/main/CacheService'
 import { eq } from 'drizzle-orm'
@@ -54,24 +53,6 @@ describe('ProviderService API keys', () => {
 
   async function readApiKeys() {
     const [row] = await dbh.db.select().from(userProviderTable).where(eq(userProviderTable.providerId, 'openai'))
-    return row?.apiKeys ?? []
-  }
-
-  async function seedManagedCherryAiProvider() {
-    await dbh.db.insert(userProviderTable).values({
-      providerId: CHERRYAI_PROVIDER_ID,
-      name: 'CherryAI',
-      orderKey: generateOrderKeyBetween(null, null),
-      apiKeys: [{ id: 'managed-key', key: 'sk-managed', label: 'Managed', isEnabled: true }],
-      isEnabled: true
-    })
-  }
-
-  async function readManagedApiKeys() {
-    const [row] = await dbh.db
-      .select()
-      .from(userProviderTable)
-      .where(eq(userProviderTable.providerId, CHERRYAI_PROVIDER_ID))
     return row?.apiKeys ?? []
   }
 
@@ -321,29 +302,6 @@ describe('ProviderService API keys', () => {
       err = e
     }
     expect(err).toMatchObject({ code: ErrorCode.NOT_FOUND })
-  })
-
-  it('rejects API key mutations for the managed CherryAI provider', async () => {
-    await seedManagedCherryAiProvider()
-
-    expect(captureError(() => providerService.addApiKey(CHERRYAI_PROVIDER_ID, 'sk-new'))).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION
-    })
-    expect(captureError(() => providerService.replaceApiKeys(CHERRYAI_PROVIDER_ID, []))).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION
-    })
-    expect(
-      captureError(() => providerService.updateApiKey(CHERRYAI_PROVIDER_ID, 'managed-key', { label: 'Updated' }))
-    ).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION
-    })
-    expect(captureError(() => providerService.deleteApiKey(CHERRYAI_PROVIDER_ID, 'managed-key'))).toMatchObject({
-      code: ErrorCode.INVALID_OPERATION
-    })
-
-    expect(await readManagedApiKeys()).toEqual([
-      { id: 'managed-key', key: 'sk-managed', label: 'Managed', isEnabled: true }
-    ])
   })
 
   it('rotates enabled API keys while returning the exact safe identity selected for each request', async () => {

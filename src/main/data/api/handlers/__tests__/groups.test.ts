@@ -59,17 +59,6 @@ describe('groupHandlers', () => {
 
       expect(listByEntityTypeMock).not.toHaveBeenCalled()
     })
-
-    it('should accept knowledge entityType in GET query params', async () => {
-      listByEntityTypeMock.mockResolvedValueOnce([{ id: 'g-knowledge', entityType: 'knowledge', name: 'Knowledge' }])
-
-      const result = await groupHandlers['/groups'].GET({
-        query: { entityType: 'knowledge' }
-      } as never)
-
-      expect(listByEntityTypeMock).toHaveBeenCalledWith('knowledge')
-      expect(result).toEqual([{ id: 'g-knowledge', entityType: 'knowledge', name: 'Knowledge' }])
-    })
   })
 
   describe('/groups POST', () => {
@@ -103,18 +92,6 @@ describe('groupHandlers', () => {
       ).rejects.toHaveProperty('name', 'ZodError')
 
       expect(createMock).not.toHaveBeenCalled()
-    })
-
-    it('should accept knowledge entityType in POST body', async () => {
-      createMock.mockResolvedValueOnce({ id: 'g-knowledge', entityType: 'knowledge', name: 'Knowledge' })
-
-      await expect(
-        groupHandlers['/groups'].POST({
-          body: { entityType: 'knowledge', name: 'Knowledge' }
-        } as never)
-      ).resolves.toMatchObject({ id: 'g-knowledge', entityType: 'knowledge' })
-
-      expect(createMock).toHaveBeenCalledWith({ entityType: 'knowledge', name: 'Knowledge' })
     })
   })
 

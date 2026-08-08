@@ -11,7 +11,7 @@ const logger = loggerService.withContext('latestReconciler')
  *   whatever lets `isSettled`/`apply` decide and act.
  */
 export interface LatestReconcilerOptions<T> {
-  /** Identifies the reconciler in logs. Use the owning concern, e.g. `'apiGateway'`. */
+  /** Identifies the reconciler in logs. Use the owning concern, e.g. `'proxy'`. */
   name: string
   /**
    * Read the latest intent/world snapshot. Called once at the start of every loop pass — it is
@@ -109,7 +109,7 @@ export interface LatestReconciler {
  * @example Self-held by a service, triggered by a preference subscription (push model):
  * ```ts
  * this.reconciler = createLatestReconciler({
- *   name: 'apiGateway',
+ *   name: 'analytics',
  *   getSnapshot: () => ({ desired: this.desiredEnabled, actual: this.isActivated }),
  *   isSettled: ({ desired, actual }) => desired === actual,
  *   apply: ({ desired }) => (desired ? this.activate() : this.deactivate())

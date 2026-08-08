@@ -4,25 +4,17 @@ import {
   CONTENT_SEARCH_MAX_LIMIT_PER_SOURCE,
   ContentSearchQuerySchema,
   contentSearchSourceTypes,
-  type SessionMessageContentSearchItem,
   type TopicMessageContentSearchItem
 } from '@shared/data/api/schemas/search'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { topicSearchMock, sessionSearchMock } = vi.hoisted(() => ({
-  topicSearchMock: vi.fn(),
-  sessionSearchMock: vi.fn()
+const { topicSearchMock } = vi.hoisted(() => ({
+  topicSearchMock: vi.fn()
 }))
 
 vi.mock('@data/services/MessageService', () => ({
   messageService: {
     search: topicSearchMock
-  }
-}))
-
-vi.mock('@data/services/AgentSessionMessageService', () => ({
-  agentSessionMessageService: {
-    search: sessionSearchMock
   }
 }))
 
@@ -39,17 +31,6 @@ const topicItem: TopicMessageContentSearchItem = {
   createdAt: '2026-05-03T00:00:00.000Z'
 }
 
-const sessionItem: SessionMessageContentSearchItem = {
-  messageId: 'session-message-1',
-  sessionId: 'session-1',
-  sessionName: 'Session One',
-  agentId: 'agent-1',
-  agentName: 'Agent One',
-  role: 'assistant',
-  snippet: 'needle session',
-  createdAt: '2026-05-04T00:00:00.000Z'
-}
-
 describe('ContentSearchService', () => {
   let service: ContentSearchService
 
@@ -64,7 +45,6 @@ describe('ContentSearchService', () => {
 
   it('runs every source by default and returns grouped cursors', async () => {
     topicSearchMock.mockReturnValueOnce({ items: [topicItem], nextCursor: '200:topic-message-1' })
-    sessionSearchMock.mockReturnValueOnce({ items: [sessionItem], nextCursor: '300:session-message-1' })
 
     const result = service.search(
       ContentSearchQuerySchema.parse({
@@ -80,55 +60,43 @@ describe('ContentSearchService', () => {
       limit: 2,
       createdAtFrom: '2026-05-01T00:00:00.000Z'
     })
-    expect(sessionSearchMock).toHaveBeenCalledWith({
-      q: 'needle',
-      cursor: undefined,
-      limit: 2,
-      createdAtFrom: '2026-05-01T00:00:00.000Z'
-    })
     expect(result).toEqual({
       query: 'needle',
-      groups: [
-        { sourceType: 'topic-message', items: [topicItem], nextCursor: '200:topic-message-1' },
-        { sourceType: 'session-message', items: [sessionItem], nextCursor: '300:session-message-1' }
-      ]
+      groups: [{ sourceType: 'topic-message', items: [topicItem], nextCursor: '200:topic-message-1' }]
     })
   })
 
-  it('runs only the requested source for single-group load more', async () => {
-    sessionSearchMock.mockReturnValueOnce({ items: [sessionItem], nextCursor: undefined })
+  it('runs the explicitly requested source with its cursor and filter for load more', async () => {
+    topicSearchMock.mockReturnValueOnce({ items: [topicItem], nextCursor: undefined })
 
     const result = service.search(
       ContentSearchQuerySchema.parse({
         q: 'needle',
-        sources: ['session-message'],
-        cursors: { 'session-message': '300:session-message-1' },
-        filters: { 'session-message': { sessionId: 'session-1' } },
+        sources: ['topic-message'],
+        cursors: { 'topic-message': '200:topic-message-1' },
+        filters: { 'topic-message': { topicId: 'topic-1' } },
         limitPerSource: 1
       })
     )
 
-    expect(topicSearchMock).not.toHaveBeenCalled()
-    expect(sessionSearchMock).toHaveBeenCalledWith({
+    expect(topicSearchMock).toHaveBeenCalledWith({
       q: 'needle',
-      sessionId: 'session-1',
-      cursor: '300:session-message-1',
+      topicId: 'topic-1',
+      cursor: '200:topic-message-1',
       limit: 1,
       createdAtFrom: undefined
     })
-    expect(result.groups).toEqual([{ sourceType: 'session-message', items: [sessionItem], nextCursor: undefined }])
+    expect(result.groups).toEqual([{ sourceType: 'topic-message', items: [topicItem], nextCursor: undefined }])
   })
 
-  it('passes only the matching source filter to each adapter', async () => {
+  it('passes the matching source filter to the adapter', async () => {
     topicSearchMock.mockReturnValueOnce({ items: [topicItem], nextCursor: undefined })
-    sessionSearchMock.mockReturnValueOnce({ items: [sessionItem], nextCursor: undefined })
 
     service.search(
       ContentSearchQuerySchema.parse({
         q: 'needle',
         filters: {
-          'topic-message': { topicId: 'topic-1' },
-          'session-message': { sessionId: 'session-1' }
+          'topic-message': { topicId: 'topic-1' }
         }
       })
     )
@@ -140,18 +108,10 @@ describe('ContentSearchService', () => {
       limit: CONTENT_SEARCH_DEFAULT_LIMIT_PER_SOURCE,
       createdAtFrom: undefined
     })
-    expect(sessionSearchMock).toHaveBeenCalledWith({
-      q: 'needle',
-      sessionId: 'session-1',
-      cursor: undefined,
-      limit: CONTENT_SEARCH_DEFAULT_LIMIT_PER_SOURCE,
-      createdAtFrom: undefined
-    })
   })
 
-  it('passes only the matching per-source cursor to each adapter', async () => {
+  it('passes the matching per-source cursor to the adapter', async () => {
     topicSearchMock.mockReturnValueOnce({ items: [topicItem], nextCursor: undefined })
-    sessionSearchMock.mockReturnValueOnce({ items: [sessionItem], nextCursor: undefined })
 
     service.search(
       ContentSearchQuerySchema.parse({
@@ -163,12 +123,6 @@ describe('ContentSearchService', () => {
     expect(topicSearchMock).toHaveBeenCalledWith({
       q: 'needle',
       cursor: '200:topic-message-1',
-      limit: CONTENT_SEARCH_DEFAULT_LIMIT_PER_SOURCE,
-      createdAtFrom: undefined
-    })
-    expect(sessionSearchMock).toHaveBeenCalledWith({
-      q: 'needle',
-      cursor: undefined,
       limit: CONTENT_SEARCH_DEFAULT_LIMIT_PER_SOURCE,
       createdAtFrom: undefined
     })
@@ -223,7 +177,6 @@ describe('ContentSearchService', () => {
     topicSearchMock.mockImplementationOnce(() => {
       throw new Error('database is busy')
     })
-    sessionSearchMock.mockReturnValueOnce({ items: [sessionItem], nextCursor: undefined })
 
     let err: unknown
     try {
@@ -239,10 +192,5 @@ describe('ContentSearchService', () => {
       code: 'INTERNAL_SERVER_ERROR',
       message: expect.stringContaining('content search source topic-message')
     })
-
-    // Sync federated search fails fast: the first failing source (topic-message) short-circuits
-    // the source loop, so later sources are not attempted — the query still fails as a whole
-    // with source context, without wasting DB work on the remaining sources.
-    expect(sessionSearchMock).not.toHaveBeenCalled()
   })
 })

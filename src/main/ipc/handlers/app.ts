@@ -17,7 +17,6 @@ export const appHandlers: IpcHandlersFor<typeof appRequestSchemas> = {
     isPackaged: app.isPackaged,
     appPath: application.getPath('app.root'),
     homePath: application.getPath('sys.home'),
-    notesPath: application.getPath('feature.notes.data'),
     configPath: application.getPath('cherry.config'),
     appDataPath: application.getPath('app.userdata'),
     resourcesPath: application.getPath('app.root.resources'),

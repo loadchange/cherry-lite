@@ -103,7 +103,7 @@ reconciler **shorter-lived than its trigger sources**.
 
 > ⚠️ Do **not** `registerDisposable(() => reconciler.dispose())` for a construct-once field. That fires
 > on **stop**, but the field is **not** recreated on restart (`start()` re-runs `onInit()`), so
-> `request()` would be permanently no-op afterward. `ApiGatewayService` deliberately does **not** dispose.
+> `request()` would be permanently no-op afterward. `SelectionService` deliberately does **not** dispose.
 
 ### Relation to `lifecycle/`
 
@@ -128,4 +128,4 @@ Map the three conditions onto the activate/deactivate path:
 
 The service **self-holds** a reconciler (`getSnapshot: () => ({ desired, actual: this.isActivated })`,
 `apply: ({ desired }) => desired ? this.activate() : this.deactivate()`) — `BaseService` core is **not**
-changed. `ApiGatewayService` is the reference consumer.
+changed. `AnalyticsService` is the reference consumer.

@@ -13,8 +13,6 @@ import {
   resourceDialogTitleClassName
 } from '../components/EditDialogShared'
 import { BasicInfoStep } from './steps/BasicInfoStep'
-import { CapabilityStep } from './steps/CapabilityStep'
-import { KnowledgeStep } from './steps/KnowledgeStep'
 import { PersonaStep } from './steps/PersonaStep'
 import type { ResourceCreateWizardFormValues, ResourceCreateWizardKind, ResourceCreateWizardValues } from './types'
 
@@ -31,11 +29,11 @@ type ResourceCreateWizardProps = {
   initialName?: string
 }
 
-type StepId = 'basic' | 'persona' | 'knowledge' | 'capability'
+type StepId = 'basic' | 'persona'
 
 /** The avatar a brand-new resource starts with — exported so callers can preview what they'd create. */
-export function getResourceCreateDefaultAvatar(kind: ResourceCreateWizardKind) {
-  return kind === 'assistant' ? '💬' : '🤖'
+export function getResourceCreateDefaultAvatar(_kind: ResourceCreateWizardKind) {
+  return '💬'
 }
 
 function getDefaultValues(kind: ResourceCreateWizardKind, initialName = ''): ResourceCreateWizardFormValues {
@@ -44,9 +42,7 @@ function getDefaultValues(kind: ResourceCreateWizardKind, initialName = ''): Res
     name: initialName,
     description: '',
     modelId: null,
-    prompt: '',
-    knowledgeBaseIds: [],
-    skillIds: []
+    prompt: ''
   }
 }
 
@@ -105,13 +101,11 @@ function WizardFooter({
 }
 
 /**
- * Stepped create flow shared by assistant + agent. Steps 1–2 (basic info,
- * persona) are identical across kinds; agents then configure skills before
- * both kinds configure knowledge bases. A left rail tracks step progress
- * (done = check, current = filled number); the right pane swaps the active
- * step's form as the footer drives navigation. One form collects every field
- * and hands the validated payload to `onSubmit`. Replaces the former
- * single-page ResourceCreateDialog.
+ * Stepped assistant create flow: basic info, then persona.
+ * A left rail tracks step progress (done = check, current = filled number);
+ * the right pane swaps the active step's form as the footer drives navigation.
+ * One form collects every field and hands the validated payload to `onSubmit`.
+ * Replaces the former single-page ResourceCreateDialog.
  *
  * The shell intentionally does NOT subscribe to form values — avatar/footer
  * watching lives in leaf components — so ordinary field edits do not re-render
@@ -138,22 +132,20 @@ export function ResourceCreateWizard({
   const pendingCloseActionRef = useRef<(() => void) | null>(null)
 
   // Combine the parent's async-submit flag with RHF's own isSubmitting so close
-  // protection (overlay / Esc / X / knowledge-page navigation) stays locked for the
+  // protection (overlay / Esc / X) stays locked for the
   // entire submit, not just the window after the parent renders its loading state —
   // otherwise a failure would write its error into an already-closed form. Subscribing
   // to isSubmitting (not form values) keeps the shell off the field-edit re-render path.
   const { isSubmitting: isFormSubmitting } = useFormState({ control: form.control })
   const submitting = isSubmitting || isFormSubmitting
 
-  const steps = useMemo<{ id: StepId; label: string }[]>(() => {
-    const basic = { id: 'basic' as const, label: t('library.config.dialogs.create.step.basic') }
-    const persona = { id: 'persona' as const, label: t('library.config.dialogs.create.step.persona') }
-    const knowledge = { id: 'knowledge' as const, label: t('library.config.dialogs.create.step.knowledge') }
-    if (kind === 'assistant') return [basic, persona, knowledge]
-
-    const capability = { id: 'capability' as const, label: t('library.config.dialogs.create.step.capability') }
-    return [basic, persona, capability, knowledge]
-  }, [kind, t])
+  const steps = useMemo<{ id: StepId; label: string }[]>(
+    () => [
+      { id: 'basic', label: t('library.config.dialogs.create.step.basic') },
+      { id: 'persona', label: t('library.config.dialogs.create.step.persona') }
+    ],
+    [t]
+  )
 
   // `initialName` seeds the form on open only. Reading it through an effect event keeps it out of the
   // deps, so a caller that passes a still-live value (a search box's query, say) cannot reset a form the
@@ -254,9 +246,7 @@ export function ResourceCreateWizard({
         name: values.name.trim(),
         modelId: values.modelId,
         description: values.description.trim(),
-        prompt: values.prompt.trim(),
-        knowledgeBaseIds: values.knowledgeBaseIds,
-        skillIds: values.skillIds
+        prompt: values.prompt.trim()
       })
     } catch (error) {
       const message =
@@ -265,9 +255,7 @@ export function ResourceCreateWizard({
     }
   })
 
-  const title = t(
-    kind === 'assistant' ? 'library.config.dialogs.create.assistant_title' : 'library.config.dialogs.create.agent_title'
-  )
+  const title = t('library.config.dialogs.create.assistant_title')
   const currentStep = steps[Math.min(stepIndex, steps.length - 1)]
 
   return (
@@ -342,12 +330,6 @@ export function ResourceCreateWizard({
                 ) : null}
                 {currentStep.id === 'persona' ? (
                   <PersonaStep form={form} portalContainer={dialogContentElement} />
-                ) : null}
-                {currentStep.id === 'knowledge' ? (
-                  <KnowledgeStep form={form} isSubmitting={submitting} portalContainer={dialogContentElement} />
-                ) : null}
-                {currentStep.id === 'capability' ? (
-                  <CapabilityStep form={form} portalContainer={dialogContentElement} />
                 ) : null}
               </Scrollbar>
             </div>

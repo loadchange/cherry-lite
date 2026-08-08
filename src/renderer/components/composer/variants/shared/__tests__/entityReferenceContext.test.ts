@@ -21,21 +21,6 @@ describe('buildEntityReferencePromptText', () => {
     )
   })
 
-  it('drops non user/assistant roles and empty texts', () => {
-    const promptText = buildEntityReferencePromptText({
-      name: 'T',
-      entityType: 'session',
-      entries: [
-        { role: 'system', text: 'system prompt' },
-        { role: 'user', text: '   ' },
-        { role: 'user', text: 'kept' }
-      ]
-    })
-
-    expect(promptText).toContain('[user]\nkept')
-    expect(promptText).not.toContain('system prompt')
-  })
-
   it('caps each message and marks it with an ellipsis', () => {
     const promptText = buildEntityReferencePromptText({
       name: 'T',
@@ -74,12 +59,6 @@ describe('buildEntityReferencePromptText', () => {
 
     expect(promptText).toContain('x'.repeat(40))
     expect(promptText).not.toContain('most recent of')
-  })
-
-  it('renders an empty marker for a transcript with no usable messages', () => {
-    const promptText = buildEntityReferencePromptText({ name: 'T', entityType: 'session', entries: [] })
-
-    expect(promptText).toBe('<referenced-conversation type="session" name="T">\n[empty]\n</referenced-conversation>')
   })
 
   it('escapes double quotes in the referenced name', () => {

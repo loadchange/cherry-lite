@@ -306,25 +306,16 @@ class BackupManager {
       logger.debug('[backupDirect] Capturing v2 backup resources')
 
       const quiesceReason = 'backup: capture consistent snapshot'
-      const channelManager = application.get('ChannelManager')
-      const channelHold = channelManager.pause(quiesceReason)
-      try {
-        const channelVerdict = await channelManager.drainInFlight({ timeoutMs: QUIESCE_TIMEOUT_MS })
-        signal?.throwIfAborted()
-        this.assertWritersDrained([channelVerdict])
-
+      {
         const aiStreamManager = application.get('AiStreamManager')
-        const agentSessionRuntime = application.get('AgentSessionRuntimeService')
         const jobManager = application.get('JobManager')
         const writerHolds: Array<{ dispose(): void }> = []
         try {
           writerHolds.push(aiStreamManager.pause(quiesceReason))
-          writerHolds.push(agentSessionRuntime.pause(quiesceReason))
           writerHolds.push(jobManager.pause(quiesceReason))
 
           const writerVerdicts = await Promise.all([
             aiStreamManager.drainInFlight({ timeoutMs: QUIESCE_TIMEOUT_MS }),
-            agentSessionRuntime.drainInFlight({ timeoutMs: QUIESCE_TIMEOUT_MS }),
             jobManager.drainInFlight({ timeoutMs: QUIESCE_TIMEOUT_MS })
           ])
           signal?.throwIfAborted()
@@ -415,8 +406,6 @@ class BackupManager {
             hold.dispose()
           }
         }
-      } finally {
-        channelHold.dispose()
       }
 
       onProgress({ stage: 'compressing', progress: 80, total: 100 })
@@ -1433,10 +1422,7 @@ class BackupManager {
   }
 
   private assertNoActiveDataWriters(): void {
-    if (
-      application.get('AiStreamManager').hasLiveStreams() ||
-      application.get('AgentSessionRuntimeService').hasBusySessions()
-    ) {
+    if (application.get('AiStreamManager').hasLiveStreams()) {
       throw new Error(
         `${BACKUP_ACTIVE_WRITERS_ERROR_CODE}: A conversation is still running. Wait for it to finish, then retry the backup or restore.`
       )

@@ -538,4 +538,4 @@ documented). Instead, an affected service **self-holds** a
 through it (`getSnapshot: () => ({ desired, actual: this.isActivated })`,
 `apply: ({ desired }) => desired ? this.activate() : this.deactivate()`). See that README's judgment
 table for exactly when it is needed (async activate/deactivate **and** a runtime toggle source; a
-fully-synchronous or startup-only service does not need it). `ApiGatewayService` is the reference.
+fully-synchronous or startup-only service does not need it). `AnalyticsService` is the reference.

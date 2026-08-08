@@ -476,16 +476,6 @@ describe('EnvironmentDependencies', () => {
     expect(ipcMocks.installTool).toHaveBeenCalledWith({ name: 'mytool' })
   })
 
-  it('excludes Code CLI snapshots from the dependency grid', async () => {
-    setSnapshots({
-      claude: miseSnapshot('claude', 'claude'),
-      'some-agent': miseSnapshot('some-agent', 'npm:some-agent')
-    })
-    render(<EnvironmentDependencies />)
-    expect(await screen.findByText('some-agent')).toBeInTheDocument()
-    expect(screen.queryByText('claude')).not.toBeInTheDocument()
-  })
-
   it('uses latest versions for exactly applied tools regardless of a custom definition', async () => {
     setSnapshots({ uv: miseSnapshot('uv', 'uv', '1.0.0'), fd: miseSnapshot('fd', 'fd', '1.0.0', false) })
     ipcMocks.latestVersions.mockResolvedValue({ uv: '2.0.0', fd: '2.0.0' })
@@ -724,15 +714,15 @@ describe('EnvironmentDependencies', () => {
     expect(ipcMocks.addCustomTool).not.toHaveBeenCalled()
   })
 
-  it('rejects a reserved Code CLI name even when no CLI snapshot is displayed', async () => {
-    ipcMocks.searchRegistry.mockResolvedValue([{ name: 'claude', tool: 'npm:other-claude' }])
+  it('rejects a reserved preset name even when no snapshot for it is displayed', async () => {
+    ipcMocks.searchRegistry.mockResolvedValue([{ name: 'rtk', tool: 'npm:other-rtk' }])
     render(<EnvironmentDependencies />)
 
     fireEvent.click(screen.getByText('settings.dependencies.addTool'))
     fireEvent.change(screen.getByPlaceholderText('settings.dependencies.searchRegistry'), {
-      target: { value: 'claude' }
+      target: { value: 'rtk' }
     })
-    fireEvent.click(await screen.findByRole('button', { name: /npm:other-claude/ }))
+    fireEvent.click(await screen.findByRole('button', { name: /npm:other-rtk/ }))
     fireEvent.click(screen.getByText('common.add'))
 
     await waitFor(() => expect(toastMock.error).toHaveBeenCalledWith('settings.dependencies.duplicateName'))

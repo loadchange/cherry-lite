@@ -41,7 +41,6 @@ const loggerWarnMock = vi.hoisted(() => vi.fn())
 const loggerErrorMock = vi.hoisted(() => vi.fn())
 const clipboardWriteTextMock = vi.hoisted(() => vi.fn())
 const modelSelectorMock = vi.hoisted(() => vi.fn())
-const exportContentToNotesMock = vi.hoisted(() => vi.fn())
 
 vi.mock('react-i18next', () => ({
   initReactI18next: {
@@ -158,10 +157,6 @@ vi.mock('@renderer/hooks/useSmoothStream', () => ({
     reset: (text = '') => onUpdate(text),
     update: (text: string) => onUpdate(text)
   })
-}))
-
-vi.mock('@renderer/services/ExportService', () => ({
-  exportContentToNotes: exportContentToNotesMock
 }))
 
 vi.mock('@renderer/ipc', () => ({
@@ -302,19 +297,10 @@ vi.mock('../components/TranslateLanguageBar', () => ({
 }))
 
 vi.mock('../components/TranslateOutputPane', () => ({
-  default: ({
-    translating,
-    translatedContent,
-    onExportToNotes
-  }: {
-    translating: boolean
-    translatedContent: string
-    onExportToNotes?: () => void | Promise<void>
-  }) => (
+  default: ({ translating, translatedContent }: { translating: boolean; translatedContent: string }) => (
     <div data-testid="translate-output-pane">
       {translating && <span>translate.processing</span>}
       <span data-testid="translate-output-content">{translatedContent}</span>
-      <button type="button" aria-label="notes.save" onClick={() => void onExportToNotes?.()} />
     </div>
   )
 }))
@@ -389,8 +375,6 @@ describe('TranslatePage', () => {
     clipboardWriteTextMock.mockReset()
     modelSelectorMock.mockReset()
     clipboardWriteTextMock.mockResolvedValue(undefined)
-    exportContentToNotesMock.mockReset()
-    exportContentToNotesMock.mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: {
@@ -430,38 +414,6 @@ describe('TranslatePage', () => {
     expect(inputSection?.parentElement).toHaveClass('grid-cols-2', 'grid-rows-1')
     expect(outputSection).toHaveClass('border-l')
     expect(outputSection).not.toHaveClass('border-t')
-  })
-
-  it('exports the trimmed current translation result to notes using the first translated line as title', async () => {
-    MockUseCacheUtils.setCacheValue('translate.output', '\nFirst translated line\nSecond translated line\n')
-    MockUsePreferenceUtils.setPreferenceValue('feature.notes.path', '/notes')
-
-    render(<TranslatePage />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'notes.save' }))
-
-    await waitFor(() =>
-      expect(exportContentToNotesMock).toHaveBeenCalledWith(
-        'First translated line',
-        'First translated line\nSecond translated line',
-        '/notes'
-      )
-    )
-  })
-
-  it('logs failures when exporting the current translation result to notes', async () => {
-    const exportError = new Error('export failed')
-    MockUseCacheUtils.setCacheValue('translate.output', 'First translated line\nSecond translated line')
-    MockUsePreferenceUtils.setPreferenceValue('feature.notes.path', '/notes')
-    exportContentToNotesMock.mockRejectedValueOnce(exportError)
-
-    render(<TranslatePage />)
-
-    fireEvent.click(screen.getByRole('button', { name: 'notes.save' }))
-
-    await waitFor(() => {
-      expect(loggerErrorMock).toHaveBeenCalledWith('Failed to export output to notes:', exportError)
-    })
   })
 
   it('appends selected file text to the latest input after async read completes', async () => {

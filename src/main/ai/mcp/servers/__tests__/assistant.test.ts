@@ -9,15 +9,12 @@ import path from 'node:path'
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
-import { DataApiErrorFactory } from '@shared/data/api/errors'
 import { MockMainPreferenceServiceUtils } from '@test-mocks/main/PreferenceService'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
-  agentCreate: vi.fn(),
   applicationGetPath: vi.fn(),
   mcpList: vi.fn(),
-  modelGetByKey: vi.fn(),
   providerGetById: vi.fn()
 }))
 
@@ -32,16 +29,8 @@ vi.mock('@application', async () => {
   }
 })
 
-vi.mock('@main/ai/agents/createAgent', () => ({
-  createAgent: mocks.agentCreate
-}))
-
 vi.mock('@data/services/McpServerService', () => ({
   mcpServerService: { list: mocks.mcpList }
-}))
-
-vi.mock('@data/services/ModelService', () => ({
-  modelService: { getByKey: mocks.modelGetByKey }
 }))
 
 vi.mock('@data/services/ProviderService', () => ({
@@ -85,19 +74,11 @@ afterEach(() => {
 
 beforeEach(() => {
   MockMainPreferenceServiceUtils.resetMocks()
-  mocks.agentCreate.mockReset()
   mocks.applicationGetPath.mockReset()
   mocks.applicationGetPath.mockReturnValue('/mock/product-manifest.json')
   mocks.mcpList.mockReset()
-  mocks.modelGetByKey.mockReset()
   mocks.providerGetById.mockReset()
   mocks.mcpList.mockReturnValue({ items: [] })
-  mocks.modelGetByKey.mockReturnValue({ id: 'anthropic::claude-sonnet' })
-  mocks.agentCreate.mockReturnValue({
-    id: 'agent-created',
-    name: 'Reviewer',
-    model: 'anthropic::claude-sonnet'
-  })
 })
 
 describe('product_info', () => {
@@ -304,89 +285,6 @@ describe('apply_setting', () => {
     await expect(applySetting({ setting: 'launch_on_boot', value: 'true' })).rejects.toThrow(
       "Setting 'launch_on_boot' is not on the apply_setting whitelist"
     )
-  })
-})
-
-describe('create_agent', () => {
-  it('creates an agent through the v2 data service', async () => {
-    const server = new AssistantServer()
-    const result = await (
-      server as unknown as {
-        createAgent: (args: Record<string, string>) => Promise<{ content: Array<{ text: string }> }>
-      }
-    ).createAgent({
-      name: ' Reviewer ',
-      description: ' Reviews code ',
-      instructions: ' Review Python code. ',
-      model: 'anthropic::claude-sonnet'
-    })
-
-    expect(mocks.agentCreate).toHaveBeenCalledWith({
-      type: 'claude-code',
-      name: 'Reviewer',
-      description: 'Reviews code',
-      instructions: 'Review Python code.',
-      model: 'anthropic::claude-sonnet',
-      configuration: {
-        permission_mode: 'default',
-        max_turns: 100,
-        env_vars: {}
-      }
-    })
-    expect(mocks.modelGetByKey).toHaveBeenCalledWith('anthropic', 'claude-sonnet')
-    expect(result.content[0].text).toContain('agent-created')
-  })
-
-  it("defaults to Cherry Assistant's current model when model is omitted", async () => {
-    const server = new AssistantServer('openai::gpt-5')
-
-    await (
-      server as unknown as {
-        createAgent: (args: Record<string, string>) => Promise<unknown>
-      }
-    ).createAgent({
-      name: 'Reviewer',
-      instructions: 'Review code.'
-    })
-
-    expect(mocks.agentCreate).toHaveBeenCalledWith(expect.objectContaining({ model: 'openai::gpt-5' }))
-  })
-
-  it('rejects legacy single-colon model ids', async () => {
-    const server = new AssistantServer()
-
-    await expect(
-      (
-        server as unknown as {
-          createAgent: (args: Record<string, string>) => Promise<unknown>
-        }
-      ).createAgent({
-        name: 'Reviewer',
-        instructions: 'Review code.',
-        model: 'anthropic:claude-sonnet'
-      })
-    ).rejects.toThrow('providerId::modelId')
-    expect(mocks.agentCreate).not.toHaveBeenCalled()
-  })
-
-  it('rejects a well-formed model id that is not configured', async () => {
-    mocks.modelGetByKey.mockImplementationOnce(() => {
-      throw DataApiErrorFactory.notFound('Model', 'anthropic/missing')
-    })
-    const server = new AssistantServer()
-
-    await expect(
-      (
-        server as unknown as {
-          createAgent: (args: Record<string, string>) => Promise<unknown>
-        }
-      ).createAgent({
-        name: 'Reviewer',
-        instructions: 'Review code.',
-        model: 'anthropic::missing'
-      })
-    ).rejects.toThrow('Model is not configured in Cherry Studio: anthropic::missing')
-    expect(mocks.agentCreate).not.toHaveBeenCalled()
   })
 })
 

@@ -434,9 +434,9 @@ export class PreferenceService extends BaseService {
    * @example
    * ```typescript
    * const preferenceService = application.get('PreferenceService')
-   * const { host, port } = preferenceService.getMultiple({
-   *   host: 'feature.api_gateway.host',
-   *   port: 'feature.api_gateway.port'
+   * const { themeMode, language } = preferenceService.getMultiple({
+   *   themeMode: 'ui.theme_mode',
+   *   language: 'app.language'
    * })
    * ```
    */

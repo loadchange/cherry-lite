@@ -5,7 +5,7 @@ import type { IpcHandlersFor } from '@shared/ipc/types'
 import { webContents } from 'electron'
 
 /**
- * Webview-domain handlers acting on a MiniApp `<webview>` guest by its webContents id.
+ * Webview-domain handlers acting on a `<webview>` guest by its webContents id.
  * The stateless link/spellcheck toggles run inline; the dialog-driven print/save flows
  * delegate to WebviewService (which owns the save-dialog + file-write logic and throws
  * 'Webview not found' when the guest is gone).

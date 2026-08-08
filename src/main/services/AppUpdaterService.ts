@@ -201,8 +201,6 @@ export class AppUpdaterService extends BaseService {
    * broadcast (see `registerAutoUpdaterListeners`), not the return value.
    */
   private async performUpdateCheck() {
-    void application.get('AnalyticsService').trackAppUpdate()
-
     if (this.isPortable()) {
       return {
         currentVersion: app.getVersion(),

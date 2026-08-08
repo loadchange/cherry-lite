@@ -5,7 +5,7 @@
  * - **FileEntry** — the managed-file entity (this section).
  * - **FileHandle** — a call-site reference to a file, by entry-id or raw path.
  * - **FileRef** — the association linking a business entity (chat message,
- *   painting, job, provider logo, mini-app logo) to a `FileEntry`.
+ *   provider logo) to a `FileEntry`.
  *
  * The legacy v1 `FileMetadata` shape lives separately in `./legacyFile.ts`.
  *
@@ -382,7 +382,7 @@ export const FileHandleSchema = z.discriminatedUnion('kind', [FileEntryHandleSch
 // TODO: 2. Add brand for FileHandle since factory function has been used
 
 // ═══════════════════════════════════════════════════════════════════════════
-// FileRef — association from a business entity (chat message, painting, …) to a
+// FileRef — association from a business entity (chat message, …) to a
 // FileEntry. Combines every registered business-domain variant into a single
 // discriminated union keyed on `sourceType`.
 // ═══════════════════════════════════════════════════════════════════════════
@@ -425,7 +425,7 @@ export const refCommonFields = Object.freeze({
  * down to `z.ZodString`.
  */
 export type BusinessRefShape = {
-  /** Which business domain owns this reference (e.g. 'chat', 'knowledge', 'painting') */
+  /** Which business domain owns this reference (e.g. 'chat', 'knowledge') */
   sourceType: z.ZodLiteral<string>
   /** The owning business entity's ID (e.g. a message ID, a knowledge item ID) */
   sourceId: z.ZodType<string>
@@ -475,72 +475,9 @@ export const chatMessageRefFields = {
 
 export const chatMessageFileRefSchema = createRefSchema(chatMessageRefFields)
 
-// ─── painting variant ───
+// ─── Single-file entity-image variants (provider logo) ───
 //
-// Links a FileEntry to a `painting` row in the v2 paintings subsystem. The
-// painting association table holds two buckets — generated `output` files and
-// `input` files — which map directly to the two roles below. Painting row
-// deletion is handled by DB-level cascade; explicit cleanup is still used when
-// replacing a painting's file set wholesale.
-//
-// `painting.id` is `uuidPrimaryKey()` — UUID v4 (not v7; paintings have no
-// ordered-id requirement, unlike `knowledge_item`). Extending `paintingRoles`
-// later is additive: rows whose role falls outside the set surface as
-// `ZodError`, the desired clean-up signal.
-
-export const paintingSourceType = 'painting' as const
-
-export const paintingRoles = ['output', 'input'] as const
-export const paintingRoleSchema = z.enum(paintingRoles)
-
-export const paintingRefFields = {
-  sourceType: z.literal(paintingSourceType),
-  sourceId: z.uuidv4(),
-  role: paintingRoleSchema
-}
-
-export const paintingFileRefSchema = createRefSchema(paintingRefFields)
-
-// ─── job variant ───
-//
-// Links a FileEntry to a `job` row (the generic job system). Its sole use today
-// is the async image-generation job (`imageGenerationJobHandler`): input images
-// and the edit mask are persisted as `delete_when_unreferenced` FileEntries at
-// enqueue time and referenced by id inside the job payload.
-//
-// Why a persistent ref (not just the payload id): the payload id lives in
-// `job.input` JSON, which the cleanup anti-join cannot see. Without a real ref
-// row, a job still queued or mid-poll when an interval pass fires could have
-// its inputs reclaimed out from under it once they age past the grace window,
-// breaking `read(inputFileIds)` mid-run. An FK-constrained association table
-// makes the job a first-class holder: the anti-join sees it, and deleting the
-// job row cascades the ref so the inputs become reclaimable exactly when the
-// job record is gone.
-//
-// The window is within one process run: image jobs are `recovery: 'abandon'`,
-// so a non-terminal job is cancelled at startup rather than resumed. A remote
-// poll still easily outlives the 1h grace window and several interval passes,
-// which is what the ref is for.
-//
-// `job.id` is `uuidPrimaryKeyOrdered()` — UUID v7. `z.uuid()` accepts it
-// (version-agnostic), matching the chat_message variant's forgiving stance.
-
-export const jobSourceType = 'job' as const
-
-export const jobRoles = ['input', 'mask'] as const
-export const jobRoleSchema = z.enum(jobRoles)
-
-export const jobRefFields = {
-  sourceType: z.literal(jobSourceType),
-  sourceId: z.uuid(),
-  role: jobRoleSchema
-}
-
-export const jobFileRefSchema = createRefSchema(jobRefFields)
-
-// ─── Single-file entity-image variants (provider logo / mini-app logo) ───
-//
-// Unlike the collection refs above (`chat_message`, `painting`), these model a
+// Unlike the collection refs above (`chat_message`), these model a
 // single-file **slot**: one owner holds at most ONE file, set-replaces the
 // previous one, and owns it exclusively. They are **roleless** (an owner has one
 // implicit purpose, so a `role` column would be a constant nothing reads) and
@@ -562,7 +499,6 @@ function defineSingleFileRef<const T extends string>(sourceType: T) {
 }
 
 export const providerLogoRef = defineSingleFileRef('provider_logo')
-export const miniAppLogoRef = defineSingleFileRef('mini_app_logo')
 
 /**
  * Prefix tagging an uploaded avatar in the `app.user.avatar` preference, e.g.
@@ -571,7 +507,7 @@ export const miniAppLogoRef = defineSingleFileRef('mini_app_logo')
  * file IPC; every other form (emoji / default `''`) passes through. Distinct
  * from an already-resolved `file://…` URL.
  *
- * Provider / mini-app uploaded logos do NOT use this tag — their file id lives
+ * Provider uploaded logos do NOT use this tag — their file id lives
  * in the logo `file_ref` table and resolves main-side onto the DTO's `logoSrc`.
  */
 export const STORED_FILE_REF_PREFIX = 'file:'
@@ -596,13 +532,7 @@ export function tagStoredFileRef(id: string): string {
  * association table in one PR. Keeping those surfaces in lockstep prevents the
  * "type declared but schema unaware" gap.
  */
-export const allSourceTypes = [
-  chatMessageSourceType,
-  paintingSourceType,
-  jobSourceType,
-  providerLogoRef.sourceType,
-  miniAppLogoRef.sourceType
-] as const satisfies readonly string[]
+export const allSourceTypes = [chatMessageSourceType, providerLogoRef.sourceType] as const satisfies readonly string[]
 export type FileRefSourceType = (typeof allSourceTypes)[number]
 
 /**
@@ -621,11 +551,5 @@ export const FileRefSourceTypeSchema = z.enum(allSourceTypes)
  * an unregistered sourceType implies either a stale artefact or a bug that
  * bypassed the variant-registration discipline.
  */
-export const FileRefSchema = z.discriminatedUnion('sourceType', [
-  chatMessageFileRefSchema,
-  paintingFileRefSchema,
-  jobFileRefSchema,
-  providerLogoRef.schema,
-  miniAppLogoRef.schema
-])
+export const FileRefSchema = z.discriminatedUnion('sourceType', [chatMessageFileRefSchema, providerLogoRef.schema])
 export type FileRef = z.infer<typeof FileRefSchema>

@@ -7,9 +7,6 @@ vi.mock('@cherrystudio/ai-core', async (importOriginal) => ({
   ...(await importOriginal<typeof AiCore>()),
   compactModelMessages: (...args: unknown[]) => compactModelMessages(...args)
 }))
-vi.mock('@main/ai/agentSession/topic', () => ({
-  isAgentSessionTopic: (id: string) => id.startsWith('agent-session:')
-}))
 vi.mock('@main/data/services/TemporaryChatService', () => ({
   temporaryChatService: { hasTopic: (id: string) => id.startsWith('temp:') }
 }))
@@ -84,12 +81,6 @@ describe('inLoopCompactionFeature', () => {
     // The compaction layer treats contextWindow as a required precondition (the model
     // layer's contract); it neither fabricates a fallback nor excludes when absent.
     expect(inLoopCompactionFeature.applies?.(scope({ chatId: 'topic-1', contextWindow: undefined }))).toBe(true)
-  })
-
-  it('does not apply for agent-session topics', () => {
-    expect(
-      inLoopCompactionFeature.applies?.(scope({ chatId: 'agent-session:s1', contextWindow: CONTEXT_WINDOW }))
-    ).toBe(false)
   })
 
   it('does not apply for temporary-chat topics', () => {

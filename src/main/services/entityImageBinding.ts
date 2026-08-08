@@ -62,7 +62,7 @@ export async function bindLogoImage(
 ): Promise<void> {
   if (image.kind === 'key') return bind({ kind: 'key', key: image.key })
   if (image.kind === 'default') return bind({ kind: 'default' })
-  // Logos are ref-backed (provider_logo / mini_app_logo): reclaim on owner
+  // Logos are ref-backed (provider_logo): reclaim on owner
   // delete or slot replacement.
   await withCreatedImageEntry(image.data, 'delete_when_unreferenced', (fileId) => bind({ kind: 'file', fileId }))
 }

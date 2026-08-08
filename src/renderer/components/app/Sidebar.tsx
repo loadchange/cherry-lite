@@ -3,7 +3,6 @@ import { usePreference } from '@data/hooks/usePreference'
 import { arrayMove } from '@dnd-kit/sortable'
 import { useTabs } from '@renderer/hooks/tab'
 import useAvatar from '@renderer/hooks/useAvatar'
-import { useMiniApps } from '@renderer/hooks/useMiniApps'
 import { useSidebarFavorites } from '@renderer/hooks/useSidebarFavorites'
 import { openSettingsTab } from '@renderer/services/mainWindowNavigation'
 import { getDefaultRouteTitle } from '@renderer/utils/routeTitle'
@@ -34,22 +33,13 @@ import {
 import UserPopup from '../UserPopup'
 import { resolveSidebarEntry, type SidebarVariantContext } from './sidebarVariants'
 
-const MINI_APP_ROUTE_PREFIX = '/app/mini-app/'
 const REQUIRED_SIDEBAR_FAVORITE_SET = new Set<SidebarAppId>(REQUIRED_SIDEBAR_FAVORITES)
-
-function getMiniAppIdFromUrl(url: string | undefined): string | undefined {
-  if (!url?.startsWith(MINI_APP_ROUTE_PREFIX)) return undefined
-  const appId = url.slice(MINI_APP_ROUTE_PREFIX.length).split(/[/?#]/, 1)[0]
-  return appId || undefined
-}
 
 export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
   const { t } = useTranslation()
   const [userName] = usePreference('app.user.name')
-  const { favorites, miniAppFavoriteIds, setAppPinned, removeMiniApp, reorderFavorites } = useSidebarFavorites()
+  const { favorites, setAppPinned, reorderFavorites } = useSidebarFavorites()
   const { activeTab, updateTab, openTab } = useTabs()
-  const { miniApps, pinned } = useMiniApps({ enabled: miniAppFavoriteIds.length > 0 })
-  const [defaultPaintingProvider] = usePreference('feature.paintings.default_provider')
 
   // Sidebar width — persisted across restarts. Dragging through the
   // intermediate 50-120px range uses a local preview width so the UI can
@@ -106,18 +96,6 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
 
   // Menu items
   const pathname = activeTab?.url || '/'
-  const activeMiniAppId = getMiniAppIdFromUrl(activeTab?.url)
-  const openableMiniAppById = useMemo(() => {
-    const appById = new Map<string, (typeof miniApps)[number]>()
-    for (const app of miniApps) {
-      appById.set(app.appId, app)
-    }
-    for (const app of pinned) {
-      appById.set(app.appId, app)
-    }
-    return appById
-  }, [miniApps, pinned])
-
   const handleRemoveSidebarFavorite = useCallback(
     (favorite: SidebarAppId) => {
       if (REQUIRED_SIDEBAR_FAVORITE_SET.has(favorite)) return
@@ -132,7 +110,7 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
     (menuItemId: string) => {
       const menuId = menuItemId as SidebarAppId
       const app = getSidebarApp(menuId)
-      const path = getSidebarMenuPath(menuId, defaultPaintingProvider)
+      const path = getSidebarMenuPath(menuId)
       if (!app || !path) return
 
       // Conversation apps: any owned tab is already "there" — its URL carries its own
@@ -165,81 +143,32 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
 
       openTab(path, { forceNew: true, title })
     },
-    [activeTab, defaultPaintingProvider, openTab, updateTab]
+    [activeTab, openTab, updateTab]
   )
   const handleOpenSettingsTab = useCallback(() => {
     openSettingsTab('/settings/provider')
   }, [])
-
-  const handleOpenMiniAppTab = useCallback(
-    (appId: string) => {
-      const app = openableMiniAppById.get(appId)
-      if (!app) return
-
-      const path = `${MINI_APP_ROUTE_PREFIX}${app.appId}`
-      if (activeTab?.url === path) return
-
-      const title = app.nameKey ? t(app.nameKey) : app.name
-      // Uploaded logo → main-resolved `logoSrc`; preset key → `logo`.
-      const icon = app.logoSrc ?? app.logo
-
-      if (activeTab?.isPinned) {
-        openTab(path, { forceNew: true, title, icon })
-        return
-      }
-
-      if (activeTab) {
-        updateTab(activeTab.id, {
-          url: path,
-          title,
-          icon,
-          metadata: undefined
-        })
-        return
-      }
-
-      openTab(path, {
-        forceNew: true,
-        title,
-        icon
-      })
-    },
-    [activeTab, openableMiniAppById, openTab, t, updateTab]
-  )
 
   // All per-type sidebar knowledge (icon, label, route, active-match, open, remove)
   // lives in the variant registry; the container only supplies the runtime context.
   const variantContext = useMemo<SidebarVariantContext>(
     () => ({
       t,
-      defaultPaintingProvider,
-      installedMiniApps: openableMiniAppById,
       isRequiredApp: (id) => REQUIRED_SIDEBAR_FAVORITE_SET.has(id),
       openApp: handleNavigate,
-      openMiniApp: handleOpenMiniAppTab,
-      removeApp: handleRemoveSidebarFavorite,
-      removeMiniApp
+      removeApp: handleRemoveSidebarFavorite
     }),
-    [
-      t,
-      defaultPaintingProvider,
-      openableMiniAppById,
-      handleNavigate,
-      handleOpenMiniAppTab,
-      handleRemoveSidebarFavorite,
-      removeMiniApp
-    ]
+    [t, handleNavigate, handleRemoveSidebarFavorite]
   )
 
-  // One continuous list: built-in apps and mini apps interleaved in their stored
-  // favorites order. Unrenderable rows (no route/icon, or an uninstalled mini app)
-  // are dropped here but stay in the preference.
+  // One continuous list in stored favorites order. Unrenderable rows (no
+  // route/icon) are dropped here but stay in the preference.
   const entries = useMemo(
     () => favorites.flatMap((favorite) => resolveSidebarEntry(favorite, variantContext) ?? []),
     [favorites, variantContext]
   )
 
-  // A single drag reorders the whole mixed list. arrayMove yields the new entry
+  // A single drag reorders the whole list. arrayMove yields the new entry
   // order; map each entry back to its favorite by key and persist. The sidebar owns
   // its order entirely through `ui.sidebar.favorites` and never touches order keys.
   const handleReorder = useCallback(
@@ -257,7 +186,7 @@ export default function Sidebar({ ref }: { ref?: Ref<HTMLDivElement | null> }) {
   // Common props shared between normal and floating sidebar
   const sidebarProps = {
     entries,
-    active: { activeItem, activeTabId: activeMiniAppId },
+    active: { activeItem },
     title: sidebarUser.name,
     logo: sidebarLogo,
     actions: (footerLayout: SidebarVisibleLayout) => (

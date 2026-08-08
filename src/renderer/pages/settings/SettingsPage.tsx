@@ -1,5 +1,4 @@
 import { MenuDivider, MenuItem, MenuList, PageHeader } from '@cherrystudio/ui'
-import { GatewayIcon } from '@renderer/components/icons/GatewayIcon'
 import { McpLogo } from '@renderer/components/icons/SvgIcon'
 import Scrollbar from '@renderer/components/Scrollbar'
 import useMacTransparentWindow from '@renderer/hooks/useMacTransparentWindow'
@@ -15,23 +14,19 @@ import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   Activity,
   Bell,
-  CalendarClock,
   Cloud,
   Command,
-  FileBox,
   FileCode,
   HardDrive,
   Info,
   Package,
   Palette,
   PictureInPicture2,
-  Radio,
   ScanText,
   Search,
   Settings2,
   Terminal,
-  TextCursorInput,
-  ToolCase
+  TextCursorInput
 } from 'lucide-react'
 import type { CSSProperties, FC } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -77,22 +72,6 @@ const SettingsPage: FC = () => {
                 active={isActive('/settings/model')}
                 onClick={() => go('/settings/model')}
               />
-              <MenuItem
-                className={settingsSubmenuItemClassName}
-                labelClassName={settingsSubmenuItemLabelClassName}
-                icon={<FileBox />}
-                label={t('settings.dependencies.localModels.title')}
-                active={isActive('/settings/local-models')}
-                onClick={() => go('/settings/local-models')}
-              />
-              <MenuItem
-                className={settingsSubmenuItemClassName}
-                labelClassName={settingsSubmenuItemLabelClassName}
-                icon={<GatewayIcon />}
-                label={t('apiGateway.title')}
-                active={isActive('/settings/api-gateway')}
-                onClick={() => go('/settings/api-gateway')}
-              />
               <MenuDivider className={settingsSubmenuDividerClassName} />
               <div className={settingsSubmenuSectionTitleClassName}>{t('settings.menuGroups.capabilities')}</div>
               <MenuItem
@@ -102,14 +81,6 @@ const SettingsPage: FC = () => {
                 label={t('agent.settings.toolsMcp.mcp.tab')}
                 active={isActive('/settings/mcp')}
                 onClick={() => go('/settings/mcp')}
-              />
-              <MenuItem
-                className={settingsSubmenuItemClassName}
-                labelClassName={settingsSubmenuItemLabelClassName}
-                icon={<ToolCase />}
-                label={t('settings.skills.title')}
-                active={isActive('/settings/skills')}
-                onClick={() => go('/settings/skills')}
               />
               <MenuItem
                 className={settingsSubmenuItemClassName}
@@ -171,22 +142,6 @@ const SettingsPage: FC = () => {
               />
               <MenuDivider className={settingsSubmenuDividerClassName} />
               <div className={settingsSubmenuSectionTitleClassName}>{t('settings.menuGroups.automation')}</div>
-              <MenuItem
-                className={settingsSubmenuItemClassName}
-                labelClassName={settingsSubmenuItemLabelClassName}
-                icon={<Radio />}
-                label={t('settings.channels.title')}
-                active={isActive('/settings/channels')}
-                onClick={() => go('/settings/channels')}
-              />
-              <MenuItem
-                className={settingsSubmenuItemClassName}
-                labelClassName={settingsSubmenuItemLabelClassName}
-                icon={<CalendarClock />}
-                label={t('settings.scheduledTasks.title')}
-                active={isActive('/settings/scheduled-tasks')}
-                onClick={() => go('/settings/scheduled-tasks')}
-              />
               <MenuItem
                 className={settingsSubmenuItemClassName}
                 labelClassName={settingsSubmenuItemLabelClassName}

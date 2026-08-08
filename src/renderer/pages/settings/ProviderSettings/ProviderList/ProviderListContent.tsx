@@ -20,7 +20,6 @@ interface ProviderListContentProps {
   searchActive: boolean
   expandedGroups: Record<string, boolean>
   onToggleGroup: (presetProviderId: string) => void
-  onAddAnotherInGroup?: (template: Provider) => void
   scrollerRef?: (element: HTMLDivElement | null) => void
   onDragStateChange: (nextDragging: boolean) => void
   onReorder: (reorderedProviders: Provider[]) => void | Promise<void>
@@ -95,7 +94,6 @@ export default function ProviderListContent({
   searchActive,
   expandedGroups,
   onToggleGroup,
-  onAddAnotherInGroup,
   scrollerRef,
   onDragStateChange,
   onReorder,
@@ -210,7 +208,6 @@ export default function ProviderListContent({
               expanded={expanded}
               containsSelected={containsSelected}
               onToggle={() => onToggleGroup(item.presetProviderId)}
-              onAddAnother={onAddAnotherInGroup}
               onDragStateChange={onDragStateChange}
               onReorder={onReorder}
               onReorderError={onReorderError}

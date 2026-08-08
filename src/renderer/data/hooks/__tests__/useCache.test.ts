@@ -211,7 +211,7 @@ describe('functional updater (runtime)', () => {
 
     // Reset the singleton keys these suites touch (state persists across tests).
     cacheService.set('chat.selected_message_ids', [])
-    cacheService.setShared('feature.api_gateway.running', false)
+    cacheService.setShared('agent.model_switch_confirmation.skipped', false)
     cacheService.setPersist('ui.emoji.recently_used', [])
   })
 
@@ -269,20 +269,20 @@ describe('functional updater (runtime)', () => {
 
   describe('shared tier (useSharedCache)', () => {
     it('resolves the updater against the latest shared value', () => {
-      cacheService.setShared('feature.api_gateway.running', false)
-      const { result } = renderHook(() => useSharedCache('feature.api_gateway.running'))
+      cacheService.setShared('agent.model_switch_confirmation.skipped', false)
+      const { result } = renderHook(() => useSharedCache('agent.model_switch_confirmation.skipped'))
       act(() => {
         result.current[1]((prev) => !prev)
       })
-      expect(cacheService.getShared('feature.api_gateway.running')).toBe(true)
+      expect(cacheService.getShared('agent.model_switch_confirmation.skipped')).toBe(true)
     })
 
     it('still accepts a concrete value (backward compatible)', () => {
-      const { result } = renderHook(() => useSharedCache('feature.api_gateway.running'))
+      const { result } = renderHook(() => useSharedCache('agent.model_switch_confirmation.skipped'))
       act(() => {
         result.current[1](true)
       })
-      expect(cacheService.getShared('feature.api_gateway.running')).toBe(true)
+      expect(cacheService.getShared('agent.model_switch_confirmation.skipped')).toBe(true)
     })
   })
 
@@ -381,8 +381,8 @@ type PersistPrev<K extends Parameters<typeof usePersistCache>[0]> = Parameters<U
 
 // Representative value types
 type SelectedIds = InferUseCacheValue<'chat.selected_message_ids'> // string[]
-type KeepAlive = InferUseCacheValue<'mini_app.opened_keep_alive'> // CacheMiniAppType[]
-type GatewayRunning = InferSharedCacheValue<'feature.api_gateway.running'> // boolean
+type McpTools = InferSharedCacheValue<'mcp.tools.server-1'> // CacheMcpTool[]
+type ModelSwitchSkipped = InferSharedCacheValue<'agent.model_switch_confirmation.skipped'> // boolean
 type JobProgress = InferSharedCacheValue<'jobs.progress.job-1'> // { progress: number, ... }
 
 describe('readonly updater (static guarantees)', () => {
@@ -401,15 +401,15 @@ describe('readonly updater (static guarantees)', () => {
     it('primitive value → passes through unchanged (not wrapped)', () => {
       // ReadonlyValue<boolean> must stay `boolean`, else `prev => !prev` and
       // `prev => prev + 1` would stop compiling.
-      expectTypeOf<SharedPrev<'feature.api_gateway.running'>>().toEqualTypeOf<GatewayRunning>()
-      expectTypeOf<SharedPrev<'feature.api_gateway.running'>>().toEqualTypeOf<boolean>()
+      expectTypeOf<SharedPrev<'agent.model_switch_confirmation.skipped'>>().toEqualTypeOf<ModelSwitchSkipped>()
+      expectTypeOf<SharedPrev<'agent.model_switch_confirmation.skipped'>>().toEqualTypeOf<boolean>()
       expect(true).toBe(true)
     })
 
     it('shallow only — array elements are NOT deep-frozen', () => {
       // Element type stays the mutable value's element (we intentionally avoid a
       // recursive DeepReadonly, which caused filter/map assignability friction).
-      expectTypeOf<MemoryPrev<'mini_app.opened_keep_alive'>[number]>().toEqualTypeOf<KeepAlive[number]>()
+      expectTypeOf<SharedPrev<'mcp.tools.server-1'>[number]>().toEqualTypeOf<McpTools[number]>()
       expect(true).toBe(true)
     })
   })
@@ -453,7 +453,7 @@ describe('readonly updater (static guarantees)', () => {
     })
 
     it('primitive negation / arithmetic compile', () => {
-      const flip = (prev: SharedPrev<'feature.api_gateway.running'>): boolean => !prev
+      const flip = (prev: SharedPrev<'agent.model_switch_confirmation.skipped'>): boolean => !prev
       const persistCopy = (prev: PersistPrev<'ui.emoji.recently_used'>): string[] => [...prev]
       expect(flip).toBeTypeOf('function')
       expect(persistCopy).toBeTypeOf('function')

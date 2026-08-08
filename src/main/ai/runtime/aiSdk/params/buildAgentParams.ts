@@ -4,14 +4,8 @@ import type { AiPlugin } from '@cherrystudio/ai-core'
 import { projectRuntimeReasoning, providerRegistryService } from '@data/services/ProviderRegistryService'
 import { loggerService } from '@logger'
 import { MAX_TOOL_CALLS, MIN_TOOL_CALLS } from '@main/ai/constants'
-import { resolveKnowledgeBaseScope } from '@main/ai/utils/knowledgeScope'
 import { getProviderForCapability, isPermanentWebSearchConfigError } from '@main/services/webSearch'
-import {
-  KB_READ_TOOL_NAME,
-  KB_SEARCH_TOOL_NAME,
-  WEB_FETCH_TOOL_NAME,
-  WEB_SEARCH_TOOL_NAME
-} from '@shared/ai/builtinTools'
+import { WEB_FETCH_TOOL_NAME, WEB_SEARCH_TOOL_NAME } from '@shared/ai/builtinTools'
 import type { CompactionSink } from '@shared/ai/compaction'
 import type { WebSearchCapability } from '@shared/data/preference/preferenceTypes'
 import { isWebSearchProviderReady } from '@shared/data/presets/webSearchProviders'
@@ -42,7 +36,6 @@ import { resolveAssistantMcpToolIds } from '../../../tools/adapters/aiSdk/mcp/re
 import { registry, ToolRegistry } from '../../../tools/adapters/aiSdk/registry'
 import { createAiRepair } from '../../../tools/adapters/aiSdk/repair'
 import type { ToolEntry } from '../../../tools/adapters/aiSdk/types'
-import { resolveConfiguredPaintingModel } from '../../../tools/painting'
 import type { AiBaseRequest, CallOverrides } from '../../../types'
 import {
   adjustMaxOutputTokensForReasoning,
@@ -72,12 +65,7 @@ import { type NativeFileSupport, resolveNativeFileSupport } from './nativeFileSu
 import type { RequestScope, SdkConfig } from './scope'
 
 const logger = loggerService.withContext('buildAgentParams')
-const CITABLE_BUILTIN_TOOL_NAMES: ReadonlySet<string> = new Set([
-  WEB_SEARCH_TOOL_NAME,
-  WEB_FETCH_TOOL_NAME,
-  KB_SEARCH_TOOL_NAME,
-  KB_READ_TOOL_NAME
-])
+const CITABLE_BUILTIN_TOOL_NAMES: ReadonlySet<string> = new Set([WEB_SEARCH_TOOL_NAME, WEB_FETCH_TOOL_NAME])
 const NO_WEB_TOOL_ROUTES: WebToolRoutes = { webSearch: 'none', webFetch: 'none' }
 
 export interface BuildAgentParamsInput {
@@ -134,24 +122,18 @@ export async function buildAgentParams(input: BuildAgentParamsInput): Promise<Bu
   const retained = request.retainedContext ?? collectRetainedContext(request.messages ?? [])
   const fileAttachments = retained.fileAttachments
   const hasFileAttachments = fileAttachments.length > 0
-  const knowledgeBaseIds = resolveKnowledgeBaseScope(assistant?.knowledgeBaseIds, request.knowledgeBaseIds)
   const toolSignals = canModelConsumeTools(model) ? await resolveRequestToolSignals(request) : undefined
   const webToolRoutes = await resolveRequestWebToolRoutes(model, provider, assistant, {
     endpointType: resolvedEndpoint.endpointType,
     hasFunctionToolSignals: toolSignals
       ? toolSignals.mcpToolIds.size > 0 ||
-        // Mirrors the KB tools' own `applies`: owning a base is not enough, this request must also
-        // scope one. ORing the two made every user with any KB look like a function-tool conflict,
-        // which withheld the server web-search route on Gemini 2.5 for requests that load no tool.
-        (toolSignals.hasAnyKnowledgeBase && knowledgeBaseIds.length > 0) ||
         hasFileAttachments ||
-        Object.keys(request.callOverrides?.tools ?? {}).length > 0 ||
-        assistant?.settings.enableGenerateImage === true
+        Object.keys(request.callOverrides?.tools ?? {}).length > 0
       : false,
     reasoningEffort: request.reasoningEffort ?? assistant?.settings.reasoning_effort
   })
   const { tools, deferredEntries, hasCitableTools, mcpToolIds } = toolSignals
-    ? await resolveTools(request, assistant, model, hasFileAttachments, knowledgeBaseIds, webToolRoutes, toolSignals)
+    ? await resolveTools(request, assistant, model, hasFileAttachments, webToolRoutes, toolSignals)
     : { tools: undefined, deferredEntries: [] as ToolEntry[], hasCitableTools: false, mcpToolIds: new Set<string>() }
   const hasFunctionTools = tools !== undefined && Object.keys(tools).length > 0
   const finalWebToolRoutes = finalizeWebToolRoutes(webToolRoutes, model, provider, hasFunctionTools)
@@ -203,7 +185,6 @@ export async function buildAgentParams(input: BuildAgentParamsInput): Promise<Bu
     assistant,
     abortSignal: signal,
     fileAttachments,
-    knowledgeBaseIds,
     // fs_read's exact allow-list: blobs referenced by the conversation, plus
     // whatever the in-flight offload adapter appends mid-turn. Cloned so those
     // per-turn appends never contaminate the RetainedContext shared across the
@@ -231,8 +212,7 @@ export async function buildAgentParams(input: BuildAgentParamsInput): Promise<Bu
     compressionModel,
     compactionSink,
     webToolRoutes: finalWebToolRoutes,
-    hasFileAttachments,
-    knowledgeBaseIds
+    hasFileAttachments
   }
 
   const features = extraFeatures?.length ? [...INTERNAL_FEATURES, ...extraFeatures] : INTERNAL_FEATURES
@@ -326,12 +306,12 @@ function canModelConsumeTools(model: Model): boolean {
 /** Pre-tool-resolution signals — feed the web-tool routing and are reused by `resolveTools`. */
 async function resolveRequestToolSignals(
   request: BuildAgentParamsInput['request']
-): Promise<{ mcpToolIds: ReadonlySet<string>; hasAnyKnowledgeBase: boolean }> {
+): Promise<{ mcpToolIds: ReadonlySet<string> }> {
   let mcpIdList = request.mcpToolIds
   if (!mcpIdList && request.assistantId) {
     mcpIdList = await resolveAssistantMcpToolIds(request.assistantId)
   }
-  return { mcpToolIds: new Set(mcpIdList ?? []), hasAnyKnowledgeBase: resolveHasAnyKnowledgeBase() }
+  return { mcpToolIds: new Set(mcpIdList ?? []) }
 }
 
 /**
@@ -344,7 +324,6 @@ export async function resolveTools(
   assistant: Assistant | undefined,
   model: Model,
   hasFileAttachments: boolean,
-  knowledgeBaseIds: readonly string[],
   webToolRoutes: WebToolRoutes = NO_WEB_TOOL_ROUTES,
   signals?: Awaited<ReturnType<typeof resolveRequestToolSignals>>
 ): Promise<{
@@ -353,7 +332,7 @@ export async function resolveTools(
   hasCitableTools: boolean
   mcpToolIds: ReadonlySet<string>
 }> {
-  const { mcpToolIds, hasAnyKnowledgeBase } = signals ?? (await resolveRequestToolSignals(request))
+  const { mcpToolIds } = signals ?? (await resolveRequestToolSignals(request))
   if (mcpToolIds.size) {
     // Scope the registry sync to servers that actually own a selected tool —
     // avoids paying the per-server `listTools` round-trip for every active
@@ -361,14 +340,10 @@ export async function resolveTools(
     await syncMcpToolsToRegistry(undefined, { selectedToolIds: mcpToolIds })
   }
 
-  const paintingModel = resolveConfiguredPaintingModel()
   const activeEntries = registry.selectActive({
     assistant,
-    paintingModel: paintingModel ?? undefined,
     mcpToolIds,
     hasFileAttachments,
-    hasAnyKnowledgeBase,
-    knowledgeBaseIds,
     webToolRoutes
   })
   let tools: ToolSet | undefined
@@ -443,20 +418,6 @@ async function resolveRequestWebToolRoutes(
 }
 
 /**
- * Whether the user has any knowledge base, used to gate the `kb_*` tools in `selectActive`. Fail-open:
- * a transient count error must not suppress the KB tools for users who do have bases (the tools
- * themselves steer gracefully when a lookup fails), so an error is treated as "present".
- */
-function resolveHasAnyKnowledgeBase(): boolean {
-  try {
-    return application.get('KnowledgeService').hasAnyBase()
-  } catch (error) {
-    logger.warn('Failed to check for knowledge bases during tool resolution; treating as present', { error })
-    return true
-  }
-}
-
-/**
  * Assemble `AgentOptions`: capability-driven providerOptions overlaid with
  * the user's customParameters (split into AI-SDK standard params vs
  * provider-scoped params), per-call headers/maxRetries, stop-after-N-tools,
@@ -489,7 +450,6 @@ function buildAgentOptions(
           provider,
           {
             enableReasoning: capabilities.enableReasoning,
-            enableGenerateImage: capabilities.enableGenerateImage,
             enableWebSearch: scope.webToolRoutes?.webSearch === 'server'
           },
           {

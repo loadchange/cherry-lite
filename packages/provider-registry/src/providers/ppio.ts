@@ -302,17 +302,6 @@ export default openaiCompatible({
       }
     },
     {
-      apiModelId: 'qwen/qwen3-embedding-0.6b',
-      endpointTypes: ['openai-embeddings'],
-      limits: { contextWindow: 32768, maxOutputTokens: 32768 },
-      modelId: 'qwen3-embedding-0-6b',
-      modelVariants: ['6b'],
-      pricing: {
-        input: { currency: 'CNY', perMillionTokens: 0.07 },
-        output: { currency: 'CNY', perMillionTokens: 0.07 }
-      }
-    },
-    {
       apiModelId: 'qwen/qwen3-next-80b-a3b-thinking',
       limits: { contextWindow: 65536, maxOutputTokens: 65536 },
       modelId: 'qwen3-next-80b-a3b',

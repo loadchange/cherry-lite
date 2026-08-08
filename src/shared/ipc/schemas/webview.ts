@@ -4,7 +4,7 @@ import * as z from 'zod'
 import { defineRoute } from '../define'
 
 /**
- * Webview IPC schemas — host-side control of MiniApp `<webview>` guests, addressed by
+ * Webview IPC schemas — host-side control of `<webview>` guests, addressed by
  * `webviewId` (the guest's webContents id, a plain number). The legacy channels passed
  * positional args; the IpcApi routes fold them into a single input object.
  *

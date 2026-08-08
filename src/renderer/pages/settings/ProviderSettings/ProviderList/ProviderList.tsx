@@ -4,11 +4,7 @@ import ConfirmActionPopup from '@renderer/components/popups/ConfirmActionPopup'
 import { useModels } from '@renderer/hooks/useModel'
 import { useProviders } from '@renderer/hooks/useProvider'
 import { providerListClasses } from '@renderer/pages/settings/ProviderSettings/primitives/ProviderSettingsPrimitives'
-import {
-  isProviderPresetInstanceSource,
-  isProviderSettingsListVisibleProvider,
-  matchKeywordsInProvider
-} from '@renderer/pages/settings/ProviderSettings/utils/providerDisplay'
+import { matchKeywordsInProvider } from '@renderer/pages/settings/ProviderSettings/utils/providerDisplay'
 import { toast } from '@renderer/services/toast'
 import type { Provider } from '@shared/data/types/provider'
 import { canManageProvider } from '@shared/utils/provider'
@@ -19,7 +15,6 @@ import { useTranslation } from 'react-i18next'
 import { useOvmsSupport } from '../hooks/useOvmsSupport'
 import ProviderEditorDrawer from './ProviderEditorDrawer'
 import type { ProviderFilterMode } from './providerFilterMode'
-import { getGroupedPresetIds } from './providerGrouping'
 import ProviderListContent, { type ProviderListContentItemState } from './ProviderListContent'
 import ProviderListHeaderFilterMenu from './ProviderListHeaderFilterMenu'
 import ProviderListItemWithContextMenu from './ProviderListItemWithContextMenu'
@@ -57,7 +52,6 @@ export default function ProviderList({ selectedProviderId, filterModeHint, onSel
     mode: editorMode,
     initialLogo,
     startAdd,
-    startAddFrom,
     startEdit,
     cancel: cancelEditor,
     submit: submitEditor
@@ -113,9 +107,6 @@ export default function ProviderList({ selectedProviderId, filterModeHint, onSel
 
   const filteredProviders = useMemo(() => {
     return providers.filter((provider) => {
-      if (!isProviderSettingsListVisibleProvider(provider)) {
-        return false
-      }
       if (provider.id === 'ovms' && !isOvmsSupported) {
         return false
       }
@@ -136,15 +127,6 @@ export default function ProviderList({ selectedProviderId, filterModeHint, onSel
         counts.set(provider.id, (counts.get(provider.id) ?? 0) + 1)
         return counts
       }, new Map()),
-    [providers]
-  )
-
-  const groupedPresetIds = useMemo(() => getGroupedPresetIds(filteredProviders), [filteredProviders])
-  const presetSources = useMemo(
-    () =>
-      providers.filter(
-        (provider) => isProviderPresetInstanceSource(provider) && isProviderSettingsListVisibleProvider(provider)
-      ),
     [providers]
   )
 
@@ -258,11 +240,6 @@ export default function ProviderList({ selectedProviderId, filterModeHint, onSel
         onSelect={() => onSelectProvider(provider.id)}
         onEdit={() => startEdit(provider)}
         onDelete={() => handleDeleteProvider(provider.id)}
-        onDuplicate={
-          provider.presetProviderId && !groupedPresetIds.has(provider.presetProviderId)
-            ? () => startAddFrom(provider)
-            : undefined
-        }
         showManagementActions={showManagementActions}
         listState={state}
         onSetListItemRef={setProviderItemRef}
@@ -270,7 +247,6 @@ export default function ProviderList({ selectedProviderId, filterModeHint, onSel
     )
   }
 
-  const handleAddAnother = useCallback((template: Provider) => startAddFrom(template), [startAddFrom])
   const addProviderButton = (
     <button
       type="button"
@@ -306,7 +282,6 @@ export default function ProviderList({ selectedProviderId, filterModeHint, onSel
         searchActive={Boolean(searchText)}
         expandedGroups={expandedGroups}
         onToggleGroup={handleToggleGroup}
-        onAddAnotherInGroup={handleAddAnother}
         scrollerRef={setScrollerRef}
         onDragStateChange={handleDragStateChange}
         onReorder={applyReorderedList}
@@ -318,9 +293,7 @@ export default function ProviderList({ selectedProviderId, filterModeHint, onSel
         open={editorOpen}
         mode={editorMode}
         initialLogo={initialLogo}
-        presetSources={presetSources}
         onClose={cancelEditor}
-        onSelectPreset={startAddFrom}
         onSubmit={handleSubmitEditor}
       />
     </aside>

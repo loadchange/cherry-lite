@@ -1,4 +1,3 @@
-import { agentSessionMessageTable } from '@data/db/schemas/agentSessionMessage'
 import { aiUsageRecordTable } from '@data/db/schemas/aiUsageRecord'
 import { messageTable } from '@data/db/schemas/message'
 import type { DbType } from '@data/db/types'
@@ -38,19 +37,13 @@ function hasUsageSignal(stats: MessageStats): boolean {
 }
 
 function countCandidateRows(db: DbType): number {
-  const chat =
+  return (
     db
       .select({ count: sql<number>`count(*)` })
       .from(messageTable)
       .where(and(eq(messageTable.role, 'assistant'), isNotNull(messageTable.stats)))
       .get()?.count ?? 0
-  const agentSession =
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(agentSessionMessageTable)
-      .where(and(eq(agentSessionMessageTable.role, 'assistant'), isNotNull(agentSessionMessageTable.stats)))
-      .get()?.count ?? 0
-  return chat + agentSession
+  )
 }
 
 function readChatCandidateRows(db: DbType, afterId: string | undefined, limit: number): AiUsageRecordSourceRow[] {
@@ -74,33 +67,6 @@ function readChatCandidateRows(db: DbType, afterId: string | undefined, limit: n
     .limit(limit)
     .all()
     .map((row) => ({ ...row, messageKind: 'chat' as const }))
-}
-
-function readAgentSessionCandidateRows(
-  db: DbType,
-  afterId: string | undefined,
-  limit: number
-): AiUsageRecordSourceRow[] {
-  return db
-    .select({
-      id: agentSessionMessageTable.id,
-      modelId: agentSessionMessageTable.modelId,
-      messageSnapshot: agentSessionMessageTable.messageSnapshot,
-      stats: agentSessionMessageTable.stats,
-      createdAt: agentSessionMessageTable.createdAt
-    })
-    .from(agentSessionMessageTable)
-    .where(
-      and(
-        eq(agentSessionMessageTable.role, 'assistant'),
-        isNotNull(agentSessionMessageTable.stats),
-        afterId ? gt(agentSessionMessageTable.id, afterId) : undefined
-      )
-    )
-    .orderBy(asc(agentSessionMessageTable.id))
-    .limit(limit)
-    .all()
-    .map((row) => ({ ...row, messageKind: 'agent-session' as const }))
 }
 
 function resolveLegacyModel(source: AiUsageRecordSourceRow): {
@@ -209,7 +175,7 @@ export class AiUsageRecordMigrator extends BaseMigrator {
     this.skippedCount = 0
     this.insertedCount = 0
     const warnings: string[] = []
-    const readers = [readChatCandidateRows, readAgentSessionCandidateRows]
+    const readers = [readChatCandidateRows]
     const batchSize = 500
 
     for (const readBatch of readers) {

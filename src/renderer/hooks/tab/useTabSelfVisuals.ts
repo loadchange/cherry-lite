@@ -16,8 +16,7 @@ export interface TabSelfVisuals {
 }
 
 const TAB_APP_ROUTE_PREFIX: Record<ConversationAppId, string> = {
-  assistants: '/app/chat',
-  agents: '/app/agents'
+  assistants: '/app/chat'
 }
 
 function tabBelongsToApp(tab: Pick<Tab, 'url'>, appId: ConversationAppId): boolean {

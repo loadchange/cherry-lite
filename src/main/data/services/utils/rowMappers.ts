@@ -53,7 +53,7 @@ export function timestampToISO(value: number | Date): string {
  * the DB always has a real value; use `timestampToISO` there.
  *
  * The canonical use case is merging a builtin/preset definition with an
- * optional DB preference row — see `MiniAppService.builtinToMiniApp`.
+ * optional DB preference row.
  */
 export function timestampToISOOrUndefined(value: number | Date | null | undefined): string | undefined {
   return value ? new Date(value).toISOString() : undefined

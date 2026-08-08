@@ -8,7 +8,7 @@
 
 import { application } from '@application'
 import { assistantTable } from '@data/db/schemas/assistant'
-import { assistantKnowledgeBaseTable, assistantMcpServerTable } from '@data/db/schemas/assistantRelations'
+import { assistantMcpServerTable } from '@data/db/schemas/assistantRelations'
 import { pinTable } from '@data/db/schemas/pin'
 import type { DbOrTx, DbType } from '@data/db/types'
 import { loggerService } from '@logger'
@@ -36,7 +36,7 @@ const logger = loggerService.withContext('DataApi:AssistantService')
 
 type AssistantRow = typeof assistantTable.$inferSelect
 
-type AssistantRelationIds = Pick<Assistant, 'mcpServerIds' | 'knowledgeBaseIds'>
+type AssistantRelationIds = Pick<Assistant, 'mcpServerIds'>
 type AssistantEntitySearchItem = Extract<EntitySearchItem, { type: 'assistant' }>
 type AssistantRowWithModelName = {
   assistant: AssistantRow
@@ -45,8 +45,7 @@ type AssistantRowWithModelName = {
 
 function createEmptyRelations(): AssistantRelationIds {
   return {
-    mcpServerIds: [],
-    knowledgeBaseIds: []
+    mcpServerIds: []
   }
 }
 
@@ -62,7 +61,6 @@ function rowToAssistant(
     modelId: row.modelId as UniqueModelId | null,
     groupId: row.groupId,
     mcpServerIds: relations.mcpServerIds,
-    knowledgeBaseIds: relations.knowledgeBaseIds,
     createdAt: timestampToISO(row.createdAt),
     updatedAt: timestampToISO(row.updatedAt),
     modelName
@@ -179,21 +177,9 @@ export class AssistantDataService {
       .where(inArray(assistantMcpServerTable.assistantId, assistantIds))
       .orderBy(asc(assistantMcpServerTable.assistantId), asc(assistantMcpServerTable.createdAt))
       .all()
-    const knowledgeBaseRows = this.db
-      .select({
-        assistantId: assistantKnowledgeBaseTable.assistantId,
-        knowledgeBaseId: assistantKnowledgeBaseTable.knowledgeBaseId
-      })
-      .from(assistantKnowledgeBaseTable)
-      .where(inArray(assistantKnowledgeBaseTable.assistantId, assistantIds))
-      .orderBy(asc(assistantKnowledgeBaseTable.assistantId), asc(assistantKnowledgeBaseTable.createdAt))
-      .all()
 
     for (const row of mcpServerRows) {
       relationMap.get(row.assistantId)?.mcpServerIds.push(row.mcpServerId)
-    }
-    for (const row of knowledgeBaseRows) {
-      relationMap.get(row.assistantId)?.knowledgeBaseIds.push(row.knowledgeBaseId)
     }
 
     return relationMap
@@ -360,7 +346,7 @@ export class AssistantDataService {
     // defaults; prompt/description stay omitted when undefined so DB DEFAULTs apply.
     // orderKey is omitted — `insertWithOrderKey` computes the next fractional
     // key from the existing max and injects it before the DB write.
-    const { mcpServerIds, knowledgeBaseIds, ...columnDto } = dto
+    const { mcpServerIds, ...columnDto } = dto
     const insertValues = {
       ...columnDto,
       modelId,
@@ -373,7 +359,7 @@ export class AssistantDataService {
       scope: isNull(assistantTable.deletedAt)
     }) as AssistantRow
 
-    this.syncRelationsTx(tx, inserted.id, { mcpServerIds, knowledgeBaseIds })
+    this.syncRelationsTx(tx, inserted.id, { mcpServerIds })
 
     return this.getActiveRowWithModelNameById(inserted.id, tx)
   }
@@ -381,7 +367,7 @@ export class AssistantDataService {
   /**
    * Create a new assistant.
    *
-   * `mcpServerIds` and `knowledgeBaseIds` land inside the same
+   * `mcpServerIds` lands inside the same
    * transaction as the insert — one failed binding rolls the assistant row
    * back so callers never observe a half-written record.
    */
@@ -395,8 +381,7 @@ export class AssistantDataService {
     return rowToAssistant(
       row,
       {
-        mcpServerIds: dto.mcpServerIds ?? [],
-        knowledgeBaseIds: dto.knowledgeBaseIds ?? []
+        mcpServerIds: dto.mcpServerIds ?? []
       },
       modelName
     )
@@ -427,7 +412,7 @@ export class AssistantDataService {
   /**
    * Update an existing assistant.
    *
-   * Column writes and junction-table syncs (mcpServer / knowledgeBase) all
+   * Column writes and junction-table syncs (mcpServer) all
    * run under one transaction so save-time failures cannot leave the entity
    * desynced from its bindings.
    *
@@ -445,7 +430,7 @@ export class AssistantDataService {
     }
 
     // Strip relation fields — these are synced to junction tables, not assistant columns
-    const { mcpServerIds, knowledgeBaseIds, settings: settingsPatch, ...columnFields } = dto
+    const { mcpServerIds, settings: settingsPatch, ...columnFields } = dto
     const updates = Object.fromEntries(Object.entries(columnFields).filter(([, v]) => v !== undefined)) as Partial<
       typeof assistantTable.$inferInsert
     >
@@ -453,15 +438,14 @@ export class AssistantDataService {
       updates.settings = { ...current.settings, ...settingsPatch }
     }
     const hasColumnUpdates = Object.keys(updates).length > 0
-    const hasRelationUpdates = mcpServerIds !== undefined || knowledgeBaseIds !== undefined
+    const hasRelationUpdates = mcpServerIds !== undefined
 
     if (!hasColumnUpdates && !hasRelationUpdates) {
       return current
     }
 
     const nextRelations: AssistantRelationIds = {
-      mcpServerIds: mcpServerIds ?? current.mcpServerIds,
-      knowledgeBaseIds: knowledgeBaseIds ?? current.knowledgeBaseIds
+      mcpServerIds: mcpServerIds ?? current.mcpServerIds
     }
 
     const aliveFilter = and(eq(assistantTable.id, id), isNull(assistantTable.deletedAt))
@@ -499,7 +483,7 @@ export class AssistantDataService {
       }
 
       // Sync junction table rows if relation fields are provided
-      this.syncRelationsTx(tx, id, { mcpServerIds, knowledgeBaseIds })
+      this.syncRelationsTx(tx, id, { mcpServerIds })
 
       const nextModelName =
         dto.modelId !== undefined && dto.modelId !== current.modelId
@@ -547,7 +531,7 @@ export class AssistantDataService {
   /**
    * Soft-delete an assistant (sets deletedAt timestamp).
    * The row is preserved so topic.assistantId FK remains valid
-   * and junction table data (mcpServers, knowledgeBases) is retained.
+   * and junction table data (mcpServers) is retained.
    * The group assignment is cleared so restoring a soft-deleted assistant
    * does not restore its previous classification.
    */
@@ -596,7 +580,7 @@ export class AssistantDataService {
   private syncRelationsTx(
     tx: Pick<DbType, 'delete' | 'insert' | 'select'>,
     assistantId: string,
-    dto: { mcpServerIds?: string[]; knowledgeBaseIds?: string[] }
+    dto: { mcpServerIds?: string[] }
   ): void {
     if (dto.mcpServerIds !== undefined) {
       const existing = tx
@@ -623,35 +607,6 @@ export class AssistantDataService {
       if (toAdd.length > 0) {
         tx.insert(assistantMcpServerTable)
           .values(toAdd.map((mcpServerId) => ({ assistantId, mcpServerId })))
-          .run()
-      }
-    }
-
-    if (dto.knowledgeBaseIds !== undefined) {
-      const existing = tx
-        .select({ knowledgeBaseId: assistantKnowledgeBaseTable.knowledgeBaseId })
-        .from(assistantKnowledgeBaseTable)
-        .where(eq(assistantKnowledgeBaseTable.assistantId, assistantId))
-        .all()
-      const existingIds = new Set(existing.map((r) => r.knowledgeBaseId))
-      const desiredIds = new Set(dto.knowledgeBaseIds)
-
-      const removeIds = existing.filter((r) => !desiredIds.has(r.knowledgeBaseId)).map((r) => r.knowledgeBaseId)
-      const toAdd = dto.knowledgeBaseIds.filter((id) => !existingIds.has(id))
-
-      if (removeIds.length > 0) {
-        tx.delete(assistantKnowledgeBaseTable)
-          .where(
-            and(
-              eq(assistantKnowledgeBaseTable.assistantId, assistantId),
-              inArray(assistantKnowledgeBaseTable.knowledgeBaseId, removeIds)
-            )
-          )
-          .run()
-      }
-      if (toAdd.length > 0) {
-        tx.insert(assistantKnowledgeBaseTable)
-          .values(toAdd.map((knowledgeBaseId) => ({ assistantId, knowledgeBaseId })))
           .run()
       }
     }

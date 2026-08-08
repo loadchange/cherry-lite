@@ -41,7 +41,6 @@ import {
   PRESETS_BINARY_TOOLS,
   validateBinaryToolDefinition
 } from '@shared/data/presets/binaryTools'
-import { CODE_CLI_TOOL_PRESETS } from '@shared/data/presets/codeCliTools'
 import type {
   BinaryApplication,
   BinaryAvailability,
@@ -88,10 +87,6 @@ const ToolIcon: FC<{ icon?: string; className?: string }> = ({ icon, className }
 }
 
 type ToolSource = BinaryAvailability['source']
-
-// Code CLIs are installed through BinaryManager too, but have their own
-// management surface (the Code CLI page) — keep them out of this inventory.
-const CODE_CLI_BINARIES = new Set(CODE_CLI_TOOL_PRESETS.map((preset) => preset.executable))
 
 interface EnvironmentDependenciesProps {
   mini?: boolean
@@ -192,7 +187,7 @@ const EnvironmentDependencies: FC<EnvironmentDependenciesProps> = ({ mini = fals
   // Runtime dependencies mise auto-installs do not appear here unless the user
   // added them as a custom tool — availability alone never mints a card.
   const inventorySnapshots = useMemo(
-    () => Object.values(snapshots).filter((snapshot) => !CODE_CLI_BINARIES.has(snapshot.name) && !!snapshot.definition),
+    () => Object.values(snapshots).filter((snapshot) => !!snapshot.definition),
     [snapshots]
   )
   // Operation status is part of each snapshot, so a window mounted mid-mutation
@@ -220,8 +215,7 @@ const EnvironmentDependencies: FC<EnvironmentDependenciesProps> = ({ mini = fals
 
     const allNames = [
       ...PRESETS_BINARY_TOOLS.map((p) => p.name),
-      ...inventorySnapshots.map((snapshot) => snapshot.name),
-      ...CODE_CLI_BINARIES
+      ...inventorySnapshots.map((snapshot) => snapshot.name)
     ]
     if (allNames.includes(tool.name)) {
       toast.error(t('settings.dependencies.duplicateName'))

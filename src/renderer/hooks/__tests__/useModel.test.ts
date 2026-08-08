@@ -582,53 +582,17 @@ describe('useDefaultModel', () => {
     MockUsePreferenceUtils.setPreferenceValue('chat.default_model_id', 'openai::gpt-4o')
     MockUsePreferenceUtils.setPreferenceValue('feature.quick_assistant.model_id', 'openai::quick')
     MockUsePreferenceUtils.setPreferenceValue('feature.translate.model_id', 'openai::translate')
-    MockUsePreferenceUtils.setPreferenceValue('feature.paintings.default_model_id', 'openai::dall-e-3')
 
     renderHook(() => useDefaultModel({ enabled: false }))
 
-    expect(mockUseQuery).toHaveBeenCalledTimes(4)
+    expect(mockUseQuery).toHaveBeenCalledTimes(3)
     expect(mockUseQuery).toHaveBeenCalledWith('/models/', {
       enabled: false,
       swrOptions: { keepPreviousData: false }
     })
   })
 
-  it('persists the picked painting model id to feature.paintings.default_model_id', async () => {
-    const { result } = renderHook(() => useDefaultModel())
-
-    await act(async () => {
-      await result.current.setPaintingModel({ id: 'openai::dall-e-3' })
-    })
-
-    expect(MockUsePreferenceUtils.getPreferenceValue('feature.paintings.default_model_id')).toBe('openai::dall-e-3')
-  })
-
-  it('resolves paintingModel from feature.paintings.default_model_id', () => {
-    MockUsePreferenceUtils.setPreferenceValue('feature.paintings.default_model_id', 'openai::dall-e-3')
-
-    renderHook(() => useDefaultModel())
-
-    expect(mockUseQuery).toHaveBeenCalledWith('/models/openai::dall-e-3', {
-      enabled: true,
-      swrOptions: { keepPreviousData: false }
-    })
-  })
-
-  it('does not fall back to the chat default when the painting model is unset', () => {
-    MockUsePreferenceUtils.setPreferenceValue('chat.default_model_id', 'openai::gpt-4o')
-    MockUsePreferenceUtils.setPreferenceValue('feature.quick_assistant.model_id', 'openai::quick')
-    MockUsePreferenceUtils.setPreferenceValue('feature.translate.model_id', 'openai::translate')
-    MockUsePreferenceUtils.setPreferenceValue('feature.paintings.default_model_id', null)
-
-    renderHook(() => useDefaultModel())
-
-    // painting resolves the empty/disabled key, never the chat-default id
-    expect(mockUseQuery).toHaveBeenCalledWith('/models/', { enabled: false, swrOptions: { keepPreviousData: false } })
-    const defaultIdQueries = mockUseQuery.mock.calls.filter(([path]) => path === '/models/openai::gpt-4o')
-    expect(defaultIdQueries).toHaveLength(1) // defaultModel only; painting did not borrow it
-  })
-
-  it('cascades setDefaultModel to quick and translate but not painting', async () => {
+  it('cascades setDefaultModel to quick and translate', async () => {
     const { result } = renderHook(() => useDefaultModel())
 
     await act(async () => {
@@ -637,7 +601,6 @@ describe('useDefaultModel', () => {
 
     expect(MockUsePreferenceUtils.getPreferenceValue('feature.quick_assistant.model_id')).toBe('openai::gpt-4o')
     expect(MockUsePreferenceUtils.getPreferenceValue('feature.translate.model_id')).toBe('openai::gpt-4o')
-    expect(MockUsePreferenceUtils.getPreferenceValue('feature.paintings.default_model_id')).toBeNull()
   })
 
   it('force-cascades setDefaultModel over existing quick and translate models', async () => {

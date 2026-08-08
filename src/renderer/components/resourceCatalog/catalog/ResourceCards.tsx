@@ -1,6 +1,5 @@
 import { Badge, Button } from '@cherrystudio/ui'
 import type { ResourceItem } from '@renderer/types/resourceCatalog'
-import { RESOURCE_TYPE_META } from '@renderer/utils/resourceCatalog'
 import { cn } from '@renderer/utils/style'
 import type { Group } from '@shared/data/types/group'
 import { Trash2 } from 'lucide-react'
@@ -45,16 +44,9 @@ export function ResourceCard({
   onExport
 }: ResourceCardProps) {
   const { t } = useTranslation()
-  const cfg = RESOURCE_TYPE_META[r.type]
   const isSettings = variant === 'settings'
-  // Library cards keep the type tint for quick scanning. The settings surface uses a neutral icon block
-  // so Skill management follows the same calm visual hierarchy as the surrounding settings pages.
-  const showTypeIcon = r.type === 'skill'
-  const useTypedAvatarBg = showTypeIcon && !isSettings
-  const TypeIcon = cfg.icon
   const showOverflowMenu = hasOverflowActions(r)
   const visibleGroup = r.type === 'assistant' ? r.groupName : undefined
-  const skillVersion = r.type === 'skill' ? r.raw.version?.trim() : undefined
 
   return (
     <div
@@ -64,7 +56,6 @@ export function ResourceCard({
           ? 'rounded-xl border-border hover:border-border-strong'
           : 'rounded-lg border-border-subtle hover:border-border-subtle'
       )}
-      style={r.type === 'skill' ? { backgroundColor: 'var(--settings-group-background, var(--card))' } : undefined}
       role="button"
       tabIndex={0}
       aria-label={r.name}
@@ -72,27 +63,12 @@ export function ResourceCard({
       onKeyDown={(e) => activateCardOnKeyDown(e, () => onEdit(r))}>
       <div className={isSettings ? 'p-4' : 'p-3.5'}>
         <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'flex size-10 shrink-0 items-center justify-center rounded-lg text-base',
-              useTypedAvatarBg ? cfg.color : 'bg-secondary text-secondary-foreground'
-            )}>
-            {showTypeIcon ? (
-              <TypeIcon size={20} aria-hidden className={isSettings ? 'text-foreground-tertiary' : undefined} />
-            ) : (
-              r.avatar
-            )}
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-secondary text-base text-secondary-foreground">
+            {r.avatar}
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex min-w-0 items-center gap-1.5">
               <h4 className="min-w-0 truncate font-medium text-foreground text-sm leading-5">{r.name}</h4>
-              {skillVersion && (
-                <Badge
-                  variant="secondary"
-                  className="shrink-0 border-0 bg-secondary px-1.5 py-px font-normal text-muted-foreground text-xs">
-                  {skillVersion}
-                </Badge>
-              )}
             </div>
             <p
               className={cn(
@@ -125,7 +101,7 @@ export function ResourceCard({
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={r.type === 'skill' ? t('library.action.uninstall') : t('common.delete')}
+                aria-label={t('common.delete')}
                 onClick={() => onDelete(r)}
                 className="text-muted-foreground opacity-0 hover:bg-error-subtle hover:text-error-subtle-foreground focus-visible:opacity-100 group-hover:opacity-100">
                 <Trash2 size={12} className="lucide-custom" />

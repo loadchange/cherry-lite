@@ -4,7 +4,7 @@ import { ProviderAvatar } from '@renderer/pages/settings/ProviderSettings/compon
 import { providerListClasses } from '@renderer/pages/settings/ProviderSettings/primitives/ProviderSettingsPrimitives'
 import { cn } from '@renderer/utils/style'
 import type { Provider } from '@shared/data/types/provider'
-import { ChevronRight, GripVertical, Plus } from 'lucide-react'
+import { ChevronRight, GripVertical } from 'lucide-react'
 import { type ReactNode, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -24,7 +24,6 @@ export interface ProviderListGroupProps {
   expanded: boolean
   containsSelected: boolean
   onToggle: () => void
-  onAddAnother?: (template: Provider) => void
   onDragStateChange: (dragging: boolean) => void
   onReorder: (reorderedProviders: Provider[]) => void | Promise<void>
   onReorderError?: (error: unknown) => void
@@ -46,7 +45,6 @@ export default function ProviderListGroup({
   expanded,
   containsSelected,
   onToggle,
-  onAddAnother,
   onDragStateChange,
   onReorder,
   onReorderError,
@@ -122,16 +120,6 @@ export default function ProviderListGroup({
             restrictions={{ scrollableAncestor: true }}
             renderItem={renderItem}
           />
-          {onAddAnother && members[0] && (
-            <button
-              type="button"
-              data-testid={`provider-list-group-add-${presetProviderId}`}
-              onClick={() => onAddAnother(members[0])}
-              className={providerListClasses.groupAddRow}>
-              <Plus size={12} />
-              <span className="truncate">{t('settings.provider.duplicate.add_another', { name: label })}</span>
-            </button>
-          )}
         </div>
       )}
     </div>

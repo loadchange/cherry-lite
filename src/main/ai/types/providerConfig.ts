@@ -27,8 +27,6 @@ export interface ProviderCapabilities {
   enableReasoning: boolean
   /** Whether provider-native web search should be enabled. */
   enableWebSearch: boolean
-  /** Whether the model should generate images inline. */
-  enableGenerateImage: boolean
 }
 
 /**

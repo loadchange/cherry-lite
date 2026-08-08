@@ -23,7 +23,7 @@ const FILE_PROCESSING_FEATURE_SECTIONS: readonly {
 }[] = [
   {
     feature: 'image_to_text',
-    processors: ['system', 'paddleocr', 'local-paddleocr', 'tesseract', 'mistral', 'ovocr']
+    processors: ['system', 'paddleocr', 'tesseract', 'mistral', 'ovocr']
   },
   {
     feature: 'document_to_markdown',
@@ -56,12 +56,6 @@ const PROCESSOR_DISPLAY_META: Record<FileProcessorId, ProcessorDisplayMeta> = {
     descriptionKey: 'settings.tool.file_processing.processors.paddleocr.description',
     logo: Paddleocr,
     apiKeyWebsite: 'https://aistudio.baidu.com/paddleocr/'
-  },
-  'local-paddleocr': {
-    nameKey: 'settings.tool.file_processing.processors.local_paddleocr.name',
-    descriptionKey: 'settings.tool.file_processing.processors.local_paddleocr.description',
-    logo: Paddleocr,
-    apiKeyWebsite: null
   },
   ovocr: {
     nameKey: 'settings.tool.file_processing.processors.ovocr.name',
@@ -158,10 +152,6 @@ export function getFeatureSections(
 
 export function getProcessorNameKey(processorId: FileProcessorId): string {
   return PROCESSOR_DISPLAY_META[processorId].nameKey
-}
-
-export function getProcessorDescriptionKey(processorId: FileProcessorId): string {
-  return PROCESSOR_DISPLAY_META[processorId].descriptionKey
 }
 
 export function getProcessorApiKeyWebsite(processorId: FileProcessorId): string | null {

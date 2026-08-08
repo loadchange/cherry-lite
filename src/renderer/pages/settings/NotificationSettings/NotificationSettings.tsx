@@ -19,8 +19,7 @@ const NotificationSettings: FC = () => {
 
   const [notificationSettings, setNotificationSettings] = useMultiplePreferences({
     assistant: 'app.notification.assistant.enabled',
-    backup: 'app.notification.backup.enabled',
-    knowledge: 'app.notification.knowledge.enabled'
+    backup: 'app.notification.backup.enabled'
   })
 
   const handleNotificationChange = (type: NotificationSource, value: boolean) => {
@@ -52,14 +51,6 @@ const NotificationSettings: FC = () => {
           <Switch
             checked={notificationSettings.backup}
             onCheckedChange={(v) => handleNotificationChange('backup', v)}
-          />
-        </SettingRow>
-        <SettingDivider />
-        <SettingRow>
-          <SettingRowTitle>{t('settings.notification.knowledge_embed')}</SettingRowTitle>
-          <Switch
-            checked={notificationSettings.knowledge}
-            onCheckedChange={(v) => handleNotificationChange('knowledge', v)}
           />
         </SettingRow>
       </SettingGroup>

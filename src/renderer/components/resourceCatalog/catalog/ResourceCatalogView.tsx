@@ -12,7 +12,7 @@ const ResourceCatalogDialogs = lazy(() =>
   import('./ResourceCatalogDialogs').then((module) => ({ default: module.ResourceCatalogDialogs }))
 )
 
-type ResourceCatalogViewType = Extract<ResourceType, 'assistant' | 'agent' | 'skill'>
+type ResourceCatalogViewType = Extract<ResourceType, 'assistant'>
 
 export type ResourceCatalogViewProps = {
   className?: string
@@ -37,12 +37,8 @@ export function ResourceCatalogView({
   const { t } = useTranslation()
   const { resourceError, refetch, gridProps, dialogs } = useResourceCatalogController(resourceType)
   const hasActiveDialog = Boolean(
-    dialogs.selectedSkill ||
-      dialogs.assistantImportOpen ||
+    dialogs.assistantImportOpen ||
       (resourceType === 'assistant' && dialogs.assistantLibraryOpen) ||
-      dialogs.skillImportOpen ||
-      dialogs.skillMarketplaceOpen ||
-      (resourceType === 'skill' && dialogs.systemSkillOpen) ||
       dialogs.createDialogOpen ||
       dialogs.createDialogKind ||
       dialogs.editDialogTarget
@@ -54,12 +50,7 @@ export function ResourceCatalogView({
   }, [hasActiveDialog])
 
   return (
-    <div
-      className={cn(
-        'flex min-h-0 flex-1',
-        resourceType === 'skill' ? 'bg-transparent' : variant === 'library' && 'bg-background',
-        className
-      )}>
+    <div className={cn('flex min-h-0 flex-1', variant === 'library' && 'bg-background', className)}>
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {resourceError ? (
           <>
@@ -86,7 +77,6 @@ export function ResourceCatalogView({
         ) : (
           <ResourceGrid
             {...gridProps}
-            onOpenSystemSkills={resourceType === 'skill' ? gridProps.onOpenSystemSkills : undefined}
             toolbarLeading={toolbarLeading}
             variant={variant}
             title={title}

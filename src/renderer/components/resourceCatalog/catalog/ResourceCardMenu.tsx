@@ -155,7 +155,7 @@ function useResourceCardMenuItems({
     items.push({
       type: 'item',
       id: 'delete',
-      label: resource.type === 'skill' ? t('library.action.uninstall') : t('common.delete'),
+      label: t('common.delete'),
       icon: <Trash2 size={14} />,
       destructive: true,
       onSelect: () => {

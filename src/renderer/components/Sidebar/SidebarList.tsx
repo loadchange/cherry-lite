@@ -74,7 +74,7 @@ function IconList({ entries, active, onReorder, onContextMenuOpenChange }: ListP
                     : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground'
                 }`}>
                 {isActive && <ActiveIndicator className="rounded-full" />}
-                {entry.renderIcon(18, 'lg')}
+                {entry.renderIcon(18)}
               </button>
             </EntryContextMenu>
           </SidebarTooltip>
@@ -99,7 +99,7 @@ function FullList({ entries, active, onReorder, onContextMenuOpenChange }: ListP
             <EntryContextMenu items={entry.contextMenuItems} onOpenChange={onContextMenuOpenChange}>
               <MenuItem
                 variant="ghost"
-                icon={entry.renderIcon(16, 'md')}
+                icon={entry.renderIcon(16)}
                 label={entry.label}
                 active={isActive}
                 onClick={guardClick(entry.key, entry.onOpen)}

@@ -8,8 +8,7 @@ import {
   openResourceEditDialog,
   type ResourceEditDialogTarget
 } from '@renderer/components/resourceCatalog/dialogs/edit'
-import { useAgent } from '@renderer/hooks/agent/useAgent'
-import { useAgentMutationsById, useAssistantMutationsById } from '@renderer/hooks/resourceCatalog'
+import { useAssistantMutationsById } from '@renderer/hooks/resourceCatalog'
 import { useMcpRuntimeStatusMap } from '@renderer/hooks/useMcpRuntimeStatus'
 import { useMcpServers } from '@renderer/hooks/useMcpServer'
 import { toast } from '@renderer/services/toast'
@@ -27,7 +26,6 @@ export const MCP_STATUS_LAUNCHER_ID = 'mcp-status'
 const logger = loggerService.withContext('mcpStatusTool')
 
 type McpStatusToolContext = ToolRenderContext<readonly [], readonly []>
-type McpStatusAgent = { mcps?: string[] } | undefined
 const MCP_RUNTIME_STATUS_LABEL_KEYS: Record<McpRuntimeStatus['state'], string> = {
   connected: 'settings.mcp.runtimeStatus.connected',
   connecting: 'settings.mcp.runtimeStatus.connecting',
@@ -42,23 +40,18 @@ const MCP_MODE_LABEL_KEYS: Record<McpMode, string> = {
 
 interface BuildMcpStatusItemsOptions {
   assistant?: Assistant
-  agent?: McpStatusAgent
   canEditBindings?: boolean
   mcpServers: readonly McpServer[]
   mcpStatuses: Record<string, McpRuntimeStatus | undefined>
   onToggleBinding?: (id: string, enabled: boolean) => void
   pendingServerId?: string | null
-  scope: TopicType.Chat | TopicType.Session
   t: TFunction
 }
 
 interface UpdateMcpBindingOptions {
   assistant?: Assistant
-  agent?: McpStatusAgent
   enabled: boolean
-  scope: TopicType.Chat | TopicType.Session
   serverId: string
-  updateAgent: (patch: { mcps: string[] }) => Promise<unknown>
   updateAssistant: (patch: { mcpServerIds: string[] }) => Promise<unknown>
 }
 
@@ -142,19 +135,10 @@ function nextBindingIds(ids: readonly string[], serverId: string, enabled: boole
 
 export async function updateMcpBinding({
   assistant,
-  agent,
   enabled,
-  scope,
   serverId,
-  updateAgent,
   updateAssistant
 }: UpdateMcpBindingOptions): Promise<boolean> {
-  if (scope === TopicType.Session) {
-    if (!agent) return false
-    await updateAgent({ mcps: nextBindingIds(agent.mcps ?? [], serverId, enabled) })
-    return true
-  }
-
   if (!assistant || (assistant.settings?.mcpMode ?? DEFAULT_MCP_MODE) !== 'manual') return false
   await updateAssistant({ mcpServerIds: nextBindingIds(assistant.mcpServerIds ?? [], serverId, enabled) })
   return true
@@ -162,26 +146,13 @@ export async function updateMcpBinding({
 
 export function buildMcpStatusItems({
   assistant,
-  agent,
   canEditBindings,
   mcpServers,
   mcpStatuses,
   onToggleBinding,
   pendingServerId,
-  scope,
   t
 }: BuildMcpStatusItemsOptions): QuickPanelListItem[] {
-  if (scope === TopicType.Session) {
-    if (mcpServers.length === 0) {
-      return [createEmptyMcpStatusItem(t('settings.quickPanel.mcp.agentEmpty', 'No MCP servers configured'))]
-    }
-    return buildBindingServerItems(mcpServers, new Set(agent?.mcps ?? []), mcpStatuses, t, {
-      canEditBindings,
-      onToggleBinding,
-      pendingServerId
-    })
-  }
-
   const mode = assistant ? (assistant.settings?.mcpMode ?? DEFAULT_MCP_MODE) : 'disabled'
   if (mode === 'disabled') {
     return [createEmptyMcpStatusItem(t('settings.quickPanel.mcp.disabled', 'MCP is disabled'))]
@@ -205,14 +176,7 @@ export function buildMcpStatusItems({
   })
 }
 
-export function resolveMcpConfigTarget(options: {
-  scope: TopicType.Chat | TopicType.Session
-  assistantId?: string
-  agentId?: string
-}): ResourceEditDialogTarget | null {
-  if (options.scope === TopicType.Session) {
-    return options.agentId ? { kind: 'agent', id: options.agentId, initialTab: 'tools.mcp' } : null
-  }
+export function resolveMcpConfigTarget(options: { assistantId?: string }): ResourceEditDialogTarget | null {
   return options.assistantId ? { kind: 'assistant', id: options.assistantId, initialTab: 'tools.mcp' } : null
 }
 
@@ -285,22 +249,18 @@ export function createMcpStatusLauncher(
 }
 
 export const McpStatusComposerRuntime = ({ context }: { context: McpStatusToolContext }) => {
-  const { assistant, launcher, scope, session, t } = context
+  const { assistant, launcher, t } = context
   const { isVisible, symbol, updateList } = useQuickPanel()
   const [dataRequested, setDataRequested] = useState(false)
-  const mode =
-    scope === TopicType.Chat ? (assistant ? (assistant.settings?.mcpMode ?? DEFAULT_MCP_MODE) : 'disabled') : undefined
-  const dataEnabled = dataRequested && (scope === TopicType.Session || mode !== 'disabled')
+  const mode = assistant ? (assistant.settings?.mcpMode ?? DEFAULT_MCP_MODE) : 'disabled'
+  const dataEnabled = dataRequested && mode !== 'disabled'
   const { mcpServers, isLoading: isMcpServersLoading } = useMcpServers(undefined, { enabled: dataEnabled })
   const mcpStatuses = useMcpRuntimeStatusMap(mcpServers)
-  const { agent } = useAgent(dataEnabled && scope === TopicType.Session ? (session?.agentId ?? null) : null)
   const { updateAssistant } = useAssistantMutationsById(assistant?.id ?? '')
-  const { updateAgent } = useAgentMutationsById(session?.agentId ?? '')
   const [pendingServerId, setPendingServerId] = useState<string | null>(null)
   const bindingMutationInFlightRef = useRef(false)
-  const bindingPanelEditable = scope === TopicType.Session || mode === 'manual'
-  const canEditBindings =
-    scope === TopicType.Session ? Boolean(session?.agentId && agent) : Boolean(assistant?.id && mode === 'manual')
+  const bindingPanelEditable = mode === 'manual'
+  const canEditBindings = Boolean(assistant?.id && mode === 'manual')
 
   const handleToggleBinding = useCallback(
     async (serverId: string, enabled: boolean) => {
@@ -311,32 +271,24 @@ export const McpStatusComposerRuntime = ({ context }: { context: McpStatusToolCo
       try {
         await updateMcpBinding({
           assistant,
-          agent,
           enabled,
-          scope: scope === TopicType.Session ? TopicType.Session : TopicType.Chat,
           serverId,
-          updateAgent,
           updateAssistant
         })
       } catch (error) {
-        logger.error('Failed to update MCP binding from the composer', error as Error, { scope, serverId })
+        logger.error('Failed to update MCP binding from the composer', error as Error, { serverId })
         toast.error(formatErrorMessageWithPrefix(error, t('common.save_failed')))
       } finally {
         bindingMutationInFlightRef.current = false
         setPendingServerId(null)
       }
     },
-    [agent, assistant, scope, t, updateAgent, updateAssistant]
+    [assistant, t, updateAssistant]
   )
 
   const configTarget = useMemo<ResourceEditDialogTarget | null>(
-    () =>
-      resolveMcpConfigTarget({
-        scope: scope === TopicType.Session ? TopicType.Session : TopicType.Chat,
-        assistantId: assistant?.id,
-        agentId: session?.agentId
-      }),
-    [assistant?.id, scope, session?.agentId]
+    () => resolveMcpConfigTarget({ assistantId: assistant?.id }),
+    [assistant?.id]
   )
 
   const items = useMemo(() => {
@@ -352,19 +304,16 @@ export const McpStatusComposerRuntime = ({ context }: { context: McpStatusToolCo
     }
     const statusItems = buildMcpStatusItems({
       assistant,
-      agent,
       canEditBindings,
       mcpServers,
       mcpStatuses,
       onToggleBinding: bindingPanelEditable ? handleToggleBinding : undefined,
       pendingServerId,
-      scope: scope === TopicType.Session ? TopicType.Session : TopicType.Chat,
       t
     })
     const footer = buildMcpConfigFooterItem(configTarget, t)
     return footer ? [...statusItems, footer] : statusItems
   }, [
-    agent,
     assistant,
     bindingPanelEditable,
     canEditBindings,
@@ -375,7 +324,6 @@ export const McpStatusComposerRuntime = ({ context }: { context: McpStatusToolCo
     mcpServers,
     mcpStatuses,
     pendingServerId,
-    scope,
     t
   ])
 
@@ -397,7 +345,7 @@ export const McpStatusComposerRuntime = ({ context }: { context: McpStatusToolCo
 const mcpStatusTool = defineTool({
   key: 'mcp_status',
   label: 'MCP',
-  visibleInScopes: [TopicType.Chat, TopicType.Session],
+  visibleInScopes: [TopicType.Chat],
   composer: {
     runtime: ({ context }) => <McpStatusComposerRuntime context={context} />
   }

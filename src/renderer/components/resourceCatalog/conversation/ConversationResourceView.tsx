@@ -3,7 +3,7 @@ import type { ResourceType } from '@renderer/types/resourceCatalog'
 import { cn } from '@renderer/utils/style'
 import type { ReactNode } from 'react'
 
-export type ConversationResourceKind = Extract<ResourceType, 'assistant' | 'agent' | 'skill'>
+export type ConversationResourceKind = Extract<ResourceType, 'assistant'>
 
 type ConversationResourceViewProps = {
   className?: string

@@ -1,13 +1,7 @@
-import { composerFileTokenId, composerKnowledgeBaseTokenId } from './shared/composerTokens'
+import { composerFileTokenId } from './shared/composerTokens'
 
-export {
-  fileToComposerToken,
-  getComposerTokenIds,
-  hasComposerToken,
-  knowledgeBaseToComposerToken
-} from './shared/composerTokens'
+export { fileToComposerToken, getComposerTokenIds, hasComposerToken } from './shared/composerTokens'
 
 export const chatComposerTokenId = {
-  file: composerFileTokenId,
-  knowledge: composerKnowledgeBaseTokenId
+  file: composerFileTokenId
 }

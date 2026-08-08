@@ -5,7 +5,7 @@
  * runtime Zod schemas that handlers validate against and the type-level
  * helpers that inject whole endpoint definitions (path + method + params +
  * body + response) into a resource's schema map. Consumed by resource schema
- * files (e.g. `topics.ts`, `miniApps.ts`), main-side handlers, and renderer
+ * files (e.g. `topics.ts`, `providers.ts`), main-side handlers, and renderer
  * hooks.
  *
  * The leading underscore mirrors `src/main/data/db/schemas/_columnHelpers.ts`
@@ -71,7 +71,7 @@ export type OrderBatchRequest = z.infer<typeof OrderBatchRequestSchema>
  *
  * Usage in a resource schema file:
  *
- *   export type MiniappSchemas = {
+ *   export type TopicSchemas = {
  *     '/mini-apps': { GET: {...}, POST: {...} }
  *     '/mini-apps/:id': { ... }
  *   } & OrderEndpoints<'/mini-apps'>

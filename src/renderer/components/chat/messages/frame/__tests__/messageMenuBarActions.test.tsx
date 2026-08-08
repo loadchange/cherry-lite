@@ -332,7 +332,6 @@ describe('messageMenuBarActions', () => {
       createActionContext({
         actions: {
           deleteMessage: vi.fn(),
-          exportToNotes: vi.fn(),
           regenerateMessage: vi.fn(),
           renderRegenerateModelPicker: vi.fn(),
           setActiveBranch: vi.fn(),
@@ -349,7 +348,6 @@ describe('messageMenuBarActions', () => {
       'assistant-mention-model',
       'translate',
       'useful',
-      'notes',
       'delete',
       'more-menu'
     ])
@@ -656,23 +654,22 @@ describe('messageMenuBarActions', () => {
     expect(tooltipOpenValues[tooltipOpenValues.length - 1]).toBe(true)
   })
 
-  it('keeps Notes actions capability-driven', () => {
+  it('keeps save actions capability-driven', () => {
     const context = createActionContext({
       actions: {
         deleteMessage: vi.fn(),
-        exportToNotes: vi.fn(),
-        saveToKnowledge: vi.fn()
+        saveTextFile: vi.fn()
       } as MessageListActions
     })
 
     const toolbarActions = resolveMessageMenuBarToolbarActions(context)
 
-    expect(toolbarActions.map((action) => action.id)).toEqual(['copy', 'notes', 'delete', 'more-menu'])
+    expect(toolbarActions.map((action) => action.id)).toEqual(['copy', 'delete', 'more-menu'])
     expect(
       resolveMessageMenuBarMenuActions(context)
         .find((action) => action.id === 'save')
         ?.children.map((action) => action.id)
-    ).toEqual(['save.notes', 'save.knowledge'])
+    ).toEqual(['save.file'])
   })
 
   it('keeps menu actions capability-driven instead of filtering by session roots', () => {

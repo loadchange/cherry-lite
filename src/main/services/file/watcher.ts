@@ -8,7 +8,7 @@
  *
  * ## Positioning
  *
- * - **Not a lifecycle service.** Business modules (e.g. a future NoteService)
+ * - **Not a lifecycle service.** Business modules
  *   instantiate their own watcher via `createDirectoryWatcher(path)` and
  *   dispose it themselves; the factory transparently forwards events into
  *   `DanglingCache`.
@@ -49,12 +49,7 @@ const logger = loggerService.withContext('file/watcher')
  * Normalized FS event. Rename is represented as `unlink` + `add` — consumers
  * that need "rename" semantics correlate the pair themselves (see
  * §8.3 "Rename Detection Semantics" in file-manager-architecture.md).
- *
- * Directory variants `addDir` / `unlinkDir` were added when the
- * `DirectoryTreeBuilder` primitive landed (see
- * `docs/references/file/directory-tree.md`) — without them, folder
- * creation / deletion would never reach a subscribed tree builder because
- * chokidar reports those on dedicated channels.
+
  */
 export type WatcherEvent =
   | { readonly kind: 'add'; readonly path: AbsoluteFilePath }

@@ -89,19 +89,21 @@ describe('getToolCitationExport', () => {
     })
   })
 
-  it('lists a URL-less knowledge citation without a link', () => {
+  it('lists a URL-less citation without a link', () => {
     const message = createExportView([
       {
-        type: 'tool-kb_search',
+        type: 'tool-web_search',
         toolCallId: 'c2',
         state: 'output-available',
-        input: { query: 'q', baseIds: ['b'] },
-        output: [{ id: '3f2a1b9c-1', baseId: 'b', conceptId: 'notes/one.md', title: 'One.md', content: 'kb', score: 1 }]
+        input: { query: 'q' },
+        output: [{ id: '3f2a1b9c-1', title: 'Unlinked Source', url: '', content: 'snippet' }]
       },
-      { type: 'text', text: 'From notes. [cite:3f2a1b9c-1]' }
+      { type: 'text', text: 'From an unlinked source. [cite:3f2a1b9c-1]' }
     ] as MessageExportView['parts'])
 
-    expect(getToolCitationExport(message, 'From notes. [cite:3f2a1b9c-1]').citation).toBe('[1] One.md')
+    expect(getToolCitationExport(message, 'From an unlinked source. [cite:3f2a1b9c-1]').citation).toBe(
+      '[1] Unlinked Source'
+    )
   })
 
   it('defers to legacy reference metadata rather than renumbering it', () => {

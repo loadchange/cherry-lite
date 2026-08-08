@@ -6,13 +6,11 @@
  * import from here. Nothing outside the module imports implementation files
  * under `./internal/*` or `./utils/*` directly.
  *
- * - `FileManager` and `DirectoryTreeManager` are lifecycle services
- *   (`@Injectable`, `@ServicePhase(Phase.WhenReady)`). Their **classes** are
- *   exported here for the composition root (`serviceRegistry`) to register —
- *   exactly like the feature barrels (`@main/features/knowledge` →
- *   `KnowledgeService`). Runtime code resolves the singletons via
- *   `application.get('FileManager')` / `application.get('DirectoryTreeManager')`;
- *   do not `new` them or call methods off these exports directly.
+ * - `FileManager` is a lifecycle service (`@Injectable`,
+ *   `@ServicePhase(Phase.WhenReady)`). Its **class** is exported here for the
+ *   composition root (`serviceRegistry`) to register. Runtime code resolves the
+ *   singleton via `application.get('FileManager')`; do not `new` it or call
+ *   methods off this export directly.
  * - Implementation lives under `./internal/*` (entry / content / system ops),
  *   `./tree/*`, `./utils/*`, and `./watcher.ts` as private modules. Narrow
  *   documented helpers are re-exported below for legitimate outside callers.
@@ -20,7 +18,7 @@
  *   owner, open to the entire Main process). Modules that need raw
  *   `atomicWriteFile` / `stat` etc. import that barrel directly.
  * - `./watcher.ts` exposes `createDirectoryWatcher()` as a consumable primitive
- *   for business modules (e.g. future NoteService). Not a lifecycle service.
+ *   for business modules. Not a lifecycle service.
  * - `./danglingCache.ts` is a file-module singleton; only queried via the
  *   DataApi handler or via FileManager side effects.
  *
@@ -40,7 +38,6 @@ export type {
 } from './FileManager'
 export { FileManager } from './FileManager'
 export { ContentCommittedMetadataPendingError, StaleVersionError } from './FileManager'
-export { DirectoryTreeManager } from './tree/DirectoryTreeManager'
 
 // DanglingCache: interface and singleton are both exported for in-process
 // callers (orphanSweep, business services querying live state). External
@@ -60,8 +57,8 @@ export { createDanglingCacheImpl, danglingCache } from './danglingCache'
 // via the barrel — see file-manager-architecture.md §1.6.1 / §12.
 export type { VersionCache } from './versionCache'
 
-// Watcher primitive — business modules (future NoteService, KB watcher, etc.)
-// call `createDirectoryWatcher` directly. Not a lifecycle service.
+// Watcher primitive — business modules call `createDirectoryWatcher` directly.
+// Not a lifecycle service.
 export type {
   CreateDirectoryWatcherOptions,
   DirectoryWatcher,

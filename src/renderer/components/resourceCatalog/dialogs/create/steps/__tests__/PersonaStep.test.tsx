@@ -72,9 +72,7 @@ function Harness({ name = '' }: { name?: string }) {
       name,
       description: '',
       modelId: null,
-      prompt: 'Original persona prompt',
-      knowledgeBaseIds: [],
-      skillIds: []
+      prompt: 'Original persona prompt'
     }
   })
 

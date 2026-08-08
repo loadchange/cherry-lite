@@ -1,7 +1,3 @@
-import { agentTable } from '@data/db/schemas/agent'
-import { agentSessionTable } from '@data/db/schemas/agentSession'
-import { agentSessionMessageTable } from '@data/db/schemas/agentSessionMessage'
-import { agentWorkspaceTable } from '@data/db/schemas/agentWorkspace'
 import { aiUsageRecordTable } from '@data/db/schemas/aiUsageRecord'
 import { assistantTable } from '@data/db/schemas/assistant'
 import { messageTable } from '@data/db/schemas/message'
@@ -16,7 +12,6 @@ import { AiUsageRecordMigrator } from '../AiUsageRecordMigrator'
 import { getAllMigrators } from '../migratorRegistry'
 
 const chatMessageId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
-const agentMessageId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
 
 describe('AiUsageRecordMigrator', () => {
   const dbh = setupTestDatabase()
@@ -40,37 +35,6 @@ describe('AiUsageRecordMigrator', () => {
     dbh.db
       .insert(topicTable)
       .values({ id: 'topic-1', assistantId: 'assistant-1', activeNodeId: null, orderKey: 'a0' })
-      .run()
-    dbh.db
-      .insert(agentTable)
-      .values({
-        id: 'agent-1',
-        type: 'claude_code',
-        name: 'Current Agent Name',
-        instructions: '',
-        model: null,
-        orderKey: 'a0'
-      })
-      .run()
-    dbh.db
-      .insert(agentWorkspaceTable)
-      .values({
-        id: 'workspace-1',
-        name: 'Workspace',
-        path: '/tmp/workspace',
-        type: 'user',
-        orderKey: 'a0'
-      })
-      .run()
-    dbh.db
-      .insert(agentSessionTable)
-      .values({
-        id: 'session-1',
-        agentId: 'agent-1',
-        name: 'Session',
-        workspaceId: 'workspace-1',
-        orderKey: 'a0'
-      })
       .run()
   })
 
@@ -125,23 +89,10 @@ describe('AiUsageRecordMigrator', () => {
         ])
       )
       .run()
-    dbh.db
-      .insert(agentSessionMessageTable)
-      .values({
-        id: agentMessageId,
-        sessionId: 'session-1',
-        role: 'assistant',
-        status: 'success',
-        data: { parts: [] },
-        stats: { totalTokens: 7, requestCount: 1, estimatedRequestCount: 1, unpricedRequestCount: 1 },
-        createdAt: 2_000,
-        updatedAt: 2_000
-      })
-      .run()
 
     const migrator = new AiUsageRecordMigrator()
-    expect(await migrator.prepare(context())).toMatchObject({ success: true, itemCount: 2 })
-    expect(await migrator.execute(context())).toMatchObject({ success: true, processedCount: 2 })
+    expect(await migrator.prepare(context())).toMatchObject({ success: true, itemCount: 1 })
+    expect(await migrator.execute(context())).toMatchObject({ success: true, processedCount: 1 })
 
     const rows = dbh.db.select().from(aiUsageRecordTable).orderBy(aiUsageRecordTable.createdAt).all()
     expect(rows[0]).toMatchObject({
@@ -163,13 +114,6 @@ describe('AiUsageRecordMigrator', () => {
       timeThinkingMs: null,
       createdAt: 1_000
     })
-    expect(rows[1]).toMatchObject({
-      requestId: `legacy:agent-session:${agentMessageId}`,
-      providerId: null,
-      modelId: null,
-      sourceId: null
-    })
-
     expect(dbh.db.select().from(messageTable).where(eq(messageTable.id, chatMessageId)).get()?.stats).toMatchObject({
       requestCount: 2,
       estimatedRequestCount: 2,

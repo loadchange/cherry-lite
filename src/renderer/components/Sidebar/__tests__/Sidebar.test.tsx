@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import type { LucideIcon } from 'lucide-react'
 import { Search } from 'lucide-react'
-import type { CSSProperties, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
@@ -12,9 +12,8 @@ import {
   SIDEBAR_ICON_WIDTH,
   SIDEBAR_MAX_WIDTH
 } from '../constants'
-import { MiniAppIcon } from '../primitives'
 import { Sidebar } from '../Sidebar'
-import type { ResolvedSidebarEntry, SidebarMiniAppTab } from '../types'
+import type { ResolvedSidebarEntry } from '../types'
 
 type AppItem = {
   id: string
@@ -100,20 +99,6 @@ vi.mock('@renderer/components/command', () => ({
   )
 }))
 
-vi.mock('@renderer/components/icons/miniAppsLogo', () => {
-  const QwenLogo = ({ style, ...props }: { style?: CSSProperties }) => (
-    <svg data-testid="resolved-mini-app-logo" style={style} {...props} />
-  )
-  QwenLogo.Avatar = ({ size }: { size: number }) => (
-    <span data-size={size} data-testid="resolved-mini-app-logo-avatar" />
-  )
-  return {
-    getMiniAppsLogoRef: (logo?: string) =>
-      logo === 'qwen' ? { kind: 'provider', key: 'qwen', meta: { id: 'qwen', colorPrimary: '#000' } } : undefined,
-    useMiniAppLogo: (logo?: string) => (logo === 'qwen' ? QwenLogo : undefined)
-  }
-})
-
 // Build the type-agnostic resolved entries the real registry would produce, so the
 // presentation tests exercise the same shape without depending on app wiring.
 const appEntry = (item: AppItem): ResolvedSidebarEntry => ({
@@ -126,17 +111,6 @@ const appEntry = (item: AppItem): ResolvedSidebarEntry => ({
   isActive: (active) => active.activeItem === item.id,
   onOpen: () => {},
   contextMenuItems: item.contextMenuItems
-})
-const miniEntry = (
-  tab: SidebarMiniAppTab,
-  contextMenuItems?: ResolvedSidebarEntry['contextMenuItems']
-): ResolvedSidebarEntry => ({
-  key: `mini_app:${tab.miniApp.id}`,
-  label: tab.title,
-  renderIcon: (_size, miniAppSize) => <MiniAppIcon tab={tab} size={miniAppSize} />,
-  isActive: (active) => active.activeTabId === tab.miniApp.id,
-  onOpen: () => {},
-  contextMenuItems
 })
 
 const items: AppItem[] = [
@@ -373,100 +347,6 @@ describe('Sidebar resize handle', () => {
     } finally {
       vi.useRealTimers()
     }
-  })
-
-  it('renders apps and direct mini app icons together in one full docked list', () => {
-    const { container } = render(
-      <Sidebar
-        width={SIDEBAR_FULL_THRESHOLD}
-        setWidth={vi.fn()}
-        active={{ activeItem: 'chat' }}
-        entries={[
-          ...entries,
-          miniEntry({
-            title: 'Qwen',
-            miniApp: { id: 'qwen', logo: 'qwen' }
-          })
-        ]}
-      />
-    )
-
-    expect(screen.getByText('Chat')).toBeInTheDocument()
-    expect(screen.getByText('Qwen')).toBeInTheDocument()
-    expect(container.querySelector('[data-testid="resolved-mini-app-logo-avatar"]')).not.toBeInTheDocument()
-    expect(container.querySelector('[data-testid="resolved-mini-app-logo"]')).toHaveStyle({
-      width: '16px',
-      height: '16px'
-    })
-  })
-
-  it('gives docked mini apps the shared icon-row button sizing and hover styles', () => {
-    const { container } = render(
-      <Sidebar
-        width={SIDEBAR_ICON_WIDTH}
-        setWidth={vi.fn()}
-        active={{ activeItem: 'chat' }}
-        entries={[
-          ...entries,
-          miniEntry({
-            title: 'Qwen',
-            miniApp: { id: 'qwen', logo: 'qwen' }
-          })
-        ]}
-      />
-    )
-
-    const miniAppLogo = container.querySelector('[data-testid="resolved-mini-app-logo"]')
-    const dockedMiniAppButton = miniAppLogo?.closest('button')
-
-    expect(miniAppLogo).toHaveStyle({ width: '22px', height: '22px' })
-    expect(dockedMiniAppButton).toHaveClass('h-9', 'w-9')
-    expect(dockedMiniAppButton).toHaveClass('hover:bg-accent/60', 'hover:text-foreground')
-  })
-
-  it('names icon-only docked mini app buttons from the full title when the logo is missing', () => {
-    render(
-      <Sidebar
-        width={SIDEBAR_ICON_WIDTH}
-        setWidth={vi.fn()}
-        active={{ activeItem: 'chat' }}
-        entries={[
-          ...entries,
-          miniEntry({
-            title: 'Custom Tool',
-            miniApp: { id: 'custom' }
-          })
-        ]}
-      />
-    )
-
-    expect(screen.getByRole('button', { name: 'Custom Tool' })).toBeInTheDocument()
-  })
-
-  it('wires context menu actions for docked mini app icons', () => {
-    const onRemove = vi.fn()
-
-    render(
-      <Sidebar
-        width={SIDEBAR_ICON_WIDTH}
-        setWidth={vi.fn()}
-        active={{ activeItem: 'chat' }}
-        entries={[
-          ...entries,
-          miniEntry(
-            {
-              title: 'Qwen',
-              miniApp: { id: 'qwen', logo: 'qwen' }
-            },
-            [{ type: 'item', id: 'remove-qwen', label: 'Remove from Sidebar', onSelect: onRemove }]
-          )
-        ]}
-      />
-    )
-
-    fireEvent.click(screen.getByTestId('context-menu-remove-qwen'))
-
-    expect(onRemove).toHaveBeenCalledTimes(1)
   })
 
   it('suppresses only the dragged sidebar entry click after sorting settles', () => {

@@ -24,7 +24,6 @@ const hookMocks = vi.hoisted(() => ({
   finishTopicRenaming: vi.fn(),
   getTopicMessages: vi.fn(),
   promptShow: vi.fn(),
-  saveToKnowledge: vi.fn(),
   startTopicRenaming: vi.fn(),
   togglePin: vi.fn(),
   updateTopic: vi.fn(),
@@ -181,10 +180,6 @@ vi.mock('@renderer/hooks/useTopic', () => ({
   startTopicRenaming: hookMocks.startTopicRenaming
 }))
 
-vi.mock('@renderer/hooks/useNotesSettings', () => ({
-  useNotesSettings: () => ({ notesPath: '/notes' })
-}))
-
 vi.mock('@renderer/utils/aiGeneration', () => ({
   fetchMessagesSummary: vi.fn().mockResolvedValue({ text: 'Auto title' })
 }))
@@ -208,10 +203,6 @@ vi.mock('@renderer/components/popups/PromptPopup', () => ({
   default: { show: hookMocks.promptShow }
 }))
 
-vi.mock('@renderer/components/SaveToKnowledgePopup', () => ({
-  default: { showForTopic: hookMocks.saveToKnowledge }
-}))
-
 // The confirm-and-run dialog itself is covered by its own unit test; here we just let it run
 // the gated action (as if the user confirmed).
 const { confirmActionShow } = vi.hoisted(() => ({
@@ -232,7 +223,6 @@ vi.mock('@renderer/services/ExportService', () => ({
   exportMarkdownToSiyuan: vi.fn(),
   exportMarkdownToYuque: vi.fn(),
   exportTopicAsMarkdown: vi.fn(),
-  exportTopicToNotes: vi.fn(),
   exportTopicToNotion: vi.fn(),
   topicToMarkdown: vi.fn().mockResolvedValue('# topic')
 }))
@@ -247,7 +237,6 @@ vi.mock('react-i18next', () => ({
       const labels: Record<string, string> = {
         'chat.default.name': 'Default assistant',
         'chat.default.topic.name': 'New conversation',
-        'chat.save.topic.knowledge.menu_title': 'Save to knowledge base',
         'chat.topics.auto_rename': 'Generate conversation name',
         'chat.topics.clear.title': 'Clear messages',
         'chat.topics.copy.image': 'Copy as Image',
@@ -313,7 +302,6 @@ vi.mock('react-i18next', () => ({
         'history.records.table.emptyValue': '-',
         'history.records.table.time': 'Time',
         'history.records.title': 'Conversation history',
-        'notes.save': 'Save to notes',
         'selector.common.pinned_title': 'Pinned'
       }
       const options = typeof fallbackOrOptions === 'object' ? fallbackOrOptions : maybeOptions
@@ -369,7 +357,6 @@ function createAssistant(overrides: Partial<Assistant> = {}): Assistant {
     },
     modelId: null,
     mcpServerIds: [],
-    knowledgeBaseIds: [],
     groupId: null,
     createdAt: '2026-05-13T08:00:00.000Z',
     updatedAt: '2026-05-14T08:00:00.000Z',
@@ -449,7 +436,6 @@ describe('HistoryRecordsView assistant mode', () => {
     hookMocks.getTopicMessages.mockReset()
     hookMocks.getTopicMessages.mockResolvedValue([])
     hookMocks.promptShow.mockReset()
-    hookMocks.saveToKnowledge.mockReset()
     hookMocks.startTopicRenaming.mockReset()
     hookMocks.togglePin.mockReset()
     hookMocks.togglePin.mockResolvedValue(undefined)
@@ -992,8 +978,6 @@ describe('HistoryRecordsView assistant mode', () => {
       'Pin Conversation',
       'Clear messages',
       '',
-      'Save to notes',
-      'Save to knowledge base',
       'ExportExport as ImageExport as MarkdownExport as Markdown with ReasoningExport as WordExport to NotionExport to YuqueExport to ObsidianExport to JoplinExport to Siyuan',
       'CopyCopy as ImageCopy as MarkdownCopy as Plain Text',
       '',

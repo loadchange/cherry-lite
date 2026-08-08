@@ -33,7 +33,7 @@
     },
     "builtin": {
       "cherry_assistant": {
-        "description": "Cherry Studio 內建使用顧問。診斷問題、引導操作、收錄 FAQ、提交 Bug/需求、搜尋和建立 Skills"
+        "description": "Cherry Studio Lite 內建使用顧問。診斷問題、引導操作、收錄 FAQ、提交 Bug/需求、搜尋和建立 Skills"
       }
     },
     "channels": {
@@ -1085,55 +1085,6 @@
       "server_not_running_description": "智能體功能需要 API 閘道運行。你可以直接啟動閘道，或前往設定頁面檢查配置。"
     }
   },
-  "apiGateway": {
-    "actions": {
-      "regenerate": "重新產生",
-      "restart": {
-        "button": "重新啟動",
-        "tooltip": "重新啟動閘道"
-      },
-      "start": "啟動",
-      "stop": "停止"
-    },
-    "authHeader": {
-      "title": "授權標頭"
-    },
-    "description": "透過 OpenAI 和 Anthropic 相容的 HTTP API 公開 Cherry Studio 的 AI 功能",
-    "documentation": {
-      "title": "API 文件"
-    },
-    "fields": {
-      "apiKey": {
-        "copyTooltip": "複製 API 金鑰",
-        "label": "API 金鑰",
-        "placeholder": "API 金鑰會自動產生"
-      },
-      "port": {
-        "label": "連接埠"
-      },
-      "url": {
-        "copyTooltip": "複製 URL",
-        "label": "URL"
-      }
-    },
-    "messages": {
-      "apiKeyRegenerated": "API 金鑰已重新產生",
-      "notEnabled": "API 閘道未啟用。",
-      "operationFailed": "API 閘道操作失敗：",
-      "restartError": "重新啟動 API 閘道失敗：",
-      "restartFailed": "API 閘道重新啟動失敗：",
-      "restartSuccess": "API 閘道重新啟動成功",
-      "startError": "啟動 API 閘道失敗：",
-      "startSuccess": "API 閘道啟動成功",
-      "stopError": "停止 API 閘道失敗：",
-      "stopSuccess": "API 閘道停止成功"
-    },
-    "status": {
-      "running": "執行中",
-      "stopped": "已停止"
-    },
-    "title": "API 閘道"
-  },
   "assistants": {
     "abbr": "助手",
     "clear": {
@@ -2137,11 +2088,6 @@
       },
       "select_placeholder": "請選擇…"
     },
-    "api_gateway": {
-      "description": "任意 CLI，暢用全部模型",
-      "requires_running": "啟用後請保持 Cherry Studio 執行，外部 CLI 才能連線到它託管的閘道。",
-      "title": "統一網關"
-    },
     "apply_failed": "寫入 CLI 設定到系統檔案失敗",
     "auto_update_to_latest": "檢查更新並安裝最新版本",
     "bun_required_message": "運作 CLI 工具需要安裝 Bun 環境",
@@ -2448,9 +2394,6 @@
     "yesterday": "昨天",
     "you": "您"
   },
-  "docs": {
-    "title": "說明文件"
-  },
   "emoji_picker": {
     "categories": {
       "activities": "活動",
@@ -2519,12 +2462,12 @@
       "content": "訊息內容被安全系統攔截，請修改後重試",
       "context_length": "對話內容過長，請清除歷史記錄或開啟新對話",
       "deprecated": "此模型已停用，請切換至其他模型",
-      "free_model_unavailable": "AI診斷暫時無法使用",
       "go_to_settings": "前往設定",
       "knowledge": "知識庫向量化失敗",
       "mcp": "MCP 伺服器連線失敗，請檢查服務是否已啟動",
       "model": "模型不存在或你沒有存取權限",
       "model_conflict": "診斷模型與出錯模型相同，無法進行診斷",
+      "model_unavailable": "AI診斷暫時無法使用",
       "network": "無法連線到伺服器，請檢查網路或代理設定",
       "ocr": "OCR 識別引擎未初始化，請檢查 OCR 設定",
       "parse": "AI 回傳了無效的回應，請重試或切換模型",
@@ -3986,9 +3929,6 @@
           "specified": "匯出 Markdown 檔案失敗"
         }
       },
-      "notes": {
-        "export": "匯出筆記失敗"
-      },
       "notion": {
         "export": "匯出 Notion 失敗，請檢查連線狀態並參考說明文件確認設定",
         "no_api_key": "未設定 Notion API Key 或 Notion Database ID",
@@ -4092,9 +4032,6 @@
           "preconf": "成功匯出 Markdown 檔案到預先設定的路徑",
           "specified": "成功匯出 Markdown 檔案"
         }
-      },
-      "notes": {
-        "export": "成功匯出到筆記"
       },
       "notion": {
         "export": "成功匯出到 Notion"
@@ -4493,159 +4430,6 @@
   "navigate": {
     "provider_settings": "前往供應商設定頁面"
   },
-  "notes": {
-    "auto_rename": {
-      "empty_note": "筆記為空，無法產生名稱",
-      "failed": "產生筆記名稱失敗",
-      "label": "產生筆記名稱",
-      "success": "已成功產生筆記名稱"
-    },
-    "characters": "字元",
-    "collapse": "收合",
-    "conflict": {
-      "description": "此筆記在編輯器外被更改。請重新載入以載入最新版本（您未儲存的編輯將被捨棄），或繼續編輯。",
-      "keep_draft": "繼續編輯",
-      "reload": "重新載入",
-      "title": "磁碟上的筆記已變更"
-    },
-    "content_placeholder": "請輸入筆記內容...",
-    "copyContent": "複製內容",
-    "create_folder_failed": "建立資料夾失敗",
-    "create_note_failed": "建立筆記失敗",
-    "crossPlatformRestoreWarning": "偵測到從其他裝置恢復設定，但筆記目錄為空。請將筆記檔案複製到：{{path}}",
-    "delete": "刪除",
-    "delete_confirm": "確定要刪除此 {{type}} 嗎？",
-    "delete_failed": "刪除筆記失敗",
-    "delete_folder_confirm": "確定要刪除資料夾 \"{{name}}\" 及其所有內容嗎？",
-    "delete_note_confirm": "確定要刪除筆記 \"{{name}}\" 嗎？",
-    "drop_markdown_hint": "拖曳 .md 檔案或資料夾到此處匯入",
-    "empty": "暫無筆記",
-    "expand": "展開",
-    "exportToPDF": "匯出為 PDF",
-    "exportToWord": "匯出為 Word",
-    "export_failed": "匯出至知識庫失敗",
-    "export_knowledge": "匯出筆記至知識庫",
-    "export_success": "成功匯出至知識庫",
-    "export_to_pdf_failed": "匯出為 PDF 失敗",
-    "export_to_pdf_success": "已匯出為 PDF",
-    "export_to_word_failed": "匯出為 Word 失敗",
-    "file_removed_draft": "此筆記已從磁碟中移除。您未儲存的草稿仍可在編輯器中取得。",
-    "folder": "資料夾",
-    "leave": {
-      "description": "離開此頁面將會放棄您未儲存的編輯。您是否確定要繼續？",
-      "discard_and_continue": "捨棄並繼續",
-      "title": "捨棄未儲存的筆記編輯？"
-    },
-    "load_failed": "筆記載入失敗",
-    "load_failed_description": "無法讀取該檔案。為保護筆記內容，已停用編輯。",
-    "metadata_sync_failed": "檔案已更新，但筆記狀態同步失敗，請重試該操作。",
-    "metadata_update_failed": "筆記狀態更新失敗",
-    "move_failed": "移動筆記失敗",
-    "new_folder": "新增資料夾",
-    "new_note": "新增筆記",
-    "no_content_to_copy": "沒有內容可複製",
-    "no_content_to_export": "沒有內容可匯出",
-    "no_file_selected": "請選擇要上傳的檔案",
-    "no_note_selected": "請先選擇一個筆記",
-    "no_valid_files": "沒有上傳有效的檔案",
-    "open_folder": "開啟外部資料夾",
-    "open_outside": "從外部開啟",
-    "print": "列印",
-    "print_failed": "列印筆記失敗",
-    "rename": "重新命名",
-    "rename_changed": "基於安全性考量，檔名已從 {{original}} 變更為 {{final}}",
-    "rename_failed": "重新命名筆記失敗",
-    "save": "儲存到筆記",
-    "save_blocked_load_failed": "筆記載入失敗，已阻止儲存",
-    "save_failed": "儲存筆記失敗",
-    "save_failure": {
-      "description": "此筆記無法儲存。您的編輯內容仍保留在編輯器中，自動儲存功能已暫停。",
-      "metadata_pending": "筆記已儲存，但其檔案中繼資料仍在復原中。請勿重試此儲存操作。"
-    },
-    "search": {
-      "both": "名稱 + 內容",
-      "content": "內容",
-      "found_results": "找到 {{count}} 個結果（名稱：{{nameCount}}，內容：{{contentCount}}）",
-      "more_matches": "更多符合結果",
-      "searching": "搜尋中...",
-      "show_less": "收合"
-    },
-    "settings": {
-      "data": {
-        "apply": "套用",
-        "apply_path_failed": "套用路徑失敗",
-        "current_work_directory": "目前工作目錄",
-        "invalid_directory": "選擇的目錄無效或無權限",
-        "path_required": "請選擇工作目錄",
-        "path_updated": "工作目錄更新成功",
-        "reset_failed": "重設失敗",
-        "reset_to_default": "重設為預設值",
-        "select": "選擇",
-        "select_directory_failed": "選擇目錄失敗",
-        "title": "資料設定",
-        "work_directory_description": "工作目錄是儲存所有筆記檔案的位置。\n變更工作目錄不會移動現有檔案，請手動移轉檔案。",
-        "work_directory_placeholder": "選擇筆記工作目錄"
-      },
-      "display": {
-        "compress_content": "內容壓縮",
-        "compress_content_description": "啟用後會限制每行字數，減少畫面顯示的內容，但讓長段落更好閱讀。",
-        "default_font": "預設字型",
-        "font_size": "字型大小",
-        "font_size_description": "調整字型大小以獲得更好的閱讀體驗 (10-30px)",
-        "font_size_large": "大",
-        "font_size_medium": "中",
-        "font_size_small": "小",
-        "font_title": "字型設定",
-        "serif_font": "襯線字型",
-        "show_table_of_contents": "顯示目錄大綱",
-        "show_table_of_contents_description": "顯示目錄大綱側邊欄，方便在檔案內導覽",
-        "title": "顯示設定"
-      },
-      "editor": {
-        "edit_mode": {
-          "description": "在編輯檢視中，新筆記的預設編輯模式",
-          "preview_mode": "即時預覽",
-          "source_mode": "原始碼模式",
-          "title": "預設編輯檢視"
-        },
-        "title": "編輯器設定",
-        "view_mode": {
-          "description": "新筆記的預設檢視模式",
-          "edit_mode": "編輯模式",
-          "read_mode": "閱讀模式",
-          "title": "預設檢視"
-        },
-        "view_mode_description": "設定新標籤頁的預設檢視模式。"
-      },
-      "save_failed": "儲存筆記設定失敗",
-      "title": "更多選項"
-    },
-    "show_starred": "顯示收藏的筆記",
-    "sort_a2z": "檔名（A-Z）",
-    "sort_created_asc": "建立時間（從舊到新）",
-    "sort_created_desc": "建立時間（從新到舊）",
-    "sort_updated_asc": "更新時間（從舊到新）",
-    "sort_updated_desc": "更新時間（從新到舊）",
-    "sort_z2a": "檔名（Z-A）",
-    "spell_check": "拼字檢查",
-    "spell_check_tooltip": "啟用/停用拼字檢查",
-    "star": "收藏筆記",
-    "starred_notes": "收藏的筆記",
-    "target_name_exists": "已存在同名筆記或資料夾",
-    "title": "筆記",
-    "tree_load_failed": "載入筆記目錄失敗",
-    "unsaved_changes": "尚有未儲存的內容，確定要離開嗎？",
-    "unstar": "取消收藏",
-    "untitled_folder": "新資料夾",
-    "untitled_note": "無標題筆記",
-    "upload_all_failed": "{{failed}} 個筆記上傳失敗",
-    "upload_failed": "筆記上傳失敗",
-    "upload_files": "上傳檔案",
-    "upload_folder": "上傳資料夾",
-    "upload_partial_failed": "已上傳 {{uploaded}} 個筆記，{{failed}} 個失敗",
-    "upload_success": "筆記上傳成功",
-    "uploading_files": "正在上傳 {{count}} 個檔案..."
-  },
   "notification": {
     "assistant": "助手回應",
     "knowledge": {
@@ -4692,22 +4476,19 @@
     },
     "skip": "跳過",
     "toast": {
-      "complete_failed": "無法完成引導，請重試",
-      "connected": "成功連接到 CherryIN"
+      "complete_failed": "無法完成引導，請重試"
     },
     "welcome": {
-      "login_cherryin": "使用 CherryIN 登入",
       "or_continue_with": "或繼續使用",
-      "other_provider": "選擇其他供應商",
       "select_other_provider": "選擇其他供應商",
       "setup_hint": "請至少設定一個提供者以獲得最佳體驗",
       "subtitle": "連接服務商，開啟您的全能 AI 工作站",
-      "title": "歡迎來到 Cherry Studio"
+      "title": "歡迎來到 Cherry Studio Lite"
     }
   },
   "openclaw": {
     "checking_installation": "正在檢查 OpenClaw 安裝狀態...",
-    "description": "使用 Cherry Studio 服務商為 OpenClaw 提供支援，OpenClaw 是您的個人 AI 助手，可在 WhatsApp、Telegram、Slack、Discord 等平台上使用。",
+    "description": "使用 Cherry Studio Lite 服務商為 OpenClaw 提供支援，OpenClaw 是您的個人 AI 助手，可在 WhatsApp、Telegram、Slack、Discord 等平台上使用。",
     "error": {
       "select_provider_model": "請先選擇服務商和模型"
     },
@@ -4728,7 +4509,7 @@
     },
     "installed_at": "OpenClaw 安裝路徑",
     "migration": {
-      "description": "偵測到 PATH 中存在外部 OpenClaw 安裝，但 Cherry Studio 只使用受管理的 OpenClaw 二進位檔。請安裝受管理版本後繼續。",
+      "description": "偵測到 PATH 中存在外部 OpenClaw 安裝，但 Cherry Studio Lite 只使用受管理的 OpenClaw 二進位檔。請安裝受管理版本後繼續。",
       "install_button": "重新安裝 OpenClaw",
       "title": "OpenClaw 需要更新"
     },
@@ -4745,7 +4526,7 @@
       "title": "模型設定"
     },
     "node_missing": {
-      "description": "OpenClaw 需要 Node.js/npm。請先安裝 Node.js，然後重新啟動 Cherry Studio。",
+      "description": "OpenClaw 需要 Node.js/npm。請先安裝 Node.js，然後重新啟動 Cherry Studio Lite。",
       "download_button": "下載 Node.js",
       "hint": "macOS：brew install node | Windows：從 nodejs.org 下載 LTS 版本",
       "title": "需要 Node.js"
@@ -5231,7 +5012,6 @@
     "baidu-cloud": "百度雲千帆",
     "burncloud": "BurnCloud",
     "cerebras": "Cerebras AI",
-    "cherryai": "CherryAI",
     "cherryin": "CherryIN",
     "claude-code": "Claude Code",
     "copilot": "GitHub Copilot",
@@ -5352,221 +5132,6 @@
     },
     "title": "資料復原"
   },
-  "richEditor": {
-    "action": {
-      "table": {
-        "deleteColumn": "刪除列",
-        "deleteRow": "刪除行",
-        "insertColumnAfter": "在右側插入",
-        "insertColumnBefore": "在左側插入",
-        "insertRowAfter": "在下方插入",
-        "insertRowBefore": "在上方插入"
-      }
-    },
-    "commands": {
-      "blockMath": {
-        "description": "插入數學公式",
-        "title": "數學公式"
-      },
-      "blockquote": {
-        "description": "插入引用文字",
-        "title": "引用"
-      },
-      "bold": {
-        "description": "標記為粗體",
-        "title": "粗體"
-      },
-      "bulletList": {
-        "description": "建立簡單的列點清單",
-        "title": "無序清單"
-      },
-      "calloutInfo": {
-        "description": "新增資訊提示框",
-        "title": "資訊提示框"
-      },
-      "calloutWarning": {
-        "description": "新增警告提示框",
-        "title": "警告提示框"
-      },
-      "code": {
-        "description": "插入程式碼片段",
-        "title": "程式碼"
-      },
-      "codeBlock": {
-        "description": "插入程式碼片段",
-        "title": "程式碼區塊"
-      },
-      "columns": {
-        "description": "建立分欄版面",
-        "title": "分欄"
-      },
-      "date": {
-        "description": "插入目前日期",
-        "title": "日期"
-      },
-      "divider": {
-        "description": "新增水平分隔線",
-        "title": "分隔線"
-      },
-      "hardBreak": {
-        "description": "插入換行符",
-        "title": "換行符"
-      },
-      "heading1": {
-        "description": "大段落標題",
-        "title": "一級標題"
-      },
-      "heading2": {
-        "description": "中段落標題",
-        "title": "二級標題"
-      },
-      "heading3": {
-        "description": "小段落標題",
-        "title": "三級標題"
-      },
-      "heading4": {
-        "description": "較小的段落標題",
-        "title": "四級標題"
-      },
-      "heading5": {
-        "description": "更小的段落標題",
-        "title": "五級標題"
-      },
-      "heading6": {
-        "description": "最小的段落標題",
-        "title": "六級標題"
-      },
-      "image": {
-        "description": "插入圖片",
-        "title": "圖片"
-      },
-      "inlineCode": {
-        "description": "新增行內程式碼",
-        "title": "行內程式碼"
-      },
-      "inlineMath": {
-        "description": "插入行內數學公式",
-        "title": "行內數學公式"
-      },
-      "italic": {
-        "description": "標記為斜體",
-        "title": "斜體"
-      },
-      "link": {
-        "description": "新增連結",
-        "title": "連結"
-      },
-      "noCommandsFound": "未找到命令",
-      "orderedList": {
-        "description": "建立帶編號的清單",
-        "title": "有序清單"
-      },
-      "paragraph": {
-        "description": "開始編寫普通文字",
-        "title": "內文"
-      },
-      "redo": {
-        "description": "重做上一步操作",
-        "title": "重做"
-      },
-      "strike": {
-        "description": "標記為刪除線",
-        "title": "刪除線"
-      },
-      "table": {
-        "description": "插入表格",
-        "title": "表格"
-      },
-      "taskList": {
-        "description": "建立待辦事項清單",
-        "title": "任務清單"
-      },
-      "underline": {
-        "description": "標記為下劃線",
-        "title": "下劃線"
-      },
-      "undo": {
-        "description": "復原上一步操作",
-        "title": "復原"
-      }
-    },
-    "dragHandle": "拖拽塊",
-    "frontMatter": {
-      "addProperty": "新增屬性",
-      "addTag": "新增標籤",
-      "changeToBoolean": "核取方塊",
-      "changeToDate": "日期",
-      "changeToNumber": "數字",
-      "changeToTags": "標籤",
-      "changeToText": "文字",
-      "changeType": "更改類型",
-      "deleteProperty": "刪除屬性",
-      "editValue": "編輯值",
-      "empty": "空",
-      "moreActions": "更多操作",
-      "propertyName": "屬性名稱"
-    },
-    "image": {
-      "placeholder": "新增圖片"
-    },
-    "imageUploader": {
-      "embedImage": "嵌入圖片",
-      "embedLink": "嵌入連結",
-      "embedSuccess": "圖片嵌入成功",
-      "invalidType": "請選擇圖片檔案",
-      "invalidUrl": "無效的圖片連結",
-      "processing": "正在處理圖片...",
-      "title": "新增圖片",
-      "tooLarge": "圖片大小不能超過 10MB",
-      "upload": "上傳",
-      "uploadError": "圖片上傳失敗",
-      "uploadFile": "上傳檔案",
-      "uploadHint": "支援 JPG、PNG、GIF 等格式，最大 10MB",
-      "uploadSuccess": "圖片上傳成功",
-      "uploadText": "點選或拖曳圖片到此處上傳",
-      "uploading": "正在上傳圖片",
-      "urlPlaceholder": "貼上圖片連結網址",
-      "urlRequired": "請輸入圖片連結網址"
-    },
-    "link": {
-      "remove": "移除連結",
-      "text": "連結標題",
-      "textPlaceholder": "請輸入連結標題",
-      "url": "連結網址"
-    },
-    "math": {
-      "placeholder": "輸入 LaTeX 公式"
-    },
-    "placeholder": "輸入'/'呼叫命令",
-    "plusButton": "點選以在下方新增",
-    "toolbar": {
-      "blockMath": "數學公式塊",
-      "blockquote": "引用",
-      "bold": "粗體",
-      "bulletList": "無序清單",
-      "clearMarks": "清除格式",
-      "code": "行內程式碼",
-      "codeBlock": "程式碼區塊",
-      "heading1": "一級標題",
-      "heading2": "二級標題",
-      "heading3": "三級標題",
-      "heading4": "四級標題",
-      "heading5": "五級標題",
-      "heading6": "六級標題",
-      "image": "圖片",
-      "inlineMath": "行內數學公式",
-      "italic": "斜體",
-      "link": "連結",
-      "orderedList": "有序清單",
-      "paragraph": "內文",
-      "redo": "重做",
-      "strike": "刪除線",
-      "table": "表格",
-      "taskList": "任務清單",
-      "underline": "底線",
-      "undo": "復原"
-    }
-  },
   "selection": {
     "action": {
       "builtin": {
@@ -5642,7 +5207,7 @@
           },
           "description": {
             "0": "劃詞助手需「<strong>輔助使用權限</strong>」才能正常工作。",
-            "1": "請點選「<strong>前往設定</strong>」，並在稍後出現的權限請求對話框中點選「<strong>開啟系統設定</strong>」按鈕，接著在應用程式清單中找到「<strong>Cherry Studio</strong>」，並開啟權限開關。",
+            "1": "請點選「<strong>前往設定</strong>」，並在稍後出現的權限請求對話框中點選「<strong>開啟系統設定</strong>」按鈕，接著在應用程式清單中找到「<strong>Cherry Studio Lite</strong>」，並開啟權限開關。",
             "2": "完成設定後，請再次開啟劃詞助手。"
           },
           "title": "輔助使用權限"
@@ -5666,7 +5231,7 @@
         "wayland_checklist_subtitle": "確認以下條件已滿足，以盡可能優化 Wayland 下的體驗：",
         "wayland_description": "目前為 Wayland 模式，受系統限制，部分桌面環境下工具列只能顯示在螢幕中央，無法跟隨選取文字定位。建議切換到 X11 模式以獲得完整體驗。",
         "wayland_title": "Wayland 模式提示",
-        "xwayland_fail": "未啟用，請使用 `--ozone-platform=x11` 參數啟動 Cherry Studio",
+        "xwayland_fail": "未啟用，請使用 `--ozone-platform=x11` 參數啟動 Cherry Studio Lite",
         "xwayland_label": "XWayland 模式：",
         "xwayland_pass": "已啟用"
       },
@@ -5815,28 +5380,13 @@
   },
   "settings": {
     "about": {
-      "careers": {
-        "button": "查看",
-        "title": "加入我們"
-      },
       "checkUpdate": {
         "available": "立即更新",
         "label": "檢查更新"
       },
       "checkingUpdate": "正在檢查更新...",
-      "contact": {
-        "button": "電子郵件",
-        "title": "聯絡方式"
-      },
-      "debug": {
-        "open": "開啟",
-        "title": "除錯面板"
-      },
       "description": "一款為創作者而生的強大 AI 助手",
       "downloading": "正在下載...",
-      "enterprise": {
-        "title": "企業版"
-      },
       "feedback": {
         "agent": {
           "description": "與 Cherry Assistant 聊天以分享回饋。",
@@ -5845,7 +5395,7 @@
         "agent_error": "無法開啟 Cherry Assistant 以提供意見回饋。請再試一次。",
         "button": "回饋",
         "dialog": {
-          "description": "選擇分享回饋的方式，幫助我們讓 Cherry Studio 變得更好。",
+          "description": "選擇分享回饋的方式，幫助我們讓 Cherry Studio Lite 變得更好。",
           "title": "選擇回饋管道"
         },
         "github": {
@@ -5871,11 +5421,7 @@
       "title": "關於我們",
       "updateAvailable": "發現新版本 {{version}}",
       "updateError": "更新錯誤",
-      "updateNotAvailable": "您正在使用最新版本",
-      "website": {
-        "button": "網站",
-        "title": "官方網站"
-      }
+      "updateNotAvailable": "您正在使用最新版本"
     },
     "advanced": {
       "auto_switch_to_topics": "自動切換到對話",
@@ -5927,7 +5473,7 @@
         "select": "變更目錄",
         "select_error": "變更資料目錄失敗",
         "select_error_in_app_path": "新路徑與應用安裝路徑相同，請選擇其他路徑",
-        "select_error_protected_path": "所選路徑受作業系統或 Cherry Studio 保護，請選擇其他資料夾",
+        "select_error_protected_path": "所選路徑受作業系統或 Cherry Studio Lite 保護，請選擇其他資料夾",
         "select_error_root_path": "新路徑不能是根路徑",
         "select_error_same_path": "新路徑與舊路徑相同，請選擇其他路徑",
         "select_error_write_permission": "新路徑沒有寫入權限",
@@ -6516,31 +6062,6 @@
       "installing": "安裝中...",
       "installingHint": "首次安裝可能需要下載執行環境，耗時數分鐘",
       "invalidTool": "工具名稱或識別碼無效",
-      "localModels": {
-        "cancel": "取消",
-        "description": "在本機執行的模型，下載後即可離線使用，無需 API Key。",
-        "download": "下載",
-        "embedding": {
-          "name": "本機嵌入模型",
-          "subtitle": "Qwen3 Embedding 0.6B · 約 614 MB"
-        },
-        "notice": {
-          "downloadFailed": "下載失敗，請檢查網路後重試。",
-          "inUse": "該模型仍被知識庫使用，已保留權重。",
-          "removeFailed": "刪除失敗，請查看日誌。"
-        },
-        "ocr": {
-          "name": "本機 OCR 模型",
-          "subtitle": "PaddleOCR PP-OCRv6 · 約 140 MB"
-        },
-        "remove": "刪除",
-        "status": {
-          "downloading": "下載中…",
-          "ready": "已就緒"
-        },
-        "title": "本機模型",
-        "unsupported": "目前平台不支援本機模型。"
-      },
       "notInstalled": "未安裝",
       "openBinariesDir": "開啟二進位檔案目錄",
       "remove": "移除工具",
@@ -6578,7 +6099,7 @@
         "uv": "用於 MCP 服務與依賴安裝的 Python 套件管理工具。"
       },
       "uninstall": "解除安裝",
-      "uninstallConfirmMessage": "您確定要卸載「{{name}}」嗎？Cherry Studio 的後端副本將會被刪除。",
+      "uninstallConfirmMessage": "您確定要卸載「{{name}}」嗎？Cherry Studio Lite 的後端副本將會被刪除。",
       "uninstallConfirmTitle": "解除安裝工具",
       "uninstallFailed": "無法解除安裝工具",
       "uninstallSuccess": "工具已卸載",
@@ -7444,10 +6965,6 @@
     "power": {
       "prevent_sleep_when_busy": "執行任務時保持系統喚醒"
     },
-    "privacy": {
-      "enable_privacy_mode": "匿名傳送錯誤報告和資料統計",
-      "title": "隱私設定"
-    },
     "prompts": {
       "add": "新增提示詞",
       "contentLabel": "內容",
@@ -7586,8 +7103,7 @@
       "base_url": {
         "invalid": "輸入有效的 HTTP 或 HTTPS URL",
         "label": "Base URL",
-        "placeholder": "https://api.example.com",
-        "required": "請輸入 Base URL"
+        "placeholder": "https://api.example.com"
       },
       "basic_auth": {
         "label": "HTTP 認證",
@@ -7687,13 +7203,6 @@
           "text_endpoint_required": "請設定至少一個文字端點",
           "url_help": "輸入 API 根 URL 以預覽最終請求路徑"
         },
-        "preset_instance": {
-          "description": "針對 Coding Plan 服務、多個帳號或專案隔離需求；請分別設定每個 Base URL 和 API 金鑰",
-          "empty": "沒有相符的提供者預設值",
-          "placeholder": "從提供者預設建立…",
-          "search_placeholder": "搜尋提供者預設值",
-          "title": "從預設開始（選填）"
-        },
         "request_preview": "請求路徑：{{path}}",
         "title": "新增自訂提供商"
       },
@@ -7709,12 +7218,6 @@
       },
       "docs_check": "檢查",
       "docs_more_details": "檢視更多細節",
-      "duplicate": {
-        "add_another": "新增 {{name}} 實例",
-        "drawer_title": "新增 {{name}} 實例",
-        "fill_after_create": "建立後請在詳情頁填寫認證欄位",
-        "menu_label": "新增實例"
-      },
       "enable_failed_after_connection": "連線成功，但服務商啟用失敗。",
       "filter": {
         "agent": "支援 Agent",
@@ -7751,8 +7254,7 @@
         "anthropic": "Anthropic Messages",
         "gemini": "Google Gemini",
         "openai_chat": "OpenAI Chat Completions",
-        "openai_responses": "OpenAI Responses",
-        "toggle": "更多端點"
+        "openai_responses": "OpenAI Responses"
       },
       "no_models_for_check": "沒有可以被檢查的模型（例如對話模型）",
       "not_checked": "未檢查",
@@ -8079,13 +7581,6 @@
           "doc2x": {
             "description": "高級檔案還原引擎。",
             "name": "Doc2x"
-          },
-          "local_paddleocr": {
-            "description": "在本機行程內執行的 PaddleOCR（PP-OCRv6 中等模型），完全離線、無需 API Key，辨識在背景執行緒進行不阻塞介面。首次使用請先在「環境相依」中下載模型（約 140MB）。",
-            "name": "本機 PaddleOCR",
-            "status": {
-              "local": "完全本機離線執行"
-            }
           },
           "mineru": {
             "description": "OpenDataLab 開源的高品質 PDF 擷取工具。",

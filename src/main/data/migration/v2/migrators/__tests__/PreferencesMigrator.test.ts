@@ -152,7 +152,7 @@ describe('PreferencesMigrator', () => {
       await migrator.prepare(ctx)
       await migrator.execute(ctx)
 
-      // Representative scalar defaults, including the new privacy defaults.
+      // Representative scalar defaults.
       const theme = await selectByKey(dbh.db, 'ui.theme_mode')
       expect(theme).toHaveLength(1)
       expect(theme[0].value).toBe('system')
@@ -161,8 +161,6 @@ describe('PreferencesMigrator', () => {
       expect(zoom[0].value).toBe(1)
       const policyVersion = await selectByKey(dbh.db, 'app.privacy.policy_version')
       expect(policyVersion[0]?.value).toBe('')
-      const dataCollection = await selectByKey(dbh.db, 'app.privacy.data_collection.enabled')
-      expect(dataCollection[0]?.value).toBe(true)
       const clientId = await selectByKey(dbh.db, 'app.user.id')
       expect(clientId[0]?.value).toBe('')
     })

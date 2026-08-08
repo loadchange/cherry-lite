@@ -2,11 +2,6 @@ import {
   chatMessageRoles,
   chatMessageSourceType,
   type FileRefSourceType,
-  jobRoles,
-  jobSourceType,
-  miniAppLogoRef,
-  paintingRoles,
-  paintingSourceType,
   providerLogoRef
 } from '@shared/data/types/file'
 import { type SQL, sql, type SQLWrapper } from 'drizzle-orm'
@@ -14,10 +9,7 @@ import { check, index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite
 
 import { createUpdateTimestamps, uuidPrimaryKey } from './_columnHelpers'
 import { fileEntryTable } from './file'
-import { jobTable } from './job'
 import { messageTable } from './message'
-import { miniAppTable } from './miniApp'
-import { paintingTable } from './painting'
 import { userProviderTable } from './userProvider'
 
 function sqlStringList(values: readonly string[]) {
@@ -59,65 +51,7 @@ export const chatMessageFileRefTable = sqliteTable(
 )
 
 /**
- * Painting file references.
- *
- * Replaces the old polymorphic `file_ref` rows with `sourceType='painting'`.
- * Deleting a painting or file entry cascades its association rows.
- */
-export const paintingFileRefTable = sqliteTable(
-  'painting_file_ref',
-  {
-    id: uuidPrimaryKey(),
-    fileEntryId: text()
-      .notNull()
-      .references(() => fileEntryTable.id, { onDelete: 'cascade' }),
-    sourceId: text()
-      .notNull()
-      .references(() => paintingTable.id, { onDelete: 'cascade' }),
-    role: text().notNull().$type<(typeof paintingRoles)[number]>(),
-    ...createUpdateTimestamps
-  },
-  (t) => [
-    index('pfr_entry_id_idx').on(t.fileEntryId),
-    index('pfr_source_id_idx').on(t.sourceId),
-    uniqueIndex('pfr_unique_idx').on(t.fileEntryId, t.sourceId, t.role),
-    check('pfr_role_check', roleCheck(t.role, paintingRoles))
-  ]
-)
-
-/**
- * Job file references.
- *
- * Links a FileEntry to a `job` row so the generic job system's persisted
- * inputs are visible to the cleanup anti-join (file-entry-cleanup.md §5.1).
- * Today only the async image-generation job holds refs here (its input images
- * / mask). Deleting the job row (terminal-row pruning) cascades the ref, so
- * the inputs become reclaimable exactly when the job record is gone; deleting
- * the file entry cascades too.
- */
-export const jobFileRefTable = sqliteTable(
-  'job_file_ref',
-  {
-    id: uuidPrimaryKey(),
-    fileEntryId: text()
-      .notNull()
-      .references(() => fileEntryTable.id, { onDelete: 'cascade' }),
-    sourceId: text()
-      .notNull()
-      .references(() => jobTable.id, { onDelete: 'cascade' }),
-    role: text().notNull().$type<(typeof jobRoles)[number]>(),
-    ...createUpdateTimestamps
-  },
-  (t) => [
-    index('jfr_entry_id_idx').on(t.fileEntryId),
-    index('jfr_source_id_idx').on(t.sourceId),
-    uniqueIndex('jfr_unique_idx').on(t.fileEntryId, t.sourceId, t.role),
-    check('jfr_role_check', roleCheck(t.role, jobRoles))
-  ]
-)
-
-/**
- * Single-file entity-image refs (provider logo, mini-app logo).
+ * Single-file entity-image refs (provider logo).
  *
  * These model a single-file slot and are the **single source of truth** for an
  * owner's uploaded logo — the owner row keeps only `logo_key` (preset / URL
@@ -127,8 +61,8 @@ export const jobFileRefTable = sqliteTable(
  * `getSingleFileRefId` (one indexed lookup on the unique `(sourceId)` index).
  * `sourceId` carries a **FK to the owner** (`onDelete: 'cascade'`) and
  * `fileEntryId` a FK to the file (`onDelete: 'cascade'`), matching the
- * collection ref tables (`chat_message`, `painting`): dropping a provider /
- * mini-app or its file drops the ref row, so orphan-counting stays exact.
+ * collection ref tables (`chat_message`): dropping a provider or
+ * its file drops the ref row, so orphan-counting stays exact.
  * Because both FKs are enforced, a write must order its inserts
  * `file_entry → owner row → ref row` (the ref's `fileEntryId` FK needs the file,
  * its `sourceId` FK needs the owner): the live `set_logo` path always updates an
@@ -153,22 +87,8 @@ export const providerLogoFileRefTable = sqliteTable(
   (t) => [index('plfr_entry_id_idx').on(t.fileEntryId), uniqueIndex('plfr_source_id_idx').on(t.sourceId)]
 )
 
-export const miniAppLogoFileRefTable = sqliteTable(
-  'mini_app_logo_file_ref',
-  {
-    id: uuidPrimaryKey(),
-    fileEntryId: text()
-      .notNull()
-      .references(() => fileEntryTable.id, { onDelete: 'cascade' }),
-    sourceId: text()
-      .notNull()
-      .references(() => miniAppTable.appId, { onDelete: 'cascade' }),
-    ...createUpdateTimestamps
-  },
-  (t) => [index('malfr_entry_id_idx').on(t.fileEntryId), uniqueIndex('malfr_source_id_idx').on(t.sourceId)]
-)
 /** The roleless single-file (logo) slot source types. */
-export type SingleFileRefSourceType = typeof providerLogoRef.sourceType | typeof miniAppLogoRef.sourceType
+export type SingleFileRefSourceType = typeof providerLogoRef.sourceType
 
 /**
  * Single-file slot tables by source type — the `sourceType → table` bridge for
@@ -177,9 +97,8 @@ export type SingleFileRefSourceType = typeof providerLogoRef.sourceType | typeof
  * is what keeps a service from reaching another owner's slot.
  */
 export const singleFileRefTablesBySourceType = {
-  [providerLogoRef.sourceType]: providerLogoFileRefTable,
-  [miniAppLogoRef.sourceType]: miniAppLogoFileRefTable
-} as const satisfies Record<SingleFileRefSourceType, typeof providerLogoFileRefTable | typeof miniAppLogoFileRefTable>
+  [providerLogoRef.sourceType]: providerLogoFileRefTable
+} as const satisfies Record<SingleFileRefSourceType, typeof providerLogoFileRefTable>
 
 /**
  * Every persistent source type has an association table. Intentionally has NO
@@ -188,16 +107,10 @@ export const singleFileRefTablesBySourceType = {
  */
 export const persistentFileRefTablesBySourceType = {
   [chatMessageSourceType]: chatMessageFileRefTable,
-  [paintingSourceType]: paintingFileRefTable,
-  [jobSourceType]: jobFileRefTable,
   ...singleFileRefTablesBySourceType
 } as const satisfies Record<
   PersistentFileRefSourceType,
-  | typeof chatMessageFileRefTable
-  | typeof paintingFileRefTable
-  | typeof jobFileRefTable
-  | typeof providerLogoFileRefTable
-  | typeof miniAppLogoFileRefTable
+  typeof chatMessageFileRefTable | typeof providerLogoFileRefTable
 >
 
 /**
@@ -213,11 +126,5 @@ export function persistentRefAbsenceConditions(): SQL[] {
 
 export type ChatMessageFileRefRow = typeof chatMessageFileRefTable.$inferSelect
 export type InsertChatMessageFileRefRow = typeof chatMessageFileRefTable.$inferInsert
-export type PaintingFileRefRow = typeof paintingFileRefTable.$inferSelect
-export type InsertPaintingFileRefRow = typeof paintingFileRefTable.$inferInsert
-export type JobFileRefRow = typeof jobFileRefTable.$inferSelect
-export type InsertJobFileRefRow = typeof jobFileRefTable.$inferInsert
 export type ProviderLogoFileRefRow = typeof providerLogoFileRefTable.$inferSelect
 export type InsertProviderLogoFileRefRow = typeof providerLogoFileRefTable.$inferInsert
-export type MiniAppLogoFileRefRow = typeof miniAppLogoFileRefTable.$inferSelect
-export type InsertMiniAppLogoFileRefRow = typeof miniAppLogoFileRefTable.$inferInsert

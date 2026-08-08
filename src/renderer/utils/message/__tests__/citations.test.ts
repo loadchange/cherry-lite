@@ -14,55 +14,18 @@ const webResults = (prefix: string) => [
   { id: `${prefix}-2`, title: 'Second', url: 'https://b.com/y', content: 'beta' }
 ]
 
-const kbResults = (prefix: string) => [
-  { id: `${prefix}-1`, conceptId: 'doc/one.md', title: 'One.md', type: 'file', content: 'kb chunk', score: 0.9 }
-]
-
 const webToolPart = (results: unknown, state = 'output-available'): CherryMessagePart =>
   ({ type: 'tool-web_search', toolCallId: 'c1', state, input: { query: 'q' }, output: results }) as never
 
-const kbToolPart = (results: unknown): CherryMessagePart =>
+/** A second citable call in the same message — `web_fetch` is the other builtin lookup tool. */
+const webFetchPart = (results: unknown): CherryMessagePart =>
   ({
-    type: 'tool-kb_search',
+    type: 'tool-web_fetch',
     toolCallId: 'c2',
     state: 'output-available',
-    input: { query: 'q', baseIds: ['b'] },
+    input: { urls: ['https://c.com/z'] },
     output: results
   }) as never
-
-const kbReadPart = (output: unknown, toolCallId = 'c5'): CherryMessagePart =>
-  ({
-    type: 'tool-kb_read',
-    toolCallId,
-    state: 'output-available',
-    input: { baseId: 'b', conceptId: 'doc/two.md' },
-    output
-  }) as never
-
-const kbReadOutput = (id: string | undefined, overrides: Record<string, unknown> = {}) => ({
-  ...(id === undefined ? {} : { id }),
-  conceptId: 'doc/two.md',
-  title: 'Two.md',
-  type: 'file',
-  totalChars: 10,
-  charStart: 0,
-  charEnd: 10,
-  content: 'read slice',
-  truncated: false,
-  ...overrides
-})
-
-const kbGrepOutput = (id: string) => ({
-  id,
-  conceptId: 'doc/three.md',
-  title: 'Three.md',
-  type: 'file',
-  totalMatches: 2,
-  matches: [
-    { line: 3, charStart: 10, charEnd: 20, snippet: 'first hit' },
-    { line: 9, charStart: 40, charEnd: 50, snippet: 'second hit' }
-  ]
-})
 
 const dynamicMcpPart = (toolName: string, content: unknown, serverName = 'cherry-tools'): CherryMessagePart =>
   ({
@@ -90,15 +53,18 @@ const textPart = (text: string): CherryMessagePart => ({ type: 'text', text }) a
 
 describe('resolveMessageCitations', () => {
   it('resolves static assistant tool parts with sequential display numbers', () => {
-    const mc = resolveMessageCitations([webToolPart(webResults('abc')), kbToolPart(kbResults('kzz'))])
+    const mc = resolveMessageCitations([
+      webToolPart(webResults('abc')),
+      webFetchPart([{ id: 'kzz-1', title: 'Third', url: 'https://c.com/z', content: 'gamma' }])
+    ])
     expect(mc.all.map((c) => c.number)).toEqual([1, 2, 3])
     expect(mc.byId.get('abc-1')).toMatchObject({ number: 1, url: 'https://a.com/x', type: 'websearch' })
-    expect(mc.byId.get('kzz-1')).toMatchObject({ number: 3, title: 'One.md', url: '', type: 'knowledge' })
+    expect(mc.byId.get('kzz-1')).toMatchObject({ number: 3, title: 'Third', url: 'https://c.com/z' })
   })
 
   it('resolves agent dynamic-tool parts with MCP-wrapped output', () => {
-    const mc = resolveMessageCitations([dynamicMcpPart('mcp__cherry-tools__kb_search', kbResults('qqq'))])
-    expect(mc.byId.get('qqq-1')).toMatchObject({ type: 'knowledge', content: 'kb chunk' })
+    const mc = resolveMessageCitations([dynamicMcpPart('mcp__cherry-tools__web_fetch', webResults('qqq'))])
+    expect(mc.byId.get('qqq-1')).toMatchObject({ type: 'websearch', content: 'alpha *bold*' })
   })
 
   it('ignores third-party MCP tools sharing the builtin name', () => {
@@ -184,7 +150,10 @@ describe('resolveMessageCitations', () => {
   })
 
   it('withholds bare-marker resolution when multiple calls make numbers ambiguous', () => {
-    const mc = resolveMessageCitations([webToolPart(webResults('aaa')), kbToolPart(kbResults('bbb'))])
+    const mc = resolveMessageCitations([
+      webToolPart(webResults('aaa')),
+      webFetchPart([{ id: 'bbb-1', title: 'Third', url: 'https://c.com/z', content: 'gamma' }])
+    ])
     expect(mc.byMarkerNumber.size).toBe(0)
     expect(mc.byId.size).toBe(3)
   })
@@ -200,71 +169,6 @@ describe('resolveMessageCitations', () => {
     expect(mc.byId.get('zzz-1')).toBe(mc.byId.get('aaa-1'))
   })
 
-  it('resolves a kb_read slice as one document-level citation', () => {
-    const mc = resolveMessageCitations([kbReadPart(kbReadOutput('rrr-1'))])
-    expect(mc.all).toHaveLength(1)
-    expect(mc.byId.get('rrr-1')).toMatchObject({ number: 1, title: 'Two.md', url: '', type: 'knowledge' })
-  })
-
-  it('resolves an MCP-wrapped kb_read slice from the agent path', () => {
-    const mc = resolveMessageCitations([dynamicMcpPart('mcp__cherry-tools__kb_read', kbReadOutput('rrr-1'))])
-    expect(mc.byId.get('rrr-1')).toMatchObject({ title: 'Two.md', content: 'read slice', type: 'knowledge' })
-  })
-
-  it('joins grep match snippets into the citation preview', () => {
-    const mc = resolveMessageCitations([kbReadPart(kbGrepOutput('ggg-1'))])
-    expect(mc.byId.get('ggg-1')).toMatchObject({ title: 'Three.md', content: 'first hit … second hit' })
-  })
-
-  it('truncates a long read slice to a tooltip-sized snippet', () => {
-    const mc = resolveMessageCitations([kbReadPart(kbReadOutput('rrr-1', { content: 'x'.repeat(2000) }))])
-    expect(mc.byId.get('rrr-1')?.content).toBe(`${'x'.repeat(300)}…`)
-  })
-
-  it('aliases a document to its existing citation when kb_search already returned it', () => {
-    const mc = resolveMessageCitations([
-      kbToolPart(kbResults('sss')),
-      kbReadPart(kbReadOutput('rrr-1', { conceptId: 'doc/one.md' }))
-    ])
-    expect(mc.all).toHaveLength(1)
-    expect(mc.byId.get('rrr-1')).toBe(mc.byId.get('sss-1'))
-  })
-
-  it('keeps same-path documents from different bases apart', () => {
-    // conceptId is a base-relative path, so two bases can each hold a `README.md`.
-    // Deduping on it alone aliased the second base's hit onto the first document.
-    const mc = resolveMessageCitations([
-      kbToolPart([
-        { id: 'kkk-1', baseId: 'base-a', conceptId: 'README.md', title: 'README', content: 'from A', score: 0.9 },
-        { id: 'kkk-2', baseId: 'base-b', conceptId: 'README.md', title: 'README', content: 'from B', score: 0.8 }
-      ])
-    ])
-    expect(mc.all).toHaveLength(2)
-    expect(mc.byId.get('kkk-1')).not.toBe(mc.byId.get('kkk-2'))
-    expect(mc.all.map((citation) => citation.content)).toEqual(['from A', 'from B'])
-  })
-
-  it('still dedupes one base’s document across a search and a read', () => {
-    const mc = resolveMessageCitations([
-      kbToolPart([
-        { id: 'kkk-1', baseId: 'base-a', conceptId: 'README.md', title: 'README', content: 'chunk', score: 0.9 }
-      ]),
-      kbReadPart(kbReadOutput('rrr-1', { baseId: 'base-a', conceptId: 'README.md' }))
-    ])
-    expect(mc.all).toHaveLength(1)
-    expect(mc.byId.get('rrr-1')).toBe(mc.byId.get('kkk-1'))
-  })
-
-  it('dedupes on conceptId alone for results persisted before baseId existed', () => {
-    const mc = resolveMessageCitations([
-      kbToolPart([
-        { id: 'kkk-1', conceptId: 'README.md', title: 'README', content: 'first', score: 0.9 },
-        { id: 'kkk-2', conceptId: 'README.md', title: 'README', content: 'second', score: 0.8 }
-      ])
-    ])
-    expect(mc.all).toHaveLength(1)
-  })
-
   it('drops a later result whose id collides with an earlier one', () => {
     // Citation ids carry 32 bits of per-call entropy so this effectively cannot happen;
     // pin the resolution anyway so a collision degrades predictably (first id wins)
@@ -277,21 +181,6 @@ describe('resolveMessageCitations', () => {
     expect(mc.byId.get('dup-1')?.url).toBe('https://a.com/x')
   })
 
-  it('skips kb_read results persisted before citation ids existed', () => {
-    const mc = resolveMessageCitations([kbReadPart(kbReadOutput(undefined))])
-    expect(mc.all).toHaveLength(0)
-  })
-
-  it('skips kb_read error and no-match outputs', () => {
-    const mc = resolveMessageCitations([
-      // The assistant path persists the raw core result, the agent path the steer text.
-      kbReadPart({ error: 'Knowledge base "b" is not available to this assistant.' }),
-      kbReadPart({ ...kbGrepOutput('ggg-1'), totalMatches: 0, matches: [] }, 'c6'),
-      kbReadPart('No matches for that pattern in "doc/three.md".', 'c7')
-    ])
-    expect(mc.all).toHaveLength(0)
-  })
-
   it('ignores tool parts that have not completed', () => {
     const mc = resolveMessageCitations([webToolPart(undefined, 'input-available'), textPart('hi')])
     expect(mc.all).toHaveLength(0)
@@ -300,12 +189,18 @@ describe('resolveMessageCitations', () => {
 
 describe('withToolCitationTags', () => {
   it('maps [cite:id] markers to sup tags and reports the cited subset in order', () => {
-    const mc = resolveMessageCitations([webToolPart(webResults('abc')), kbToolPart(kbResults('kzz'))])
-    const { content, cited } = withToolCitationTags('B fact. [cite:abc-2] KB fact. [cite:kzz-1] Again [cite:abc-2]', mc)
+    const mc = resolveMessageCitations([
+      webToolPart(webResults('abc')),
+      webFetchPart([{ id: 'kzz-1', title: 'Unlinked', url: '', content: 'gamma' }])
+    ])
+    const { content, cited } = withToolCitationTags(
+      'B fact. [cite:abc-2] Unlinked fact. [cite:kzz-1] Again [cite:abc-2]',
+      mc
+    )
     // Numbered by first appearance, not by position in the result set: abc-2 resolves to the
     // resolver's #2 and kzz-1 to its #3, but they render as 1 and 2.
     expect(content).toContain('1</sup>](https://b.com/y)')
-    // Web citations link out; the URL-less KB citation must stay a bare <sup> so rehype-harden
+    // Citations with a URL link out; a URL-less one must stay a bare <sup> so rehype-harden
     // does not rewrite an empty-href anchor into "<span>… [blocked]</span>".
     expect(content).toContain('2</sup>')
     expect(content).not.toContain('2</sup>]()')
@@ -326,15 +221,15 @@ describe('withToolCitationTags', () => {
   })
 
   it('collapses adjacent markers that resolve to the same source', () => {
-    // Two chunks of one document dedupe to a single citation, so the chained markers the model
+    // Two results for one URL dedupe to a single citation, so the chained markers the model
     // wrote would otherwise render as the same badge twice.
     const mc = resolveMessageCitations([
-      kbToolPart([
-        { id: 'sss-1', conceptId: 'doc/one.md', title: 'One.md', type: 'file', content: 'first', score: 0.9 },
-        { id: 'sss-2', conceptId: 'doc/one.md', title: 'One.md', type: 'file', content: 'second', score: 0.8 }
+      webToolPart([
+        { id: 'sss-1', title: 'One', url: 'https://a.com/x', content: 'first' },
+        { id: 'sss-2', title: 'One', url: 'https://a.com/x', content: 'second' }
       ])
     ])
-    const { content, cited } = withToolCitationTags('KB fact. [cite:sss-1][cite:sss-2]', mc)
+    const { content, cited } = withToolCitationTags('Shared fact. [cite:sss-1][cite:sss-2]', mc)
 
     expect(content.match(/>1<\/sup>/g)).toHaveLength(1)
     expect(cited).toHaveLength(1)
@@ -444,14 +339,14 @@ describe('toExportableCitations', () => {
 
   it('collapses repeat markers the way the rendered badges do', () => {
     const parts = [
-      kbToolPart([
-        { id: 'sss-1', baseId: 'b', conceptId: 'doc/one.md', title: 'One.md', content: 'first', score: 0.9 },
-        { id: 'sss-2', baseId: 'b', conceptId: 'doc/one.md', title: 'One.md', content: 'second', score: 0.8 }
+      webToolPart([
+        { id: 'sss-1', title: 'One', url: 'https://a.com/x', content: 'first' },
+        { id: 'sss-2', title: 'One', url: 'https://a.com/x', content: 'second' }
       ])
     ]
-    const { content, cited } = toExportableCitations('KB fact. [cite:sss-1][cite:sss-2]', parts)
+    const { content, cited } = toExportableCitations('Shared fact. [cite:sss-1][cite:sss-2]', parts)
 
-    expect(content).toBe('KB fact. [1]')
+    expect(content).toBe('Shared fact. [1]')
     expect(cited).toHaveLength(1)
   })
 

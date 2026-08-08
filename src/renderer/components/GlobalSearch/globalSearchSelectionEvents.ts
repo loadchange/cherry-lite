@@ -9,15 +9,6 @@ export type GlobalSearchTopicMessageSelectionPayload = GlobalSearchTopicSelectio
   messageId: string
 }
 
-export type GlobalSearchAgentSessionSelectionPayload = {
-  targetTabId: string
-  sessionId: string
-}
-
-export type GlobalSearchAgentSessionMessageSelectionPayload = GlobalSearchAgentSessionSelectionPayload & {
-  messageId: string
-}
-
 export function isGlobalSearchSelectionForTab(
   payload: { targetTabId?: string } | null | undefined,
   currentTabId: string | null | undefined

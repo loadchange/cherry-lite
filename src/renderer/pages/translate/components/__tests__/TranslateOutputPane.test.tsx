@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import TranslateOutputPane from '../TranslateOutputPane'
@@ -31,7 +31,6 @@ const baseProps = () => ({
   translating: false,
   copied: false,
   onCopy: vi.fn(),
-  onExportToNotes: vi.fn(),
   onScroll: vi.fn()
 })
 
@@ -54,20 +53,5 @@ describe('TranslateOutputPane', () => {
     render(<TranslateOutputPane {...props} />)
 
     expect(screen.getByText('translate.processing')).toBeInTheDocument()
-  })
-
-  it('shows an export-to-notes button in the bottom-right footer and calls it for translated content', () => {
-    const props = baseProps()
-    props.translatedContent = 'translated output'
-
-    render(<TranslateOutputPane {...props} />)
-
-    const buttons = screen.getAllByRole('button')
-    expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual(['common.copy', 'notes.save'])
-    expect(screen.getByRole('button', { name: 'notes.save' })).toHaveClass('ml-auto')
-
-    fireEvent.click(screen.getByRole('button', { name: 'notes.save' }))
-
-    expect(props.onExportToNotes).toHaveBeenCalledTimes(1)
   })
 })

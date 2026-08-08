@@ -29,7 +29,6 @@ const providerKeyMap = {
   baichuan: 'provider.baichuan',
   'baidu-cloud': 'provider.baidu-cloud',
   burncloud: 'provider.burncloud',
-  cherryai: 'provider.cherryai',
   cherryin: 'provider.cherryin',
   'claude-code': 'provider.claude-code',
   copilot: 'provider.copilot',
@@ -105,7 +104,9 @@ const providerKeyMap = {
  * 对于可能处理自定义供应商的情况，使用 getProviderName 或 getFancyProviderName 更安全
  */
 export const getProviderLabelKey = (id: string): string => {
-  return getLabelKey(providerKeyMap, id)
+  // Unmapped ids are normal now that every provider is user-defined: fall back to
+  // the raw id instead of reporting a missing translation.
+  return providerKeyMap[id as keyof typeof providerKeyMap] ?? id
 }
 
 const fileProcessorKeyMap = {
@@ -157,18 +158,11 @@ export const getRestoreProgressLabelKey = (key: string): string => {
 
 const titleKeyMap = {
   // TODO: update i18n key
-  apps: 'title.apps',
-  code: 'title.code',
-  files: 'title.files',
   home: 'title.home',
-  knowledge: 'title.knowledge',
   launchpad: 'title.launchpad',
   'mcp-servers': 'title.mcp-servers',
-  notes: 'title.notes',
-  paintings: 'title.paintings',
   settings: 'title.settings',
-  translate: 'title.translate',
-  agents: 'agent.sidebar_title'
+  translate: 'title.translate'
 } as const
 
 export const getTitleLabelKey = (key: string): string => {
@@ -187,14 +181,7 @@ export const getThemeModeLabelKey = (key: string): string => {
 
 const sidebarIconKeyMap = {
   assistants: 'title.chat',
-  agents: 'title.work',
-  paintings: 'title.paintings',
-  translate: 'translate.title',
-  mini_app: 'miniApp.title',
-  knowledge: 'knowledge.title',
-  files: 'files.title',
-  code_tools: 'code.title',
-  notes: 'notes.title'
+  translate: 'translate.title'
 } as const
 
 export const getSidebarIconLabelKey = (key: string): string => {
@@ -206,15 +193,8 @@ export const getSidebarIconLabelKey = (key: string): string => {
 // chat carve brings feat's Sidebar; remove together with that.
 const sidebarFavoriteKeyMap = {
   assistants: 'assistants.title',
-  agents: 'title.work',
   store: 'assistants.presets.title',
-  paintings: 'title.paintings',
-  translate: 'translate.title',
-  mini_app: 'miniApp.title',
-  knowledge: 'knowledge.title',
-  files: 'files.title',
-  code_tools: 'code.title',
-  notes: 'notes.title'
+  translate: 'translate.title'
 } as const
 export const getSidebarFavoriteLabelKey = (key: string): string => {
   return getLabelKey(sidebarFavoriteKeyMap, key)
@@ -228,44 +208,6 @@ const selectionDescriptionKeyMap = {
 
 export const getSelectionDescriptionLabelKey = (key: string): string => {
   return getLabelKey(selectionDescriptionKeyMap, key)
-}
-
-const paintingsImageSizeOptionsKeyMap = {
-  auto: 'paintings.image_size_options.auto'
-} as const
-
-export const getPaintingsImageSizeOptionsLabelKey = (key: string): string => {
-  return paintingsImageSizeOptionsKeyMap[key] ? getLabelKey(paintingsImageSizeOptionsKeyMap, key) : key
-}
-
-const paintingsQualityOptionsKeyMap = {
-  auto: 'paintings.quality_options.auto',
-  high: 'paintings.quality_options.high',
-  low: 'paintings.quality_options.low',
-  medium: 'paintings.quality_options.medium'
-} as const
-
-export const getPaintingsQualityOptionsLabelKey = (key: string): string => {
-  return getLabelKey(paintingsQualityOptionsKeyMap, key)
-}
-
-const paintingsModerationOptionsKeyMap = {
-  auto: 'paintings.moderation_options.auto',
-  low: 'paintings.moderation_options.low'
-} as const
-
-export const getPaintingsModerationOptionsLabelKey = (key: string): string => {
-  return getLabelKey(paintingsModerationOptionsKeyMap, key)
-}
-
-const paintingsBackgroundOptionsKeyMap = {
-  auto: 'paintings.background_options.auto',
-  opaque: 'paintings.background_options.opaque',
-  transparent: 'paintings.background_options.transparent'
-} as const
-
-export const getPaintingsBackgroundOptionsLabelKey = (key: string): string => {
-  return getLabelKey(paintingsBackgroundOptionsKeyMap, key)
 }
 
 const mcpTypeKeyMap = {

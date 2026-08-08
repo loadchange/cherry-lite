@@ -1,10 +1,8 @@
 import { modelMatchesDisplayTag } from '@renderer/components/tags/Model'
-import { modelFilterIncludesAgentOnlyProviders } from '@renderer/hooks/agent/useAgentModelFilter'
 import { useModels } from '@renderer/hooks/useModel'
 import { usePins } from '@renderer/hooks/usePins'
 import { useProviders } from '@renderer/hooks/useProvider'
 import { getSearchMatchScore } from '@renderer/utils/model'
-import { isProviderSettingsListVisibleProvider } from '@renderer/utils/providerSettings'
 import { isUniqueModelId, type Model, parseUniqueModelId, type UniqueModelId } from '@shared/data/types/model'
 import type { Provider } from '@shared/data/types/provider'
 import { isExternalCliProvider } from '@shared/utils/provider'
@@ -104,13 +102,9 @@ export function useModelSelectorData({
 
   const baseModelFilter = useCallback((model: Model) => filter?.(model) ?? true, [filter])
 
-  // Agent-only providers (e.g. `claude-code`, login-based, no API key) are hidden
-  // from general selectors; only agent pickers (whose filter is marked) surface them.
-  const includeAgentOnlyProviders = useMemo(() => modelFilterIncludesAgentOnlyProviders(filter), [filter])
-
   // A provider whose credentials come from an external CLI login carries no API
-  // key and cannot serve a normal chat request — it is agent-only.
-  const agentOnlyProviderIds = useMemo(
+  // key and cannot serve a normal chat request, so it never appears in a selector.
+  const externalCliProviderIds = useMemo(
     () => new Set(availableProviders.filter(isExternalCliProvider).map((p) => p.id)),
     [availableProviders]
   )
@@ -131,7 +125,7 @@ export function useModelSelectorData({
         continue
       }
 
-      if (!includeAgentOnlyProviders && agentOnlyProviderIds.has(model.providerId)) {
+      if (externalCliProviderIds.has(model.providerId)) {
         continue
       }
 
@@ -144,7 +138,7 @@ export function useModelSelectorData({
     }
 
     return grouped
-  }, [availableModels, agentOnlyProviderIds, baseModelFilter, includeAgentOnlyProviders, sortedProviders])
+  }, [availableModels, baseModelFilter, externalCliProviderIds, sortedProviders])
 
   const availableTags = useMemo(() => {
     if (modelsByProvider.size === 0) {
@@ -288,7 +282,7 @@ export function useModelSelectorData({
         title: getProviderDisplayName(provider),
         groupKind: 'provider',
         provider,
-        canNavigateToSettings: isProviderSettingsListVisibleProvider(provider)
+        canNavigateToSettings: true
       })
 
       items.push(

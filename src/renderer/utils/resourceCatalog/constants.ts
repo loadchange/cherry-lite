@@ -1,26 +1,16 @@
 import type { ResourceType, ResourceTypeUIConfig } from '@renderer/types/resourceCatalog'
 import type { AssistantSettings } from '@shared/data/types/assistant'
-import { Bot, FileText, MessageCircle, ToolCase } from 'lucide-react'
+import { FileText, MessageCircle } from 'lucide-react'
 
 export type AssistantConfigMcpMode = AssistantSettings['mcpMode']
 
 type ResourceTypeMeta = ResourceTypeUIConfig & { labelKey: string }
 
 export const RESOURCE_TYPE_META: Record<ResourceType, ResourceTypeMeta> = {
-  agent: {
-    icon: Bot,
-    color: 'bg-secondary text-secondary-foreground',
-    labelKey: 'library.type.agent'
-  },
   assistant: {
     icon: MessageCircle,
     color: 'bg-secondary text-secondary-foreground',
     labelKey: 'library.type.assistant'
-  },
-  skill: {
-    icon: ToolCase,
-    color: 'bg-warning-subtle text-warning',
-    labelKey: 'library.type.skill'
   },
   prompt: {
     icon: FileText,
@@ -29,7 +19,7 @@ export const RESOURCE_TYPE_META: Record<ResourceType, ResourceTypeMeta> = {
   }
 }
 
-export const RESOURCE_TYPE_ORDER: ResourceType[] = ['agent', 'assistant', 'skill', 'prompt']
+export const RESOURCE_TYPE_ORDER: ResourceType[] = ['assistant', 'prompt']
 
 export const RESOURCE_PROMPT_POLISH_SYSTEM_PROMPT = [
   'Improve the supplied system prompt without changing its intent or authority.',

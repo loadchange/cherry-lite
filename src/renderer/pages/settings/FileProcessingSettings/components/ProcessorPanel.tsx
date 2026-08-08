@@ -31,7 +31,6 @@ import { useTranslation } from 'react-i18next'
 import {
   type FileProcessingMenuEntry,
   getProcessorApiKeyWebsite,
-  getProcessorDescriptionKey,
   getProcessorNameKey,
   getTesseractLanguageCode,
   shouldShowLanguageOptions,
@@ -90,11 +89,7 @@ export function ProcessorPanel({
   const showApiSettings = supportsApiSettings(processor)
   const showLanguageOptions = shouldShowLanguageOptions(processor.id)
   const hasProcessorDetails =
-    showApiSettings ||
-    processor.id === 'paddleocr' ||
-    processor.id === 'local-paddleocr' ||
-    processor.id === 'system' ||
-    showLanguageOptions
+    showApiSettings || processor.id === 'paddleocr' || processor.id === 'system' || showLanguageOptions
 
   const [apiKeysInput, setApiKeysInput] = useState(() => joinApiKeyString(processor.apiKeys ?? []))
   const [apiHostInput, setApiHostInput] = useState(entry.capability.apiHost ?? '')
@@ -308,20 +303,6 @@ export function ProcessorPanel({
       ) : null}
 
       {processor.id === 'paddleocr' ? <PaddleOcrDeploymentInfo /> : null}
-
-      {processor.id === 'local-paddleocr' ? (
-        <div className="flex flex-col gap-3 border-border-subtle border-t pt-4">
-          <SettingRow className="items-start justify-start gap-2 py-1">
-            <SquareCheckBig size={13} className="mt-0.5 shrink-0 text-success" />
-            <div className="min-w-0 flex-1">
-              <SettingRowTitle className="text-success text-xs">
-                {t('settings.tool.file_processing.processors.local_paddleocr.status.local')}
-              </SettingRowTitle>
-              <SettingHelpText className="mt-1 text-xs">{t(getProcessorDescriptionKey(processor.id))}</SettingHelpText>
-            </div>
-          </SettingRow>
-        </div>
-      ) : null}
 
       {processor.id === 'system' ? (
         <div className="flex flex-col gap-3 border-border-subtle border-t pt-4">

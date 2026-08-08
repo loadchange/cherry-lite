@@ -4,18 +4,14 @@ const hasPendingSteer = vi.fn()
 vi.mock('@application', () => ({
   application: { get: vi.fn(() => ({ hasPendingSteer })) }
 }))
-vi.mock('../../../../agentSession/topic', () => ({
-  isAgentSessionTopic: (id: string) => id.startsWith('agent-session:')
-}))
 
 import { steerYieldFeature } from '../steerYield'
 
 const scope = (chatId?: string) => ({ request: { chatId } }) as any
 
 describe('steerYieldFeature', () => {
-  it('applies to chat topics, not agent sessions or topicless requests', () => {
+  it('applies to chat topics, not topicless requests', () => {
     expect(steerYieldFeature.applies?.(scope('topic-1'))).toBe(true)
-    expect(steerYieldFeature.applies?.(scope('agent-session:s1'))).toBe(false)
     expect(steerYieldFeature.applies?.(scope(undefined))).toBe(false)
   })
 

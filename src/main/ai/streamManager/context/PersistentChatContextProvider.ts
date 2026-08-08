@@ -33,7 +33,7 @@ import {
 } from '@shared/data/types/message'
 import type { Model } from '@shared/data/types/model'
 import { parseUniqueModelId, type UniqueModelId } from '@shared/data/types/model'
-import { getKnowledgeBaseIdsFromParts, hasClearContextPart } from '@shared/data/types/uiParts'
+import { hasClearContextPart } from '@shared/data/types/uiParts'
 import type { ModelMessage, UIMessage, UIMessageChunk } from 'ai'
 
 import { resolveMinContextWindow } from '../../contextBuild/resolveContextWindow'
@@ -371,7 +371,6 @@ export class PersistentChatContextProvider implements ChatContextProvider {
         contextSettingsOverride,
         toCompactionSink(subscriber)
       )
-      const knowledgeBaseIds = getKnowledgeBaseIdsFromParts(userMessage.data.parts ?? [])
       const models_ = assistantPlaceholders.map(({ model, placeholder, rootSpan }) => ({
         modelId: model.id,
         request: this.buildStreamRequest(
@@ -380,7 +379,6 @@ export class PersistentChatContextProvider implements ChatContextProvider {
           model.id,
           history,
           placeholder.id,
-          knowledgeBaseIds,
           turnOptions.reasoningEffort,
           turnOptions.fastMode === true,
           retainedContext
@@ -431,10 +429,6 @@ export class PersistentChatContextProvider implements ChatContextProvider {
     if (anchor.topicId !== req.topicId) {
       throw new Error(`'continue-conversation' anchor does not belong to topic ${req.topicId}`)
     }
-    const knowledgeBaseIds = anchor.parentId
-      ? getKnowledgeBaseIdsFromParts(messageService.getById(anchor.parentId).data.parts ?? [])
-      : undefined
-
     // Apply decisions to DB parts and flip status to `pending` so resolveCompactedHistory sees the approved state.
     const beforeParts = anchor.data.parts ?? []
     const updatedParts = applyApprovalDecisions(beforeParts, req.approvalDecisions)
@@ -490,7 +484,6 @@ export class PersistentChatContextProvider implements ChatContextProvider {
               model.id,
               history,
               anchor.id,
-              knowledgeBaseIds,
               anchor.data.turnOptions?.reasoningEffort,
               anchor.data.turnOptions?.fastMode === true,
               retainedContext
@@ -589,7 +582,6 @@ export class PersistentChatContextProvider implements ChatContextProvider {
               model.id,
               history,
               placeholder.id,
-              getKnowledgeBaseIdsFromParts(userMessage.data.parts ?? []),
               req.reasoningEffort,
               req.fastMode,
               retainedContext
@@ -803,7 +795,6 @@ export class PersistentChatContextProvider implements ChatContextProvider {
     uniqueModelId: UniqueModelId,
     history: CherryUIMessage[],
     messageId: string,
-    knowledgeBaseIds: string[] | undefined,
     reasoningEffort: AiStreamRequest['reasoningEffort'],
     fastMode: boolean,
     retainedContext?: RetainedContext
@@ -815,7 +806,6 @@ export class PersistentChatContextProvider implements ChatContextProvider {
       uniqueModelId,
       messages: history,
       messageId,
-      knowledgeBaseIds,
       reasoningEffort,
       fastMode,
       ...(retainedContext ? { retainedContext } : {})

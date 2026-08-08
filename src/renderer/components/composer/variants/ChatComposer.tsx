@@ -22,7 +22,7 @@ import { ComposerPanelSymbol, getQuickPanelSearchAliases } from '@renderer/compo
 import { getComposerToolConfig } from '@renderer/components/composer/tools/registry'
 import NewConversationIcon from '@renderer/components/icons/NewConversationIcon'
 import { McpLogo } from '@renderer/components/icons/SvgIcon'
-import { type QuickPanelListItem, useOptionalQuickPanel } from '@renderer/components/QuickPanel'
+import type { QuickPanelListItem } from '@renderer/components/QuickPanel'
 import { ResourceEditDialogEventHost } from '@renderer/components/resourceCatalog/dialogs/edit'
 import { useCache } from '@renderer/data/hooks/useCache'
 import { usePreference } from '@renderer/data/hooks/usePreference'
@@ -30,7 +30,6 @@ import { useChatWrite } from '@renderer/hooks/chat/ChatWriteContext'
 import { useCommandHandler } from '@renderer/hooks/command'
 import { useIsActiveTab } from '@renderer/hooks/tab'
 import { useAssistant } from '@renderer/hooks/useAssistant'
-import { useKnowledgeBases } from '@renderer/hooks/useKnowledgeBase'
 import { useModels } from '@renderer/hooks/useModel'
 import { useProviders } from '@renderer/hooks/useProvider'
 import { useTopicMutations } from '@renderer/hooks/useTopic'
@@ -48,11 +47,9 @@ import {
   resolveReasoningEffortForModel
 } from '@renderer/utils/model'
 import type { ComposerQueuedMessagePayload } from '@shared/ai/transport'
-import type { KnowledgeBase } from '@shared/data/types/knowledge'
 import type { CherryMessagePart } from '@shared/data/types/message'
 import type { Model, UniqueModelId } from '@shared/data/types/model'
 import type { Provider } from '@shared/data/types/provider'
-import { getKnowledgeBaseIdsFromParts, withKnowledgeScopePart } from '@shared/data/types/uiParts'
 import type { ReasoningEffortOption } from '@shared/types/aiSdk'
 import { Eraser } from 'lucide-react'
 import React, { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from 'react'
@@ -66,14 +63,9 @@ import { type FollowupQueueItem, useFollowupQueue } from '../useFollowupQueue'
 import { useInputHistory } from '../useInputHistory'
 import { ChatConversationControls, type ChatConversationControlsProps } from './chat/ChatConversationControls'
 import { type ChatComposerDraftCache, readChatDraftCache, writeChatDraftCache } from './chat/chatDraftCache'
-import { createEditableMessageDraft, getEditableKnowledgeBases } from './chat/messageEditingDraft'
+import { createEditableMessageDraft } from './chat/messageEditingDraft'
 import { useChatMentionedModels } from './chat/useChatMentionedModels'
-import {
-  chatComposerTokenId,
-  fileToComposerToken,
-  getComposerTokenIds,
-  knowledgeBaseToComposerToken
-} from './chatComposerTokens'
+import { chatComposerTokenId, fileToComposerToken, getComposerTokenIds } from './chatComposerTokens'
 import {
   COMPOSER_TOOLBAR_CLASS,
   ComposerBelowControls,
@@ -90,13 +82,12 @@ import { useComposerQuoteInsertion } from './shared/composerQuote'
 import { ComposerSpeedControl, resolveComposerReasoningEffort } from './shared/ComposerSpeedControl'
 import { type ComposerToolbarCustomTool, ComposerToolbarShortcuts } from './shared/ComposerToolbarShortcuts'
 import { useComposerFileCapabilities } from './shared/useComposerFileCapabilities'
-import { useComposerKnowledgeBaseScope } from './shared/useComposerKnowledgeBaseScope'
 import { useComposerToolbarPinnedTools } from './shared/useComposerToolbarPinnedTools'
 import { useEntityReferenceMentionSource } from './shared/useEntityReferenceMentionSource'
 import { useLatest } from './shared/useLatest'
 
 const logger = loggerService.withContext('ChatComposer')
-const CHAT_MANAGED_TOKEN_KINDS = ['file', 'knowledge'] as const satisfies readonly ComposerDraftToken['kind'][]
+const CHAT_MANAGED_TOKEN_KINDS = ['file'] as const satisfies readonly ComposerDraftToken['kind'][]
 const CHAT_NEW_CONVERSATION_TOOL_ID = 'composer:new-conversation'
 const CHAT_CLEAR_CONTEXT_TOOL_ID = 'composer:clear-context'
 const EMPTY_MODELS: Model[] = []
@@ -159,10 +150,9 @@ interface SavedComposerDraft {
   draftTokens: ComposerSerializedToken[]
   files: ComposerAttachment[]
   mentionedModels: Model[]
-  selectedKnowledgeBases: KnowledgeBase[]
 }
 
-interface InputHistoryToolSnapshot extends Pick<SavedComposerDraft, 'files' | 'selectedKnowledgeBases'> {
+interface InputHistoryToolSnapshot extends Pick<SavedComposerDraft, 'files'> {
   mentionedModels: Model[]
 }
 
@@ -350,7 +340,6 @@ const ChatComposerRoot = ({
     () => ({
       files: initialDraft.files,
       mentionedModels: [] as Model[],
-      selectedKnowledgeBases: [] as KnowledgeBase[],
       isExpanded: false,
       couldAddImageFile: false,
       extensions: [] as string[]
@@ -426,8 +415,8 @@ const ChatComposerInner = ({
   const awaitingApproval = useTopicAwaitingApproval(streamScopeKey)
   const scope = TopicType.Chat
   const config = getComposerToolConfig(scope)
-  const { files, mentionedModels, selectedKnowledgeBases, isExpanded } = useComposerToolState()
-  const { setFiles, setMentionedModels, setSelectedKnowledgeBases, setIsExpanded } = useComposerToolDispatch()
+  const { files, mentionedModels, isExpanded } = useComposerToolState()
+  const { setFiles, setMentionedModels, setIsExpanded } = useComposerToolDispatch()
   const { getLaunchers, dispatchLauncher } = useComposerToolLauncherController()
   const toolLaunchersVersion = useComposerToolLauncherVersion()
   const loadedContext = useAssistant(externalContextControls ? null : assistantId, {
@@ -476,22 +465,7 @@ const ChatComposerInner = ({
     initialDraft.tokens.length ? initialDraft.tokens : undefined
   )
   const [draftTokenRevision, setDraftTokenRevision] = useState(0)
-  const quickPanel = useOptionalQuickPanel()
-  const rootPanelVisible = Boolean(quickPanel?.isVisible && quickPanel.symbol === ComposerPanelSymbol.Root)
-  const knowledgeBasePanelVisible = Boolean(
-    quickPanel?.isVisible && quickPanel.symbol === ComposerPanelSymbol.KnowledgeBase
-  )
-  const knowledgeBasesDataEnabled =
-    selectedKnowledgeBases.length > 0 ||
-    getComposerTokenIds(draftTokens ?? [], 'knowledge').size > 0 ||
-    Boolean(editingMessageForCurrentTopic) ||
-    rootPanelVisible ||
-    knowledgeBasePanelVisible
-  const { bases: allKnowledgeBases, isLoading: isKnowledgeBasesLoading } = useKnowledgeBases({
-    enabled: knowledgeBasesDataEnabled
-  })
   const filesRef = useLatest(files)
-  const selectedKnowledgeBasesRef = useLatest(selectedKnowledgeBases)
   const mentionedModelsRef = useLatest(mentionedModels)
   const editingMessageForCurrentTopicRef = useLatest(editingMessageForCurrentTopic)
   const inputHistoryToolsRef = useRef<InputHistoryToolSnapshot | null>(null)
@@ -506,11 +480,9 @@ const ChatComposerInner = ({
       if (options.source === 'history') {
         inputHistoryToolsRef.current ??= {
           files: filesRef.current,
-          mentionedModels: mentionedModelsRef.current,
-          selectedKnowledgeBases: selectedKnowledgeBasesRef.current
+          mentionedModels: mentionedModelsRef.current
         }
         setFiles([])
-        setSelectedKnowledgeBases([])
         return
       }
 
@@ -519,17 +491,8 @@ const ChatComposerInner = ({
       if (!savedTools) return
       setFiles(savedTools.files)
       setMentionedModels(savedTools.mentionedModels)
-      setSelectedKnowledgeBases(savedTools.selectedKnowledgeBases)
     },
-    [
-      actionsRef,
-      filesRef,
-      mentionedModelsRef,
-      selectedKnowledgeBasesRef,
-      setFiles,
-      setMentionedModels,
-      setSelectedKnowledgeBases
-    ]
+    [actionsRef, filesRef, mentionedModelsRef, setFiles, setMentionedModels]
   )
   const { isInputHistoryActive, navigateHistory, resetHistoryIndex, takeDraftBeforeHistory, saveHistory } =
     useInputHistory({
@@ -799,32 +762,17 @@ const ChatComposerInner = ({
   // Steer: while a turn is streaming (but not paused for tool approval) a new message is sent as a
   // follow-up rather than blocked — the main process persists it and yields/chains a continuation.
   const canSteer = isPending && !awaitingApproval
-  const selectedKnowledgeBasesScopeKey = `${scopeKey}:${selectedAssistantId ?? 'no-assistant'}`
+  const conversationScopeKey = `${scopeKey}:${selectedAssistantId ?? 'no-assistant'}`
   const assistantName = displayAssistant?.name ?? (isAssistantLoading ? t('common.loading') : selectAssistantMessage)
   const { canAddImageFile, supportedExts } = useComposerFileCapabilities({
     models: mentionedModels,
     fallbackModel: runtimeModel
   })
 
-  const {
-    selectableKnowledgeBases,
-    selectedKnowledgeBasesInScope,
-    resolveKnowledgeBaseMarker,
-    restoreKnowledgeBaseSelection
-  } = useComposerKnowledgeBaseScope({
-    configuredKnowledgeBaseIds: assistant?.knowledgeBaseIds,
-    allKnowledgeBases,
-    isKnowledgeBasesLoading,
-    scopeKey: selectedKnowledgeBasesScopeKey,
-    selectedKnowledgeBases,
-    setSelectedKnowledgeBases
-  })
-
   // Single owner of the global draft cache. Runs after ComposerSurface's effects have synced the
   // editor to the current text, so getDraft() serializes the live tokens consistently. Every
   // persistable change is observed through text, files, or the editor token revision. The revision
-  // covers token-only edits whose serialized text stays unchanged; knowledge selection is
-  // intentionally excluded by writeChatDraftCache.
+  // covers token-only edits whose serialized text stays unchanged.
   const persistedOnceRef = useRef(false)
   useEffect(() => {
     if (!persistedOnceRef.current) {
@@ -851,8 +799,7 @@ const ChatComposerInner = ({
     setDraftTokens(savedDraft.draftTokens)
     setFiles(savedDraft.files)
     setMentionedModels(savedDraft.mentionedModels)
-    setSelectedKnowledgeBases(savedDraft.selectedKnowledgeBases)
-  }, [actionsRef, exitInputHistoryPreview, setFiles, setMentionedModels, setSelectedKnowledgeBases])
+  }, [actionsRef, exitInputHistoryPreview, setFiles, setMentionedModels])
 
   const handleCancelEditing = useCallback(() => {
     restoreSavedDraft()
@@ -879,7 +826,6 @@ const ChatComposerInner = ({
     setText(editableDraft.text)
     setDraftTokens(editableDraft.draftTokens)
     setFiles(editableDraft.files)
-    setSelectedKnowledgeBases(getEditableKnowledgeBases(editableDraft.draftTokens, selectableKnowledgeBases))
   })
 
   useEffect(() => {
@@ -899,23 +845,15 @@ const ChatComposerInner = ({
         text: currentDraft.text,
         draftTokens: currentDraft.tokens,
         files: currentTools?.files ?? filesRef.current,
-        mentionedModels: currentTools?.mentionedModels ?? mentionedModelsRef.current,
-        selectedKnowledgeBases: currentTools?.selectedKnowledgeBases ?? selectedKnowledgeBasesRef.current
+        mentionedModels: currentTools?.mentionedModels ?? mentionedModelsRef.current
       }
     } else {
       exitInputHistoryPreview()
     }
 
     restoreEditableMessageDraft(editingMessageForCurrentTopic)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- `useEffectEvent` reads latest selectable knowledge bases; this effect is keyed by editingSessionId.
-  }, [
-    actionsRef,
-    editingMessageForCurrentTopic,
-    exitInputHistoryPreview,
-    filesRef,
-    mentionedModelsRef,
-    selectedKnowledgeBasesRef
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `useEffectEvent` reads the latest draft state; this effect is keyed by editingSessionId.
+  }, [actionsRef, editingMessageForCurrentTopic, exitInputHistoryPreview, filesRef, mentionedModelsRef])
 
   useEffect(() => {
     if (!staleEditingMessage) return
@@ -925,13 +863,9 @@ const ChatComposerInner = ({
 
   const placeholderText = t('chat.input.placeholder', { key: getSendMessageShortcutLabel(sendMessageShortcut) })
 
-  const tokens = useMemo(
-    () => [...files.map(fileToComposerToken), ...selectedKnowledgeBasesInScope.map(knowledgeBaseToComposerToken)],
-    [files, selectedKnowledgeBasesInScope]
-  )
+  const tokens = useMemo(() => files.map(fileToComposerToken), [files])
 
-  // Editor→state reconciliation owned by the tools: attachmentTool prunes+dedupes files,
-  // knowledgeBaseTool prunes+re-adds knowledge bases (against the injected selectableKnowledgeBases).
+  // Editor→state reconciliation owned by the tools: attachmentTool prunes+dedupes files.
   const reconcileTokens = useComposerTokenReconcile({ scope, assistant: displayAssistant, model: runtimeModel })
   const handleTokensChange = useCallback(
     (nextDraftTokens: readonly ComposerSerializedToken[]) => {
@@ -1119,18 +1053,9 @@ const ChatComposerInner = ({
           ...(fastMode && speedControlModel?.supportsFastMode === true ? { fastMode: true } : {})
         })
       })
-      if (!payload) return null
-
-      const tokenIds = getComposerTokenIds(draft.tokens)
-      const knowledgeBaseIds = selectedKnowledgeBasesInScope
-        .filter((base) => tokenIds.has(chatComposerTokenId.knowledge(base)))
-        .map((base) => base.id)
-      return {
-        ...payload,
-        userMessageParts: withKnowledgeScopePart(payload.userMessageParts, knowledgeBaseIds)
-      }
+      return payload
     },
-    [assistantId, fastMode, files, mentionedModels, reasoningEffort, selectedKnowledgeBasesInScope, speedControlModel]
+    [assistantId, fastMode, files, mentionedModels, reasoningEffort, speedControlModel]
   )
 
   const sendQueuedPayload = useCallback(
@@ -1162,7 +1087,6 @@ const ChatComposerInner = ({
     setText('')
     setDraftTokens(undefined)
     setFiles([])
-    // Knowledge base selection belongs to the conversation scope, not the individual draft.
     // Clearing the composer must also drop the input-history nav state: a
     // recalled draft that gets sent/queued without further edits would otherwise
     // leave useInputHistory pointing at that history entry, so the next
@@ -1182,7 +1106,7 @@ const ChatComposerInner = ({
     paused: followupPaused,
     setPaused: setFollowupPaused
   } = useFollowupQueue({
-    scopeKey: selectedKnowledgeBasesScopeKey,
+    scopeKey: conversationScopeKey,
     isFulfilled,
     markSeen,
     onDrain: sendQueuedPayload,
@@ -1204,7 +1128,6 @@ const ChatComposerInner = ({
       setText(item.draft.text)
       setDraftTokens(item.draft.tokens.length ? [...item.draft.tokens] : undefined)
       setFiles((item.payload.attachments as ComposerAttachment[] | undefined) ?? [])
-      restoreKnowledgeBaseSelection(getKnowledgeBaseIdsFromParts(item.payload.userMessageParts) ?? [])
       const queuedModels = (item.payload.mentionedModels ?? [])
         .map((modelId) => allModels.find((candidate) => candidate.id === modelId))
         .filter((candidate): candidate is Model => candidate !== undefined)
@@ -1223,7 +1146,6 @@ const ChatComposerInner = ({
       changeMentionedModelMultiSelectMode,
       handleReasoningEffortChange,
       resetHistoryIndex,
-      restoreKnowledgeBaseSelection,
       restoreMentionedModelSelector,
       selectMentionedModels,
       setFiles,
@@ -1261,12 +1183,9 @@ const ChatComposerInner = ({
           return filePart ? [filePart] : []
         })
       ]
-      const knowledgeBaseIds = selectedKnowledgeBasesInScope
-        .filter((base) => tokenIds.has(chatComposerTokenId.knowledge(base)))
-        .map((base) => base.id)
-      return withKnowledgeScopePart(messageParts, knowledgeBaseIds)
+      return messageParts
     },
-    [files, selectedKnowledgeBasesInScope]
+    [files]
   )
 
   const handleSendDraft = useCallback(
@@ -1372,18 +1291,16 @@ const ChatComposerInner = ({
 
       // Optimistically clear the draft so the cleared input doubles as the re-entry
       // guard, but snapshot it first: a pre-stream failure never reaches the streaming
-      // UI, so restore the draft (text + files + knowledge bases; tokens re-derive) and
+      // UI, so restore the draft (text + files; tokens re-derive) and
       // surface the failure instead of silently discarding what the user typed.
       const previousText = text
       const previousFiles = files
-      const previousKnowledgeBases = selectedKnowledgeBases
 
       clearCurrentDraft()
       const sent = await sendQueuedPayload(payload)
       if (!sent) {
         setText(previousText)
         setFiles(previousFiles)
-        setSelectedKnowledgeBases(previousKnowledgeBases)
         toast.error(t('chat.input.send_failed'))
       }
     },
@@ -1407,7 +1324,6 @@ const ChatComposerInner = ({
       runtimeModel,
       runtimeModelPending,
       reasoningEffort,
-      selectedKnowledgeBases,
       selectedModelForMissingAssistantDefault,
       selectedModelForUnlinkedHome,
       sendDisabled,
@@ -1415,7 +1331,6 @@ const ChatComposerInner = ({
       sendQueuedPayload,
       speedControlModel,
       setFiles,
-      setSelectedKnowledgeBases,
       setText,
       staleEditingMessage,
       stopEditing,
@@ -1495,10 +1410,7 @@ const ChatComposerInner = ({
   ) : null
 
   return (
-    <ComposerToolDerivedStateProvider
-      couldAddImageFile={canAddImageFile}
-      extensions={supportedExts}
-      selectableKnowledgeBases={selectableKnowledgeBases}>
+    <ComposerToolDerivedStateProvider couldAddImageFile={canAddImageFile} extensions={supportedExts}>
       {displayAssistant && runtimeModel && (
         <ComposerToolRuntimeHost scope={scope} assistant={displayAssistant} model={runtimeModel} />
       )}
@@ -1512,7 +1424,6 @@ const ChatComposerInner = ({
           managedTokenKinds={CHAT_MANAGED_TOKEN_KINDS}
           onTokensChange={handleTokensChange}
           suggestionSources={entityReferenceSources}
-          resolveKnowledgeBaseMarker={resolveKnowledgeBaseMarker}
           placeholder={searching ? t('chat.input.translating') : placeholderText}
           sendDisabled={
             (text.trim().length === 0 && files.length === 0) ||

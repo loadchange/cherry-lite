@@ -9,20 +9,40 @@ describe('useSidebarFavorites', () => {
     MockUsePreferenceUtils.resetMocks()
   })
 
-  it('should skip removing a mini app that is not favorited', () => {
+  it('should append a pinned app to the stored favorites', () => {
     const setFavorites = vi.fn().mockResolvedValue(undefined)
     MockUsePreferenceUtils.mockPreferenceReturn(
       'ui.sidebar.favorites',
-      [{ type: 'mini_app', id: 'other-app' }],
+      [{ type: 'app', id: 'assistants' }],
       setFavorites
     )
 
     const { result } = renderHook(() => useSidebarFavorites())
 
     act(() => {
-      result.current.removeMiniApp('missing-app')
+      result.current.setAppPinned('translate', true)
     })
 
-    expect(setFavorites).not.toHaveBeenCalled()
+    expect(setFavorites).toHaveBeenCalledWith([
+      { type: 'app', id: 'assistants' },
+      { type: 'app', id: 'translate' }
+    ])
+  })
+
+  it('should keep a required app pinned when unpinning it', () => {
+    const setFavorites = vi.fn().mockResolvedValue(undefined)
+    MockUsePreferenceUtils.mockPreferenceReturn(
+      'ui.sidebar.favorites',
+      [{ type: 'app', id: 'assistants' }],
+      setFavorites
+    )
+
+    const { result } = renderHook(() => useSidebarFavorites())
+
+    act(() => {
+      result.current.setAppPinned('assistants', false)
+    })
+
+    expect(setFavorites).toHaveBeenCalledWith([{ type: 'app', id: 'assistants' }])
   })
 })

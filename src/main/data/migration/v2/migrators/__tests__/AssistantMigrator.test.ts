@@ -39,7 +39,7 @@ function createMockContext(reduxData: Record<string, unknown> = {}) {
             })
           }),
           select: vi.fn().mockReturnValue({
-            // Returns empty array for tag/knowledge-base ID lookups
+            // Returns empty array for tag ID lookups
             from: vi.fn().mockReturnValue({ all: vi.fn().mockReturnValue([]) })
           })
         }
@@ -79,8 +79,7 @@ const SAMPLE_ASSISTANTS = [
     prompt: 'You are helpful',
     emoji: '🤖',
     model: { id: 'gpt-4', provider: 'openai' },
-    mcpServers: [{ id: 'srv-1' }],
-    knowledge_bases: [{ id: 'kb-1' }]
+    mcpServers: [{ id: 'srv-1' }]
   },
   {
     id: 'ast-2',
@@ -281,50 +280,6 @@ describe('AssistantMigrator', () => {
       expect(merged.emoji).toBe('😀') // defaultAssistant fills missing field
       expect(merged.modelId).toBe('openai::gpt-4') // assistants[]-only field preserved
     })
-
-    it('should preserve secondary populated arrays when primary has empty arrays', async () => {
-      // Primary has `mcpServers: []` (default-empty, never touched), secondary
-      // has `mcpServers: [s1]` (user-configured via the slot). The merge must
-      // not let an empty array from primary clobber a populated one from
-      // secondary — see mergeOldAssistants `isPresent` array rule.
-      const ctx = createMockContext({
-        assistants: {
-          assistants: [
-            {
-              id: 'default',
-              name: 'Slot Primary',
-              mcpServers: [],
-              knowledge_bases: [],
-              tags: []
-            }
-          ],
-          presets: [],
-          defaultAssistant: {
-            id: 'default',
-            name: 'Slot Secondary',
-            mcpServers: [{ id: 'srv-1' }],
-            knowledge_bases: [{ id: 'kb-1' }],
-            tags: ['t1']
-          }
-        }
-      })
-      const result = await migrator.prepare(ctx as any)
-      expect(result.success).toBe(true)
-      expect(result.itemCount).toBe(1)
-
-      const internal = migrator as unknown as {
-        preparedResults: {
-          assistant: Record<string, unknown>
-          mcpServers: { mcpServerId: string }[]
-          knowledgeBases: { knowledgeBaseId: string }[]
-          legacyTagName: string | null
-        }[]
-      }
-      const r = internal.preparedResults[0]
-      expect(r.mcpServers.map((s) => s.mcpServerId)).toEqual(['srv-1'])
-      expect(r.knowledgeBases.map((kb) => kb.knowledgeBaseId)).toEqual(['kb-1'])
-      expect(r.legacyTagName).toBe('t1')
-    })
   })
 
   describe('mergeOldAssistants', () => {
@@ -352,25 +307,6 @@ describe('AssistantMigrator', () => {
       expect(merged.secondaryOnlyField).toBe('kept')
       expect(merged.id).toBe('default')
       expect(merged.name).toBe('Primary')
-    })
-
-    it('treats empty arrays as absent so secondary populated arrays survive', () => {
-      const primary: OldAssistant = {
-        id: 'default',
-        mcpServers: [],
-        knowledge_bases: [],
-        tags: []
-      }
-      const secondary: OldAssistant = {
-        id: 'default',
-        mcpServers: [{ id: 's1' }],
-        knowledge_bases: [{ id: 'kb1' }],
-        tags: ['t1']
-      }
-      const merged = mergeOldAssistants(primary, secondary)
-      expect(merged.mcpServers).toEqual([{ id: 's1' }])
-      expect(merged.knowledge_bases).toEqual([{ id: 'kb1' }])
-      expect(merged.tags).toEqual(['t1'])
     })
 
     it('treats empty plain objects as absent (defaultModel / customParameters)', () => {

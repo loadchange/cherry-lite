@@ -92,7 +92,7 @@ export class MainWindowService extends BaseService {
   private registerContextMenu() {
     // App-level so every webContents gets the menu — the main window's own
     // (web-contents-created fires during BrowserWindow construction, before
-    // onWindowCreatedByType) and all webviews like miniapp. Must stay a single
+    // onWindowCreatedByType) and all `<webview>` guests. Must stay a single
     // registration here: a per-window one would stack one app listener per
     // singleton main-window rebuild and pop duplicate menus.
     const handler = (_: Electron.Event, webContents: Electron.WebContents) => {

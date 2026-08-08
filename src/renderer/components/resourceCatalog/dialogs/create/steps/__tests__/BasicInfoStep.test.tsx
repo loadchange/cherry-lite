@@ -49,9 +49,7 @@ function Harness({ modelId = null }: { modelId?: UniqueModelId | null }) {
       name: '',
       description: '',
       modelId,
-      prompt: '',
-      knowledgeBaseIds: [],
-      skillIds: []
+      prompt: ''
     }
   })
 

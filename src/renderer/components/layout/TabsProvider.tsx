@@ -32,12 +32,17 @@ function createLaunchpadFallbackTab(): Tab {
   }
 }
 
-// Route no longer served — its orphaned pinned tabs are dropped on restore.
-const LEGACY_LIBRARY_ROUTE_PATH = '/app/library'
-// OpenClaw was folded into the Code page (its sidebar entry + `/app/openclaw` route were removed),
-// so an already-persisted OpenClaw pin is redirected here rather than restoring to a dead route.
-const LEGACY_OPENCLAW_ROUTE_PATH = '/app/openclaw'
-const CODE_ROUTE_PATH = '/app/code'
+// Routes no longer served — their orphaned pinned tabs are dropped on restore.
+const REMOVED_ROUTE_PATHS = new Set([
+  '/app/library',
+  '/app/openclaw',
+  '/app/code',
+  '/app/agents',
+  '/app/paintings',
+  '/app/mini-app',
+  '/app/files',
+  '/app/notes'
+])
 
 function routePathOfTab(tab: Tab): string | null {
   if (tab.type !== 'route') return null
@@ -49,26 +54,20 @@ function routePathOfTab(tab: Tab): string | null {
 }
 
 /**
- * Reconcile persisted pinned tabs against routes that have since been removed or relocated: drop
- * `/app/library` pins outright, and redirect `/app/openclaw` pins to `/app/code` (deduping so the
- * redirect never produces a second Code pin). `changed` is true when anything was dropped or
- * rewritten, signalling the caller to write the reconciled list back to the persistent cache.
+ * Reconcile persisted pinned tabs against routes that have since been removed: pins pointing at a
+ * dead route are dropped. `changed` is true when anything was dropped, signalling the caller to
+ * write the reconciled list back to the persistent cache.
  */
 export function migratePinnedTabs(pinnedTabs: Tab[]): { tabs: Tab[]; changed: boolean } {
-  let hasCodePin = pinnedTabs.some((tab) => routePathOfTab(tab) === CODE_ROUTE_PATH)
   const tabs: Tab[] = []
   let changed = false
   for (const tab of pinnedTabs) {
     const path = routePathOfTab(tab)
-    if (path === LEGACY_LIBRARY_ROUTE_PATH) {
+    if (
+      path &&
+      (REMOVED_ROUTE_PATHS.has(path) || REMOVED_ROUTE_PATHS.has(`/${path.split('/').slice(1, 3).join('/')}`))
+    ) {
       changed = true
-      continue
-    }
-    if (path === LEGACY_OPENCLAW_ROUTE_PATH) {
-      changed = true
-      if (hasCodePin) continue // a Code pin already exists — drop rather than duplicate it
-      hasCodePin = true
-      tabs.push({ ...tab, url: CODE_ROUTE_PATH, title: getDefaultRouteTitle(CODE_ROUTE_PATH) })
       continue
     }
     tabs.push(tab)

@@ -12,7 +12,6 @@ const harness = vi.hoisted(() => ({
   setDefaultModel: vi.fn(),
   setQuickModel: vi.fn(),
   setTranslateModel: vi.fn(),
-  setPaintingModel: vi.fn(),
   onDefaultModelSelected: vi.fn(),
   selectorCallbacks: [] as Array<(model: Model | undefined) => void>,
   selectorFilters: [] as Array<(model: Model) => boolean>
@@ -64,11 +63,9 @@ vi.mock('@renderer/hooks/useModel', () => ({
     defaultModel: harness.defaultModel,
     quickModel: harness.quickModel,
     translateModel: harness.translateModel,
-    paintingModel: undefined,
     setDefaultModel: harness.setDefaultModel,
     setQuickModel: harness.setQuickModel,
-    setTranslateModel: harness.setTranslateModel,
-    setPaintingModel: harness.setPaintingModel
+    setTranslateModel: harness.setTranslateModel
   })
 }))
 
@@ -140,7 +137,6 @@ describe('ModelSettings', () => {
         autoFillEmptyModels
         modelFilter={(model) => model.providerId !== 'cherryai'}
         onDefaultModelSelected={harness.onDefaultModelSelected}
-        showPaintingModel={false}
         showSettingsButton={false}
       />
     )
@@ -159,7 +155,6 @@ describe('ModelSettings', () => {
       <ModelSettings
         autoFillEmptyModels
         modelFilter={(model) => model.providerId !== 'cherryai'}
-        showPaintingModel={false}
         showSettingsButton={false}
       />
     )
@@ -172,13 +167,7 @@ describe('ModelSettings', () => {
   })
 
   it('combines the onboarding provider filter with non-chat model filtering', () => {
-    render(
-      <ModelSettings
-        modelFilter={(model) => model.providerId !== 'cherryai'}
-        showPaintingModel={false}
-        showSettingsButton={false}
-      />
-    )
+    render(<ModelSettings modelFilter={(model) => model.providerId !== 'cherryai'} showSettingsButton={false} />)
 
     const filter = harness.selectorFilters[0]
     expect(filter(createModel('openai', 'gpt-4o'))).toBe(true)

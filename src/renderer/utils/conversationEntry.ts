@@ -3,9 +3,8 @@ import { dataApiService } from '@data/DataApiService'
 import { isDataApiNotFoundError } from '@shared/data/api/errors'
 
 /**
- * Entry-target resolution for the conversation routes (`/app/chat`, `/app/agents`),
- * called from their `beforeLoad` interceptors on a bare entry (no explicit
- * topicId / sessionId in the URL).
+ * Entry-target resolution for the conversation route (`/app/chat`), called from
+ * its `beforeLoad` interceptor on a bare entry (no explicit topicId in the URL).
  *
  * Resolution order: the cross-window "last focused" id, validated by its by-id
  * endpoint, then the globally most-recently-updated conversation. `null` means
@@ -32,19 +31,4 @@ export async function resolveChatEntryTopicId(): Promise<string | null> {
 
   const { topic } = await dataApiService.get('/topics/latest')
   return topic?.id ?? null
-}
-
-export async function resolveAgentEntrySessionId(): Promise<string | null> {
-  const lastUsedSessionId = cacheService.getPersist('ui.agent.last_used_session_id')
-  if (lastUsedSessionId) {
-    try {
-      await dataApiService.get(`/agent-sessions/${lastUsedSessionId}`)
-      return lastUsedSessionId
-    } catch (error) {
-      if (!isDataApiNotFoundError(error)) throw error
-    }
-  }
-
-  const { session } = await dataApiService.get('/agent-sessions/latest')
-  return session?.id ?? null
 }

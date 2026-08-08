@@ -47,8 +47,6 @@ export interface MigrationPaths {
 
   /** {userData}/Data/cherrystudio.sqlite */
   readonly databaseFile: string
-  /** {userData}/Data/KnowledgeBase */
-  readonly knowledgeBaseDir: string
   /** {userData}/Data/Files */
   readonly filesDataDir: string
   /** {userData}/version.log — v1 VersionService version history log. */
@@ -67,8 +65,6 @@ export interface MigrationPaths {
   readonly claudeProjectsDir: string
   /** {userData}/Data/Agents/system — app-owned per-session workspace root. */
   readonly agentSystemWorkspacesDir: string
-  /** {userData}/Data/Files/custom-minapps.json — v1 sidecar with full custom miniapp records (logos stripped from Redux). */
-  readonly customMiniAppsFile: string
 
   // ── Derived from cherryHome ──
 
@@ -218,7 +214,6 @@ export function resolveMigrationPaths(): MigrationPathsResult {
     userData: currentUserData,
     cherryHome: CHERRY_HOME,
     databaseFile: path.join(currentUserData, 'Data', DB_NAME),
-    knowledgeBaseDir: path.join(currentUserData, 'Data', 'KnowledgeBase'),
     filesDataDir,
     versionLogFile: path.join(currentUserData, 'version.log'),
     legacyAgentDbFile: path.join(currentUserData, 'Data', 'agents.db'),
@@ -228,7 +223,6 @@ export function resolveMigrationPaths(): MigrationPathsResult {
     claudeConfigDir: path.join(currentUserData, 'Data', 'Agents', '.claude'),
     claudeProjectsDir: path.join(currentUserData, 'Data', 'Agents', '.claude', 'projects'),
     agentSystemWorkspacesDir: path.join(currentUserData, 'Data', 'Agents', 'system'),
-    customMiniAppsFile: path.join(filesDataDir, 'custom-minapps.json'),
     legacyConfigFile,
     migrationsFolder: app.isPackaged
       ? path.join(process.resourcesPath, MIGRATIONS_BASE_PATH)

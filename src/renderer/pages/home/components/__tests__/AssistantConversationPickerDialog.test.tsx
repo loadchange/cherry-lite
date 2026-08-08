@@ -53,8 +53,7 @@ vi.mock('@renderer/components/resourceCatalog/dialogs/create', () => ({
               name: 'New',
               modelId: 'p::m',
               description: 'desc',
-              prompt: 'Use the knowledge base',
-              knowledgeBaseIds: ['kb-1'],
+              prompt: 'Be concise',
               skillIds: []
             })
           }>
@@ -149,8 +148,7 @@ describe('AssistantConversationPickerDialog', () => {
           emoji: '🤖',
           modelId: 'p::m',
           description: 'desc',
-          prompt: 'Use the knowledge base',
-          knowledgeBaseIds: ['kb-1']
+          prompt: 'Be concise'
         }
       })
     )
@@ -174,7 +172,6 @@ describe('AssistantConversationPickerDialog', () => {
         modelId: 'p::m',
         description: 'desc',
         prompt: '',
-        knowledgeBaseIds: [],
         skillIds: []
       })
     ).rejects.toThrow('create failed')

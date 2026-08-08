@@ -176,13 +176,12 @@ describe('assistantHandlers', () => {
       await expect(
         assistantHandlers['/assistants/:id'].PATCH({
           params: { id: ASSISTANT_ID },
-          body: { mcpServerIds: ['srv-1'], knowledgeBaseIds: ['kb-1'] }
+          body: { mcpServerIds: ['srv-1'] }
         } as never)
       ).resolves.toMatchObject({ id: ASSISTANT_ID })
 
       expect(updateMock).toHaveBeenCalledWith(ASSISTANT_ID, {
-        mcpServerIds: ['srv-1'],
-        knowledgeBaseIds: ['kb-1']
+        mcpServerIds: ['srv-1']
       })
     })
 

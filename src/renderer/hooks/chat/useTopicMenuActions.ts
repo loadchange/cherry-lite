@@ -7,7 +7,6 @@ import {
   type TopicMoveAssistantTarget
 } from '@renderer/components/chat/actions/topicContextMenuActions'
 import ObsidianExportPopup from '@renderer/components/ObsidianExportPopup'
-import SaveToKnowledgePopup from '@renderer/components/SaveToKnowledgePopup'
 import { getTopicMessages } from '@renderer/hooks/useTopic'
 import { ipcApi } from '@renderer/ipc'
 import { copyTopicAsMarkdown, copyTopicAsPlainText } from '@renderer/services/copy'
@@ -17,11 +16,9 @@ import {
   exportMarkdownToSiyuan,
   exportMarkdownToYuque,
   exportTopicAsMarkdown,
-  exportTopicToNotes,
   exportTopicToNotion,
   topicToMarkdown
 } from '@renderer/services/ExportService'
-import { toast } from '@renderer/services/toast'
 import type { Topic } from '@renderer/types/topic'
 import { removeSpecialCharactersForFileName } from '@renderer/utils/file'
 import type { TopicTabPosition } from '@shared/data/preference/preferenceTypes'
@@ -35,7 +32,6 @@ export interface TopicMenuActionOptions {
   exportMenuOptions: TopicExportMenuOptions
   isActiveInCurrentTab: boolean
   isRenaming: boolean
-  notesPath: string
   onAutoRename: TopicMenuHandler
   onClearMessages: TopicMenuHandler
   onCopyImage?: TopicMenuHandler
@@ -58,7 +54,6 @@ export function createTopicActionContext({
   exportMenuOptions,
   isActiveInCurrentTab,
   isRenaming,
-  notesPath,
   assistantMoveTargets = [],
   onAutoRename,
   onClearMessages,
@@ -120,17 +115,6 @@ export function createTopicActionContext({
     onOpenInNewWindow,
     onPinTopic,
     onSetPanePosition,
-    onSaveToKnowledge: async (topic) => {
-      try {
-        const result = await SaveToKnowledgePopup.showForTopic(topic)
-        if (result?.success) {
-          toast.success(t('chat.save.topic.knowledge.success', { count: result.savedCount }))
-        }
-      } catch {
-        toast.error(t('chat.save.topic.knowledge.error.save_failed'))
-      }
-    },
-    onSaveToNotes: (topic) => exportTopicToNotes(topic, notesPath),
     onStartRename,
     panePosition,
     t,
@@ -196,7 +180,6 @@ export function useTopicMenuActions(options: TopicMenuActionOptions) {
     exportMenuOptions,
     isActiveInCurrentTab,
     isRenaming,
-    notesPath,
     assistantMoveTargets,
     onAutoRename,
     onClearMessages,
@@ -220,7 +203,6 @@ export function useTopicMenuActions(options: TopicMenuActionOptions) {
         exportMenuOptions,
         isActiveInCurrentTab,
         isRenaming,
-        notesPath,
         assistantMoveTargets,
         onAutoRename,
         onClearMessages,
@@ -242,7 +224,6 @@ export function useTopicMenuActions(options: TopicMenuActionOptions) {
       exportMenuOptions,
       isActiveInCurrentTab,
       isRenaming,
-      notesPath,
       assistantMoveTargets,
       onAutoRename,
       onClearMessages,

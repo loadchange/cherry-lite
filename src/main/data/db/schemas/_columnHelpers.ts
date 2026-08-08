@@ -60,10 +60,10 @@ export const createUpdateDeleteTimestamps = {
  * runtime helpers, migrator helpers) can rely on the property existing.
  *
  * Usage:
- *   sqliteTable('miniapp', {
+ *   sqliteTable('topic', {
  *     appId: text('app_id').primaryKey(),
  *     ...orderKeyColumns,
- *   }, (t) => [orderKeyIndex('miniapp')(t)])
+ *   }, (t) => [orderKeyIndex('topic')(t)])
  */
 export const orderKeyColumns = {
   orderKey: text('order_key').notNull()

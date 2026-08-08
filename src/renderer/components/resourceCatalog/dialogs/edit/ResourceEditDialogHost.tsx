@@ -1,7 +1,5 @@
 import { DIALOG_UNMOUNT_DELAY_MS } from '@cherrystudio/ui/utils'
 import { loggerService } from '@logger'
-import { useAgent } from '@renderer/hooks/agent/useAgent'
-import { useAgentModelFilter } from '@renderer/hooks/agent/useAgentModelFilter'
 import { useAssistantApiById } from '@renderer/hooks/useAssistant'
 import { toast } from '@renderer/services/toast'
 import type { ResourceEditDialogTarget } from '@renderer/types/resourceCatalog'
@@ -9,7 +7,6 @@ import { isNonChatModel } from '@shared/utils/model'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { AgentEditDialog } from './AgentEditDialog'
 import { AssistantEditDialog } from './AssistantEditDialog'
 
 type ResourceEditDialogHostProps = {
@@ -61,10 +58,6 @@ export function ResourceEditDialogHost({ target, onOpenChange }: ResourceEditDia
     return <AssistantEditDialogHost target={target} open={open} onOpenChange={handleOpenChange} />
   }
 
-  if (target?.kind === 'agent') {
-    return <AgentEditDialogHost target={target} open={open} onOpenChange={handleOpenChange} />
-  }
-
   return null
 }
 
@@ -92,36 +85,6 @@ function AssistantEditDialogHost({
       resource={assistant ?? null}
       onOpenChange={onOpenChange}
       modelFilter={(candidate) => !isNonChatModel(candidate)}
-      initialTab={target.initialTab}
-    />
-  )
-}
-
-function AgentEditDialogHost({
-  target,
-  open,
-  onOpenChange
-}: ResourceEditDialogHostProps & {
-  target: Extract<ResourceEditDialogTarget, { kind: 'agent' }>
-  open: boolean
-}) {
-  const { t } = useTranslation()
-  const { agent, error } = useAgent(target.id)
-  const modelFilter = useAgentModelFilter(agent?.type)
-
-  useEffect(() => {
-    if (!error) return
-
-    logger.error('Failed to load agent for edit dialog', error, { id: target.id })
-    toast.error(t('common.error'))
-  }, [error, t, target.id])
-
-  return (
-    <AgentEditDialog
-      open={open}
-      resource={agent ?? null}
-      onOpenChange={onOpenChange}
-      modelFilter={modelFilter}
       initialTab={target.initialTab}
     />
   )

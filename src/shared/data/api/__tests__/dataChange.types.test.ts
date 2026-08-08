@@ -19,14 +19,6 @@ import type { CollectionGetPaths, DataApiDataChangeEffect, GetMethodApiPaths, Sc
 describe('endpoint classification', () => {
   it('pins the collection classification snapshot (update deliberately on schema changes)', () => {
     expectTypeOf<CollectionGetPaths>().toEqualTypeOf<
-      | '/agent-channels'
-      | '/agent-sessions'
-      | '/agent-sessions/:sessionId/messages'
-      | '/agent-tasks'
-      | '/agent-workspaces'
-      | '/agents'
-      | '/agents/:agentId/tasks'
-      | '/agents/:agentId/tasks/:taskId/logs'
       | '/assistants'
       | '/files/entries'
       | '/files/entries/by-content-hash'
@@ -35,18 +27,12 @@ describe('endpoint classification', () => {
       | '/files/refs'
       | '/groups'
       | '/jobs'
-      | '/knowledge-bases'
-      | '/knowledge-bases/:id/items'
       | '/mcp-servers'
-      | '/mini-apps'
       | '/models'
-      | '/notes'
-      | '/paintings'
       | '/pins'
       | '/prompts'
       | '/providers'
       | '/providers/:providerId/models:resolve'
-      | '/skills'
       | '/tags'
       | '/tags/entities/:entityType/:entityId'
       | '/temporary/topics/:topicId/messages'
@@ -66,7 +52,6 @@ describe('endpoint classification', () => {
     expectTypeOf<'/topics/:id'>().toExtend<ScalarGetPaths>()
     expectTypeOf<'/search/entities'>().toExtend<ScalarGetPaths>()
     expectTypeOf<'/topics/:topicId/tree'>().toExtend<ScalarGetPaths>()
-    expectTypeOf<'/agent-tasks/:taskId'>().toExtend<ScalarGetPaths>()
   })
 
   it('rejects paths without a GET read model as notification targets', () => {

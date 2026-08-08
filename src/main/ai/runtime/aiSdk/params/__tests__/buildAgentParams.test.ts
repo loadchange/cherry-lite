@@ -669,39 +669,6 @@ describe('buildAgentParams web-tool routing', () => {
   // Owning a knowledge base is global account state; the KB tools only load when this request also
   // scopes one (their `applies` requires both). Treating the global flag as a function-tool signal
   // made every Gemini 2.5 request look like a native-tool conflict and lose the server route.
-  it('keeps the server route for Gemini 2.5 when a knowledge base exists but none is selected', async () => {
-    resolveProviderAiSdkConfigMock.mockResolvedValue({
-      config: { providerId: 'google', providerSettings: {} },
-      credentialReceipt: { attribution: 'unknown' }
-    })
-    const geminiProvider = makeProvider({
-      id: 'gemini',
-      defaultChatEndpoint: ENDPOINT_TYPE.GOOGLE_GENERATE_CONTENT,
-      endpointConfigs: { [ENDPOINT_TYPE.GOOGLE_GENERATE_CONTENT]: { adapterFamily: 'google' } },
-      serverTools: [{ id: SERVER_TOOL.WEB_SEARCH, modelScope: 'model-dependent' }]
-    })
-    const geminiModel = makeModel({
-      id: 'gemini::gemini-2.5-pro',
-      providerId: 'gemini',
-      apiModelId: 'gemini-2.5-pro',
-      capabilities: [MODEL_CAPABILITY.FUNCTION_CALL]
-    })
-    preferenceGetMock.mockImplementation((key: string) =>
-      key === 'chat.web_search.client_tools_preferred' ? false : null
-    )
-    registry.register(clientSearchEntry)
-
-    const result = await buildAgentParams({
-      request: {},
-      signal: undefined,
-      provider: geminiProvider,
-      model: geminiModel,
-      assistant
-    })
-
-    expect(result.plugins.some((plugin) => plugin.name === 'webSearch')).toBe(true)
-    expect(result.tools?.web_search).toBeUndefined()
-  })
 })
 
 describe('buildAgentParams assistant-less reasoning', () => {
@@ -1180,119 +1147,6 @@ describe('resolveToolCallLimit', () => {
   })
 })
 
-/**
- * The resolver's own semantics live in `utils/__tests__/knowledgeScope.test.ts`. These tests pin the
- * *call site* instead: that `buildAgentParams` composes the assistant binding with the request
- * selection in that order, and hands the result to `resolveTools`. Asserting the resolver directly
- * here would leave a swapped-argument call site (`resolveKnowledgeBaseScope(request, assistant)`)
- * green while the trust boundary inverts.
- */
-describe('buildAgentParams knowledge-scope enforcement', () => {
-  const SCOPE_PROBE_TOOL_NAME = 'test-scope-probe-tool'
-  let observedScope: readonly string[] | undefined
-
-  const scopeProbeEntry: ToolEntry = {
-    name: SCOPE_PROBE_TOOL_NAME,
-    namespace: 'test',
-    description: 'test-only tool that records the effective knowledge scope it is resolved with',
-    defer: 'never',
-    tool: {} as Tool,
-    applies: (scope) => {
-      observedScope = scope.knowledgeBaseIds
-      return true
-    }
-  }
-
-  afterEach(() => {
-    registry.deregister(SCOPE_PROBE_TOOL_NAME)
-  })
-
-  /** Drive the real `buildAgentParams` and report the scope that actually reached the tool layer. */
-  const effectiveScopeFor = async (
-    assistantKnowledgeBaseIds: string[] | undefined,
-    requestKnowledgeBaseIds: string[] | undefined
-  ): Promise<readonly string[] | undefined> => {
-    observedScope = undefined
-    resolveProviderAiSdkConfigMock.mockResolvedValue({
-      config: { providerId: 'anthropic', providerSettings: {} },
-      credentialReceipt: { attribution: 'unknown' }
-    })
-    registry.register(scopeProbeEntry)
-
-    await buildAgentParams({
-      request: { knowledgeBaseIds: requestKnowledgeBaseIds },
-      signal: undefined,
-      provider: makeProvider({
-        id: 'custom-claude',
-        defaultChatEndpoint: ENDPOINT_TYPE.ANTHROPIC_MESSAGES,
-        endpointConfigs: { [ENDPOINT_TYPE.ANTHROPIC_MESSAGES]: { adapterFamily: 'anthropic' } }
-      }),
-      model: makeModel({ capabilities: [MODEL_CAPABILITY.FUNCTION_CALL] }),
-      assistant: makeAssistant({ knowledgeBaseIds: assistantKnowledgeBaseIds })
-    })
-
-    return observedScope
-  }
-
-  it('narrows the assistant binding to the request selection instead of ignoring it', async () => {
-    await expect(effectiveScopeFor(['kb-1', 'kb-2'], ['kb-1'])).resolves.toEqual(['kb-1'])
-  })
-
-  it('never widens the assistant binding, whichever bases the request asks for', async () => {
-    // An assistant statically bound to `kb-public` must not become searchable for `kb-private` just
-    // because the renderer/IPC request asked for it — the binding is the trust boundary, not whatever
-    // the composer UI happened to let the user pick. A wholly out-of-scope selection is no narrowing
-    // at all, so the full binding stands rather than the assistant losing its own bases.
-    await expect(effectiveScopeFor(['kb-public'], ['kb-private'])).resolves.toEqual(['kb-public'])
-    await expect(effectiveScopeFor(['kb-1'], ['kb-1', 'kb-2'])).resolves.toEqual(['kb-1'])
-  })
-
-  it('falls back to the assistant binding when the request selects none', async () => {
-    await expect(effectiveScopeFor(['kb-1'], undefined)).resolves.toEqual(['kb-1'])
-  })
-
-  it('lets the request selection define the scope when the assistant has no binding', async () => {
-    await expect(effectiveScopeFor(undefined, ['kb-2'])).resolves.toEqual(['kb-2'])
-  })
-
-  it('resolves to an empty scope when neither source selects a base', async () => {
-    await expect(effectiveScopeFor(undefined, undefined)).resolves.toEqual([])
-  })
-})
-
-describe('resolveTools knowledge-base wiring', () => {
-  const KB_GATED_TOOL_NAME = 'test-kb-gated-tool'
-
-  const kbGatedEntry: ToolEntry = {
-    name: KB_GATED_TOOL_NAME,
-    namespace: 'test',
-    description: 'test-only tool gated on knowledgeBaseIds',
-    defer: 'never',
-    tool: {} as Tool,
-    applies: (scope) => (scope.knowledgeBaseIds?.length ?? 0) > 0
-  }
-
-  afterEach(() => {
-    registry.deregister(KB_GATED_TOOL_NAME)
-  })
-
-  it('exposes a kb-gated tool when the effective knowledgeBaseIds is non-empty', async () => {
-    registry.register(kbGatedEntry)
-
-    const { tools } = await resolveTools({}, undefined, makeModel(), false, ['kb-1'])
-
-    expect(tools?.[KB_GATED_TOOL_NAME]).toBeDefined()
-  })
-
-  it('hides a kb-gated tool when the effective knowledgeBaseIds is empty', async () => {
-    registry.register(kbGatedEntry)
-
-    const { tools } = await resolveTools({}, undefined, makeModel(), false, [])
-
-    expect(tools?.[KB_GATED_TOOL_NAME]).toBeUndefined()
-  })
-})
-
 describe('resolveTools citation provenance', () => {
   const tool = {} as Tool
   const entry: ToolEntry = {
@@ -1307,7 +1161,7 @@ describe('resolveTools citation provenance', () => {
 
   it('reports citation capability for a selected first-party entry', async () => {
     registry.register(entry)
-    const result = await resolveTools({}, undefined, makeModel(), false, [])
+    const result = await resolveTools({}, undefined, makeModel(), false)
     expect(result.hasCitableTools).toBe(true)
   })
 
@@ -1318,8 +1172,7 @@ describe('resolveTools citation provenance', () => {
       { callOverrides: { tools: { web_search: customTool } } },
       undefined,
       makeModel(),
-      false,
-      []
+      false
     )
 
     expect(result.tools?.web_search).toBe(customTool)

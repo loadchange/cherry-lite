@@ -1,7 +1,6 @@
 import { cacheService } from '@data/CacheService'
 import { usePreference } from '@data/hooks/usePreference'
 import { loggerService } from '@logger'
-import { useAgentSessionAutoRenameSync } from '@renderer/hooks/agent/useSession'
 import { useCustomCss } from '@renderer/hooks/useCustomCss'
 import { useLanguageSync } from '@renderer/hooks/useLanguageSync'
 import useMacTransparentWindow from '@renderer/hooks/useMacTransparentWindow'
@@ -27,7 +26,7 @@ const DEFAULT_NAV_BACKGROUND = 'var(--sidebar)'
  * window-level side effects both need, identically. It calls the two hooks the light
  * windows also reuse (`useLanguageSync` / `useCustomCss`) and inlines the concerns
  * only main + subWindow have (dayjs locale, root background, app-path snapshot,
- * fullscreen, topic/agent auto-rename).
+ * fullscreen, topic auto-rename).
  *
  * Mount it from a leaf inside the providers but OUTSIDE every `TabRouter`/`<Activity>`
  * — a hidden `<Activity>` subtree destroys effects, so a window-scoped subscription
@@ -100,5 +99,4 @@ export function useWindowRuntime(): void {
 
   // Each BrowserWindow has its own SWR cache, so both keep their own invalidation.
   useTopicAutoRenameSync()
-  useAgentSessionAutoRenameSync()
 }

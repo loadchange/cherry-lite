@@ -3,35 +3,24 @@ import { useInfiniteFlatItems, useInfiniteQuery } from '@data/hooks/useDataApi'
 import MessageContent from '@renderer/components/chat/messages/frame/MessageContent'
 import { MessageContentProvider } from '@renderer/components/chat/messages/MessageContentProvider'
 import { toMessageListItem } from '@renderer/components/chat/messages/utils/messageListItem'
-import { toAgentSessionUIMessage } from '@renderer/hooks/useAgentSessionParts'
-import { type Topic, TopicType } from '@renderer/types/topic'
-import { buildAgentSessionTopicId } from '@renderer/utils/agentSession'
+import type { Topic } from '@renderer/types/topic'
 import { sharedMessageToUIMessage, uiMessagesToPartsMap } from '@renderer/utils/message/messageProjection'
 import { cn } from '@renderer/utils/style'
 import type { CherryUIMessage } from '@shared/data/types/message'
 import { buildKeywordRegexes, splitKeywordsToTerms } from '@shared/utils/keywordSearch'
-import { ExternalLink, MessageSquare, MousePointerClick, X } from 'lucide-react'
+import { ExternalLink, MessageSquare, X } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-export type GlobalSearchMessagePreviewTarget =
-  | {
-      sourceType: 'topic'
-      topicId: string
-      title: string
-      messageId: string
-      assistantId?: string
-      createdAt?: string
-      updatedAt?: string
-    }
-  | {
-      sourceType: 'session'
-      sessionId: string
-      title: string
-      messageId: string
-      agentId?: string
-      createdAt?: string
-    }
+export type GlobalSearchMessagePreviewTarget = {
+  sourceType: 'topic'
+  topicId: string
+  title: string
+  messageId: string
+  assistantId?: string
+  createdAt?: string
+  updatedAt?: string
+}
 
 interface GlobalSearchMessagePreviewPanelProps {
   className?: string
@@ -50,32 +39,14 @@ const MESSAGE_BODY_SELECTOR = '[data-global-search-preview-message-body="true"]'
 const TEXT_NODE_PARENT_SKIP_SELECTOR = 'script, style, svg, mark'
 
 function getPreviewTopic(target: GlobalSearchMessagePreviewTarget): Topic {
-  if (target.sourceType === 'topic') {
-    return {
-      id: target.topicId,
-      assistantId: target.assistantId ?? '',
-      name: target.title,
-      createdAt: target.createdAt ?? '',
-      updatedAt: target.updatedAt ?? target.createdAt ?? '',
-      messages: []
-    } as Topic
-  }
-
   return {
-    id: buildAgentSessionTopicId(target.sessionId),
-    type: TopicType.Session,
-    assistantId: target.agentId ?? '',
+    id: target.topicId,
+    assistantId: target.assistantId ?? '',
     name: target.title,
     createdAt: target.createdAt ?? '',
-    updatedAt: target.createdAt ?? '',
+    updatedAt: target.updatedAt ?? target.createdAt ?? '',
     messages: []
   } as Topic
-}
-
-function getTargetMessageType(target: GlobalSearchMessagePreviewTarget) {
-  return target.sourceType === 'topic'
-    ? 'globalSearch.messageSearch.sources.topic'
-    : 'globalSearch.messageSearch.sources.session'
 }
 
 function getMessageRoleLabelKey(role: string) {
@@ -186,70 +157,39 @@ export function GlobalSearchMessagePreviewPanel({
   // The active message id we have already auto-scrolled to, so prepending older pages does not yank back.
   const scrolledActiveMessageIdRef = useRef<string | null>(null)
   const [activeMessageId, setActiveMessageId] = useState(target.messageId)
-  const topicId = target.sourceType === 'topic' ? target.topicId : ''
-  const sessionId = target.sourceType === 'session' ? target.sessionId : ''
   const {
     pages: topicPages,
-    isLoading: isTopicLoading,
-    isRefreshing: isTopicRefreshing,
-    error: topicError,
-    hasNext: hasNextTopicPage,
-    loadNext: loadNextTopicPage
+    isLoading,
+    isRefreshing,
+    error,
+    hasNext: hasMoreOlder,
+    loadNext: loadOlder
   } = useInfiniteQuery('/topics/:topicId/messages', {
-    params: { topicId },
-    query: { includeSiblings: false, nodeId: target.sourceType === 'topic' ? target.messageId : undefined },
-    limit: PREVIEW_PAGE_SIZE,
-    enabled: target.sourceType === 'topic'
-  })
-  const {
-    pages: sessionPages,
-    isLoading: isSessionLoading,
-    isRefreshing: isSessionRefreshing,
-    error: sessionError,
-    hasNext: hasNextSessionPage,
-    loadNext: loadNextSessionPage
-  } = useInfiniteQuery('/agent-sessions/:sessionId/messages', {
-    params: { sessionId },
-    query: {
-      messageId: target.sourceType === 'session' ? target.messageId : undefined,
-      deferToolOutputs: true
-    },
-    limit: PREVIEW_PAGE_SIZE,
-    enabled: target.sourceType === 'session'
+    params: { topicId: target.topicId },
+    query: { includeSiblings: false, nodeId: target.messageId },
+    limit: PREVIEW_PAGE_SIZE
   })
 
   const topicBranchItems = useInfiniteFlatItems(topicPages, { reversePages: true })
-  const sessionRows = useInfiniteFlatItems(sessionPages, { reversePages: true, reverseItems: true })
-  const messages = useMemo<CherryUIMessage[]>(() => {
-    if (target.sourceType === 'topic') {
-      return topicBranchItems.map((item) => sharedMessageToUIMessage(item.message))
-    }
-
-    return sessionRows.map(toAgentSessionUIMessage)
-  }, [sessionRows, target.sourceType, topicBranchItems])
+  const messages = useMemo<CherryUIMessage[]>(
+    () => topicBranchItems.map((item) => sharedMessageToUIMessage(item.message)),
+    [topicBranchItems]
+  )
   const partsByMessageId = useMemo(() => uiMessagesToPartsMap(messages), [messages])
   const previewTopic = useMemo(() => getPreviewTopic(target), [target])
   const messageItems = useMemo(
     () =>
       messages.map((message) =>
         toMessageListItem(message, {
-          assistantId: target.sourceType === 'topic' ? target.assistantId : target.agentId,
+          assistantId: target.assistantId,
           topicId: previewTopic.id
         })
       ),
     [messages, previewTopic.id, target]
   )
-  const isLoading = target.sourceType === 'topic' ? isTopicLoading : isSessionLoading
-  const isLoadingMore =
-    target.sourceType === 'topic'
-      ? isTopicRefreshing && messages.length > 0
-      : isSessionRefreshing && messages.length > 0
-  const error = target.sourceType === 'topic' ? topicError : sessionError
-  const hasMoreOlder = target.sourceType === 'topic' ? hasNextTopicPage : hasNextSessionPage
-  const loadOlder = target.sourceType === 'topic' ? loadNextTopicPage : loadNextSessionPage
+  const isLoadingMore = isRefreshing && messages.length > 0
 
-  // Scrolling near the top loads the next (older) page. Topic and session share this path because
-  // both endpoints walk newest-first via the same hasNext/loadNext contract.
+  // Scrolling near the top loads the next (older) page.
   const handleScroll = useCallback(() => {
     const container = scrollContainerRef.current
     if (!container || !hasMoreOlder) return
@@ -320,15 +260,11 @@ export function GlobalSearchMessagePreviewPanel({
     <aside className={cn('relative flex min-h-0 flex-col bg-background', className)}>
       <div className="flex h-14 shrink-0 items-center gap-3 border-border-subtle border-b px-5">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted/50 text-muted-foreground">
-          {target.sourceType === 'topic' ? (
-            <MessageSquare className="size-4" />
-          ) : (
-            <MousePointerClick className="size-4" />
-          )}
+          <MessageSquare className="size-4" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="truncate font-medium text-foreground text-sm">{target.title || t('common.unnamed')}</div>
-          <div className="text-muted-foreground text-xs">{t(getTargetMessageType(target))}</div>
+          <div className="text-muted-foreground text-xs">{t('globalSearch.messageSearch.sources.topic')}</div>
         </div>
         <button
           type="button"

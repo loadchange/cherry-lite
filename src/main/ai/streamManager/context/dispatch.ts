@@ -8,10 +8,8 @@ import { loggerService } from '@logger'
 import type { AiStreamOpenRequest, AiStreamOpenResponse, ApprovalDecision } from '@shared/ai/transport'
 import type { ReasoningEffortOption } from '@shared/types/aiSdk'
 
-import { isAgentSessionWorkspaceError } from '../../runtime/claudeCode'
 import type { AiStreamManager } from '../AiStreamManager'
 import type { StreamListener } from '../types'
-import { agentChatContextProvider } from './AgentChatContextProvider'
 import type { ChatContextProvider } from './ChatContextProvider'
 import { persistentChatContextProvider } from './PersistentChatContextProvider'
 import { temporaryChatContextProvider } from './TemporaryChatContextProvider'
@@ -64,11 +62,7 @@ const logger = loggerService.withContext('chatContextDispatch')
  * the dispatcher takes the first match without checking the rest.
  * `persistentChatContextProvider` is the catch-all and stays last.
  */
-const providers: readonly ChatContextProvider[] = [
-  agentChatContextProvider,
-  temporaryChatContextProvider,
-  persistentChatContextProvider
-]
+const providers: readonly ChatContextProvider[] = [temporaryChatContextProvider, persistentChatContextProvider]
 
 export async function dispatchStreamRequest(
   manager: AiStreamManager,
@@ -82,13 +76,12 @@ export async function dispatchStreamRequest(
 
   logger.debug('Dispatching stream request', { topicId: req.topicId, provider: provider.name })
 
-  // A busy submit no longer aborts the live turn — but only persistent chat and agent sessions
-  // absorb it. Persistent chat persists the steer user row (PersistentChatContextProvider's
-  // `hasLiveStream` branch) and we enqueue it below so the running turn yields at the next step
-  // boundary and the terminal hook chains a continuation; agent sessions enqueue onto `pendingTurns`.
-  // Temporary chats are the third case — they have no queue, so their provider throws on a live
-  // submit rather than letting the message be silently swallowed. Either way `prepareDispatch` must
-  // observe liveness.
+  // A busy submit no longer aborts the live turn — but only persistent chat absorbs it: it persists
+  // the steer user row (PersistentChatContextProvider's `hasLiveStream` branch) and we enqueue it
+  // below so the running turn yields at the next step boundary and the terminal hook chains a
+  // continuation. Temporary chats have no queue, so their provider throws on a live submit rather
+  // than letting the message be silently swallowed. Either way `prepareDispatch` must observe
+  // liveness.
   const hasLiveStream = manager.hasLiveStream(req.topicId)
 
   // An approval `continue-conversation` must never race a live stream: `send` would take the inject
@@ -100,20 +93,7 @@ export async function dispatchStreamRequest(
       topicId: req.topicId
     })
   }
-  const prepared = await provider.prepareDispatch(subscriber, req, { hasLiveStream }).catch((error: unknown) => {
-    if (isAgentSessionWorkspaceError(error)) {
-      return {
-        blocked: {
-          reason: 'agent-session-workspace' as const,
-          message: error.message
-        }
-      }
-    }
-    throw error
-  })
-  if ('blocked' in prepared) {
-    return { mode: 'blocked', ...prepared.blocked }
-  }
+  const prepared = await provider.prepareDispatch(subscriber, req, { hasLiveStream })
 
   // Inject-steer: a live persistent-chat submit took the `hasLiveStream` branch, which sets an
   // explicit `pendingSteerUserMessageId`. Enqueue it so the running turn yields (`hasPendingSteer`)
@@ -132,8 +112,7 @@ export async function dispatchStreamRequest(
   ) {
     // A persistent submit that resolved to zero models without taking the steer branch is a
     // regression: `send` persists nothing new, returns a success-shaped ack, and answers nothing.
-    // Surface it loudly. (Agent-session injects legitimately have empty models — absorbed by the
-    // runtime's pendingTurns — so they're excluded by the provider check.)
+    // Surface it loudly.
     logger.error(
       'Persistent submit resolved to zero models and is not an enqueue-only steer — nothing will be answered',
       {

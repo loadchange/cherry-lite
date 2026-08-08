@@ -22,27 +22,15 @@ describe('ConversationResourceView', () => {
     resourceCatalogViewMock.mockClear()
   })
 
-  it('embeds the resource catalog for the selected resource kind', () => {
-    render(<ConversationResourceView kind="agent" className="custom-shell" />)
+  it('embeds the resource catalog for the conversation resource kind', () => {
+    render(<ConversationResourceView kind="assistant" className="custom-shell" />)
 
     const view = screen.getByTestId('resource-catalog-view')
-    expect(view).toHaveAttribute('data-resource-type', 'agent')
+    expect(view).toHaveAttribute('data-resource-type', 'assistant')
     expect(resourceCatalogViewMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        resourceType: 'agent',
+        resourceType: 'assistant',
         className: expect.stringContaining('custom-shell')
-      })
-    )
-  })
-
-  it('updates the allowed catalog type when the conversation resource kind changes', () => {
-    const { rerender } = render(<ConversationResourceView kind="assistant" />)
-
-    rerender(<ConversationResourceView kind="skill" />)
-
-    expect(resourceCatalogViewMock).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        resourceType: 'skill'
       })
     )
   })

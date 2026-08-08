@@ -216,66 +216,20 @@ describe('ProviderList', () => {
     expect(onSelectProvider).toHaveBeenCalledWith('anthropic')
   })
 
-  it('hides CherryAI from the provider list', () => {
+  it('renders an empty provider list with the add action still available', () => {
     useProvidersMock.mockReturnValue({
-      providers: [
-        ...providers,
-        {
-          id: 'cherryai',
-          name: 'CherryAI',
-          defaultChatEndpoint: ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS,
-          isEnabled: true
-        }
-      ],
+      providers: [],
       createProvider: vi.fn()
     })
 
-    render(<ProviderList selectedProviderId="openai" onSelectProvider={vi.fn()} />)
+    render(<ProviderList selectedProviderId={undefined} onSelectProvider={vi.fn()} />)
 
-    expect(screen.getByText('OpenAI')).toBeInTheDocument()
-    expect(screen.queryByText('CherryAI')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('provider-list-item-cherryai')).not.toBeInTheDocument()
-  })
+    expect(screen.queryByTestId('provider-list-item-openai')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('provider-list-item-anthropic')).not.toBeInTheDocument()
+    expect(screen.getByTestId('provider-editor-drawer')).toHaveAttribute('data-open', 'false')
 
-  it('offers only safe canonical preset sources to the custom provider editor', () => {
-    const canonicalOpenAI = {
-      ...providers[0],
-      presetProviderId: 'openai',
-      authType: 'api-key'
-    }
-    const canonicalNewApi = {
-      id: 'new-api',
-      name: 'New API',
-      presetProviderId: 'new-api',
-      authType: 'api-key',
-      endpointConfigs: {
-        [ENDPOINT_TYPE.OPENAI_CHAT_COMPLETIONS]: { baseUrl: 'http://localhost:3000' }
-      }
-    }
-    useProvidersMock.mockReturnValue({
-      providers: [
-        canonicalOpenAI,
-        canonicalNewApi,
-        { ...canonicalOpenAI, id: 'openai-work' },
-        {
-          ...providers[1],
-          id: 'claude-code',
-          presetProviderId: 'claude-code',
-          authType: 'api-key',
-          authMethods: ['external-cli']
-        }
-      ],
-      createProvider: vi.fn()
-    })
-
-    render(<ProviderList selectedProviderId="openai" onSelectProvider={vi.fn()} />)
-
-    expect(providerEditorDrawerSpy).toHaveBeenLastCalledWith(
-      expect.objectContaining({
-        presetSources: [canonicalOpenAI, canonicalNewApi],
-        onSelectPreset: expect.any(Function)
-      })
-    )
+    fireEvent.click(screen.getAllByRole('button', { name: /添加/i })[0])
+    expect(screen.getByTestId('provider-editor-drawer')).toHaveAttribute('data-open', 'true')
   })
 
   it('triggers add and reorder actions', () => {

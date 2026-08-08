@@ -170,7 +170,6 @@ vi.mock('react-i18next', async (importOriginal) => {
           'library.config.dialogs.create.next': 'Next',
           'library.config.dialogs.create.step.basic': 'Basic info',
           'library.config.dialogs.create.step.capability': 'Capabilities',
-          'library.config.dialogs.create.step.knowledge': 'Knowledge',
           'library.config.dialogs.create.step.persona': 'Persona',
           'library.config.dialogs.edit.assistant_description': 'Edit the essentials for this assistant.',
           'library.config.dialogs.edit.assistant_title': 'Edit Assistant',
@@ -216,7 +215,6 @@ const ASSISTANTS_RESPONSE = {
       modelId: 'provider::old-model',
       orderKey: 'a0',
       mcpServerIds: [],
-      knowledgeBaseIds: [],
       groupId: '33333333-3333-4333-8333-333333333333',
       createdAt: '2024-01-01T00:00:00.000Z',
       updatedAt: '2024-01-01T00:00:00.000Z',
@@ -246,7 +244,6 @@ const ASSISTANTS_RESPONSE = {
       modelId: 'provider::old-model',
       orderKey: 'a1',
       mcpServerIds: [],
-      knowledgeBaseIds: [],
       groupId: '44444444-4444-4444-8444-444444444444',
       createdAt: '2024-01-02T00:00:00.000Z',
       updatedAt: '2024-01-02T00:00:00.000Z',
@@ -435,7 +432,6 @@ describe('AssistantSelector', () => {
       target: { value: 'Created from selector' }
     })
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 
     await waitFor(() =>
@@ -445,8 +441,7 @@ describe('AssistantSelector', () => {
           emoji: '💬',
           modelId: MODEL.id,
           description: 'Created from selector',
-          prompt: '',
-          knowledgeBaseIds: []
+          prompt: ''
         }
       })
     )
@@ -470,7 +465,6 @@ describe('AssistantSelector', () => {
 
     fireEvent.change(screen.getByPlaceholderText('Name this resource'), { target: { value: 'Created Assistant' } })
     fireEvent.click(screen.getByRole('button', { name: 'Pick model' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 
@@ -547,7 +541,6 @@ describe('AssistantSelector', () => {
 
     fireEvent.change(screen.getByPlaceholderText('Name this resource'), { target: { value: 'Created Assistant' } })
     fireEvent.click(screen.getByRole('button', { name: 'Pick model' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     fireEvent.click(screen.getByRole('button', { name: 'Next' }))
     fireEvent.click(screen.getByRole('button', { name: 'Create' }))
 

@@ -49,7 +49,7 @@ describe('searchHandlers', () => {
       await searchHandlers['/search/entities'].GET({
         query: {
           q: 'agent',
-          types: ['agent', 'session'],
+          types: ['assistant', 'topic'],
           updatedAtFrom: '2026-05-01T00:00:00.000Z',
           limitPerType: ENTITY_SEARCH_MAX_LIMIT_PER_TYPE
         }
@@ -57,7 +57,7 @@ describe('searchHandlers', () => {
 
       expect(entitySearchMock).toHaveBeenCalledWith({
         q: 'agent',
-        types: ['agent', 'session'],
+        types: ['assistant', 'topic'],
         updatedAtFrom: '2026-05-01T00:00:00.000Z',
         limitPerType: ENTITY_SEARCH_MAX_LIMIT_PER_TYPE
       })
