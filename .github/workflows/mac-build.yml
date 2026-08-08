@@ -66,7 +66,7 @@ jobs:
         run: pnpm test:e2e
 
       - name: Package macOS app
-        run: pnpm exec electron-builder --mac --arm64 --x64
+        run: pnpm exec electron-builder --mac --arm64
         env:
           # Unsigned build: no Apple credentials are configured for this fork.
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
