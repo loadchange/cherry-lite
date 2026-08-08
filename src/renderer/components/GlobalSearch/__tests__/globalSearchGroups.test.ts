@@ -361,8 +361,7 @@ describe('globalSearchGroups', () => {
   })
 
   it('maps message search source filters and groups message results by parent', () => {
-    expect(getMessageSearchSources('all')).toEqual(['topic'])
-    expect(getMessageSearchSources('topic')).toEqual(['topic'])
+    expect(getMessageSearchSources()).toEqual(['topic'])
 
     const groups = buildGlobalMessageSearchGroups({
       expandedParentIds: new Set(),

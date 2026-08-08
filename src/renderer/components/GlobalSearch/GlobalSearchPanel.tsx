@@ -305,7 +305,6 @@ export function GlobalSearchPanel({ onClose }: GlobalSearchPanelProps) {
     expandedMessageParentIds,
     expandedSearchGroupIds,
     filter,
-    messageSourceFilter,
     panelMode,
     recentItems: sanitizedRecentItems,
     timeFilter

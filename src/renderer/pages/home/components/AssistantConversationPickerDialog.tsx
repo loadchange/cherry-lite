@@ -197,7 +197,7 @@ export function AssistantConversationPickerDialog({
                     ? {
                         icon: (
                           <EmojiIcon
-                            emoji={getResourceCreateDefaultAvatar('assistant')}
+                            emoji={getResourceCreateDefaultAvatar()}
                             size={24}
                             fontSize={14}
                             className="mr-0"

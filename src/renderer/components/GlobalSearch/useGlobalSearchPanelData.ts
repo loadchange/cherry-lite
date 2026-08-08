@@ -14,7 +14,6 @@ import {
   type GlobalMessageSearchPanelGroup,
   type GlobalMessageSearchPanelItem,
   type GlobalMessageSearchResult,
-  type GlobalMessageSearchSourceFilter,
   type GlobalSearchFilter,
   type GlobalSearchPanelGroup,
   type GlobalSearchPanelGroupFooter,
@@ -144,7 +143,6 @@ export function useGlobalSearchPanelData({
   expandedMessageParentIds,
   expandedSearchGroupIds,
   filter,
-  messageSourceFilter,
   panelMode,
   recentItems,
   timeFilter
@@ -153,7 +151,6 @@ export function useGlobalSearchPanelData({
   expandedMessageParentIds: ReadonlySet<string>
   expandedSearchGroupIds: ReadonlySet<GlobalSearchPanelGroup['id']>
   filter: GlobalSearchFilter
-  messageSourceFilter: GlobalMessageSearchSourceFilter
   panelMode: GlobalSearchPanelMode
   recentItems: readonly GlobalSearchRecentEntry[] | undefined
   timeFilter: GlobalSearchTimeFilter
@@ -162,7 +159,7 @@ export function useGlobalSearchPanelData({
   const isMessageSearchMode = panelMode === 'message-search'
   const shouldShowGlobalMessagePreview = panelMode === 'search' && filter === 'all'
   const searchTypes = useMemo(() => getGlobalSearchTypes(filter), [filter])
-  const messageSearchSources = useMemo(() => getMessageSearchSources(messageSourceFilter), [messageSourceFilter])
+  const messageSearchSources = useMemo(() => getMessageSearchSources(), [])
   const shouldSearchTopicMessages =
     shouldShowGlobalMessagePreview || (isMessageSearchMode && messageSearchSources.includes('topic'))
   const updatedAtFrom = useMemo(() => getUpdatedAtFromForTimeFilter(timeFilter), [timeFilter])

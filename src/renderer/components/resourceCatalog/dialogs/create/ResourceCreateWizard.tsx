@@ -32,13 +32,13 @@ type ResourceCreateWizardProps = {
 type StepId = 'basic' | 'persona'
 
 /** The avatar a brand-new resource starts with — exported so callers can preview what they'd create. */
-export function getResourceCreateDefaultAvatar(_kind: ResourceCreateWizardKind) {
+export function getResourceCreateDefaultAvatar() {
   return '💬'
 }
 
-function getDefaultValues(kind: ResourceCreateWizardKind, initialName = ''): ResourceCreateWizardFormValues {
+function getDefaultValues(initialName = ''): ResourceCreateWizardFormValues {
   return {
-    avatar: getResourceCreateDefaultAvatar(kind),
+    avatar: getResourceCreateDefaultAvatar(),
     name: initialName,
     description: '',
     modelId: null,
@@ -121,7 +121,7 @@ export function ResourceCreateWizard({
   initialName
 }: ResourceCreateWizardProps) {
   const { t } = useTranslation()
-  const form = useForm<ResourceCreateWizardFormValues>({ defaultValues: getDefaultValues(kind, initialName) })
+  const form = useForm<ResourceCreateWizardFormValues>({ defaultValues: getDefaultValues(initialName) })
   const { defaultModel } = useDefaultModel({ enabled: open })
   const selectableDefaultModelId =
     open && defaultModel && (!modelFilter || modelFilter(defaultModel)) ? defaultModel.id : null
@@ -152,7 +152,7 @@ export function ResourceCreateWizard({
   // user is already filling in — the shared wizard has five callers and a comment would not hold them.
   const resetForOpen = useEffectEvent(() => {
     autoSelectedDefaultModelIdRef.current = null
-    form.reset(getDefaultValues(kind, initialName))
+    form.reset(getDefaultValues(initialName))
     form.clearErrors()
     setStepIndex(0)
   })
@@ -323,7 +323,7 @@ export function ResourceCreateWizard({
                   <BasicInfoStep
                     form={form}
                     portalContainer={dialogContentElement}
-                    fallbackAvatar={getResourceCreateDefaultAvatar(kind)}
+                    fallbackAvatar={getResourceCreateDefaultAvatar()}
                     modelFilter={modelFilter}
                     onSettingsNavigate={closeBeforeAction}
                   />

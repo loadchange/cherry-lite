@@ -98,7 +98,7 @@ export function getGlobalSearchTypes(filter: GlobalSearchFilter): EntitySearchTy
   return FILTER_TYPES[filter]
 }
 
-export function getMessageSearchSources(_filter: GlobalMessageSearchSourceFilter): GlobalMessageSearchSource[] {
+export function getMessageSearchSources(): GlobalMessageSearchSource[] {
   return ['topic']
 }
 
