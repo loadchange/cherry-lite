@@ -55,12 +55,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build macOS app
+      - name: Build renderer and main bundles
         run: |
           touch .env
-          pnpm build:mac
+          pnpm build
         env:
-          # Unsigned local build: no Apple credentials configured for this fork.
+          NODE_OPTIONS: --max-old-space-size=8192
+
+      - name: Electron e2e
+        run: pnpm test:e2e
+
+      - name: Package macOS app
+        run: pnpm exec electron-builder --mac --arm64 --x64
+        env:
+          # Unsigned build: no Apple credentials are configured for this fork.
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
           NODE_OPTIONS: --max-old-space-size=8192
 

@@ -30,13 +30,11 @@ export const test = base.extend<ElectronFixtures>({
   },
 
   mainWindow: async ({ electronApp }, use) => {
-    // Wait for the main window (title: "Cherry Studio", not "Quick Assistant")
-    // On Mac, the app may create the QuickAssistant window with a different title
+    // Identify the main window by the document it loads rather than its title: the
+    // title carries the product name, and other windows (Quick Assistant, sub
+    // window) would otherwise be indistinguishable.
     const mainWindow = await electronApp.waitForEvent('window', {
-      predicate: async (window) => {
-        const title = await window.title()
-        return title === 'Cherry Studio'
-      },
+      predicate: (window) => window.url().includes('windows/main/index.html'),
       timeout: 60000
     })
 
