@@ -93,7 +93,6 @@ jobs:
           name: cherry-studio-lite-mac
           path: |
             dist/*.dmg
-            dist/*.zip
             dist/latest-mac.yml
           if-no-files-found: error
 
@@ -113,7 +112,6 @@ jobs:
             - Intel (`x64`)
           files: |
             dist/*.dmg
-            dist/*.zip
             dist/latest-mac.yml
           fail_on_unmatched_files: true
           generate_release_notes: true
