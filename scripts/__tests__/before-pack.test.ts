@@ -30,6 +30,26 @@ describe('assertPrebuiltPackages', () => {
     )
   })
 
+  it('does not pack unused Lite-removed natives', () => {
+    const beforePackSource = readFileSync('scripts/before-pack.js', 'utf8')
+    const packageList = beforePackSource.slice(
+      beforePackSource.indexOf('const packages = ['),
+      beforePackSource.indexOf(']', beforePackSource.indexOf('const packages = ['))
+    )
+    const packageManifest = JSON.parse(readFileSync('package.json', 'utf8')) as {
+      dependencies: Record<string, string>
+      optionalDependencies: Record<string, string>
+    }
+
+    expect(packageList).not.toMatch(/claude-agent-sdk|anydoc|sqlite-vec/)
+    expect(packageManifest.dependencies).not.toHaveProperty('@anthropic-ai/claude-agent-sdk')
+    expect(packageManifest.dependencies).not.toHaveProperty('@firecrawl/anydoc')
+    expect(packageManifest.dependencies).not.toHaveProperty('sqlite-vec')
+    expect(Object.keys(packageManifest.optionalDependencies).join('\n')).not.toMatch(
+      /claude-agent-sdk|anydoc|sqlite-vec/
+    )
+  })
+
   it('pins macOS system OCR to the legacy Accurate implementation', () => {
     const packageManifest = JSON.parse(readFileSync('package.json', 'utf8')) as {
       optionalDependencies: Record<string, string>

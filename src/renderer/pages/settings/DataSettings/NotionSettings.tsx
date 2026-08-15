@@ -72,7 +72,7 @@ const NotionSettings: FC = () => {
   }
 
   const handleNotionTitleClick = () => {
-    void ipcApi.request('system.shell.open_website', 'https://docs.cherry-ai.com/advanced-basic/notion')
+    void ipcApi.request('system.shell.open_website', 'https://github.com/loadchange/cherry-studio-lite#readme')
   }
 
   return (

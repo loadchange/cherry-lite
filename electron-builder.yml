@@ -60,6 +60,10 @@ files:
   - "!node_modules/@tavily/core/node_modules/js-tiktoken"
   - "!node_modules/pdf-parse/lib/pdf.js/{v1.9.426,v1.10.88,v2.0.550}"
   - "!node_modules/mammoth/{mammoth.browser.js,mammoth.browser.min.js}"
+  - "!node_modules/@anthropic-ai/claude-agent-sdk*/**"
+  - "!node_modules/@firecrawl/anydoc*/**"
+  - "!node_modules/@aiany/sqlite-vec-*/**"
+  - "!node_modules/sqlite-vec/**"
   - "!node_modules/selection-hook/prebuilds/**/*" # we rebuild .node, don't use prebuilds
   - "!node_modules/selection-hook/node_modules" # we don't need what in the node_modules dir
   - "!node_modules/selection-hook/src" # we don't need source files
@@ -74,10 +78,7 @@ asarUnpack:
   - "!resources/devtools/**"
   - "**/*.{metal,exp,lib}"
   - "node_modules/@img/sharp-*/**"
-  - "node_modules/@anthropic-ai/claude-agent-sdk-*/**" # native CLI binary must live on disk to be spawned
-  - "node_modules/@aiany/sqlite-vec-*/**" # sqlite-vec extension (.dylib/.so/.dll) is dlopen'd at runtime — must live on disk
   - "node_modules/@node-rs/xxhash-*/**" # native N-API binary must be unpacked for runtime loading
-  - "node_modules/@firecrawl/anydoc-*/**" # native N-API binary must be unpacked for runtime loading
 extraResources:
   - from: "migrations/sqlite-drizzle"
     to: "migrations/sqlite-drizzle"
@@ -86,9 +87,6 @@ extraResources:
 win:
   executableName: Cherry Studio Lite
   artifactName: ${productName}-${version}-${arch}-setup.${ext}
-  extraResources:
-    - from: "node_modules/@aiany/sqlite-vec-windows-${arch}/vec0.dll"
-      to: "app.asar.unpacked/node_modules/@aiany/sqlite-vec-windows-${arch}/vec0.dll"
   target:
     - target: nsis
     - target: portable
@@ -121,7 +119,7 @@ mac:
     - target: dmg
     - target: zip
 dmg:
-  writeUpdateInfo: false
+  writeUpdateInfo: true
 linux:
   artifactName: ${productName}-${version}-${arch}.${ext}
   executableName: CherryStudioLite
@@ -142,8 +140,9 @@ rpm:
   # https://github.com/electron/forge/issues/3594
   fpm: ["--rpm-rpmbuild-define=_build_id_links none"]
 publish:
-  provider: generic
-  url: https://releases.cherry-ai.com
+  provider: github
+  owner: loadchange
+  repo: cherry-studio-lite
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/
 beforePack: scripts/before-pack.js
@@ -153,44 +152,21 @@ artifactBuildCompleted: scripts/artifact-build-completed.js
 releaseInfo:
   releaseNotes: |
     <!--LANG:en-->
-    Cherry Studio 2.0.0 - A New AI Workspace, from Chat to Getting Work Done
+    Cherry Studio Lite 2.0.0 - Chat and translate, with your own model service
 
-    ✨ New Interface, New Experience
-    - Upgraded interactions and visual design make chats, roles, projects, and tasks clearer and easier to organize
-    - Built for multitasking, with multi-window and split-view layouts for switching between work and reviewing progress and deliverables
+    ✨ Focused Lite
+    - Keeps assistant chat and translate; you bind the model provider yourself
+    - No MiniApp, image generation, agents, knowledge base, notes, or local-model stack
 
-    🤖 More Powerful Agents
-    - Supports both OpenAI and Anthropic endpoints, reuses Claude and Codex subscriptions, and works with more models
-    - The core Agent runtime is built in, greatly reducing dependency installation and environment setup
-    - Complete research, documents, presentations, data analysis, and coding faster, with one-click previews of results
-
-    🛠️ More Tool Upgrades
-    - Agents can read and maintain knowledge bases, helping your knowledge grow continuously like a Wiki
-    - Code tools are upgraded to Code Mate, with one-click model service configuration for Claude Code, Codex, and more
-    - Image generation dynamically shows the parameters available for each model, making results easier to control
-
-    ⚡ Performance
-    - A fully upgraded data foundation stays responsive even with extensive history
-    - Smoother scrolling in very long conversations, while large-folder imports no longer block the interface
-
+    🔄 Updates
+    - Check for Updates uses this repository's GitHub Releases
     <!--LANG:zh-CN-->
-    Cherry Studio 2.0.0 - 全新 AI 工作台，从对话到完成任务
+    Cherry Studio Lite 2.0.0 - 聊天与翻译，使用你自己配置的模型服务
 
-    ✨ 全新界面，全新体验
-    - 交互与视觉全面升级，更清晰简约，让聊天、角色、项目和任务更容易组织
-    - 面向多任务协作，支持多窗口与分屏布局，灵活切换，随时查看进度和产物
+    ✨ 精简版
+    - 只保留助手聊天和翻译，模型服务由你自己绑定
+    - 不含小程序、绘图、Agent、知识库、笔记和本地模型栈
 
-    🤖 Agent 能力强化
-    - 同时兼容 OpenAI 与 Anthropic 端点，可复用 Claude 和 Codex 订阅，支持更多模型
-    - Agent 核心运行环境内置，大幅减少依赖安装和环境配置
-    - 更快完成信息收集、文档撰写、PPT、数据分析和代码开发，一键预览成果
-
-    🛠️ 更多工具升级
-    - Agent 可读取和维护知识库，让知识像 Wiki 一样持续积累
-    - 代码工具升级为 Code Mate，可将模型服务一键配置到 Claude Code、Codex 等编程工具
-    - 绘图根据不同生图模型动态显示可用参数，更容易控制生成结果
-
-    ⚡ 性能优化
-    - 数据底座全面升级，历史记录再多也能保持流畅
-    - 优化超长对话滚动和大文件夹导入，不再阻塞界面操作
+    🔄 更新
+    - 检查更新指向本仓库的 GitHub Releases
     <!--LANG:END-->

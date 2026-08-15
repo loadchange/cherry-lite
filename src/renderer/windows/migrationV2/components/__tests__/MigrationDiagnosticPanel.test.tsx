@@ -299,7 +299,11 @@ describe('MigrationDiagnosticPanel', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Copy feedback email' }))
 
-    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledWith('support@cherry-ai.com'))
+    await waitFor(() =>
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        'https://github.com/loadchange/cherry-studio-lite/issues'
+      )
+    )
     expect(mocks.toast.success).toHaveBeenCalledWith('Feedback email copied')
   })
 

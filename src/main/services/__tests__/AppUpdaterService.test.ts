@@ -74,6 +74,7 @@ vi.mock('electron-updater', () => ({
     on: vi.fn(),
     removeListener: vi.fn(),
     checkForUpdates: vi.fn(),
+    setFeedURL: vi.fn(),
     downloadUpdate: vi.fn(),
     quitAndInstall: vi.fn(),
     channel: '',
@@ -94,7 +95,7 @@ import { MockMainPreferenceServiceUtils } from '@test-mocks/main/PreferenceServi
 import { app } from 'electron'
 import { autoUpdater } from 'electron-updater'
 
-import { AppUpdaterService } from '../AppUpdaterService'
+import { AppUpdaterService, LITE_UPDATE_FEED } from '../AppUpdaterService'
 
 describe('AppUpdaterService', () => {
   let appUpdater: AppUpdaterService
@@ -115,9 +116,39 @@ describe('AppUpdaterService', () => {
   })
 
   describe('managed update feed', () => {
+    it('points electron-updater at this fork GitHub Releases, never the original feed', async () => {
+      await (appUpdater as any).configureUpdaterForCheck()
+
+      expect(autoUpdater.setFeedURL).toHaveBeenCalledWith(LITE_UPDATE_FEED)
+      expect(LITE_UPDATE_FEED).toEqual({
+        provider: 'github',
+        owner: 'loadchange',
+        repo: 'cherry-studio-lite'
+      })
+      expect(JSON.stringify(LITE_UPDATE_FEED)).not.toContain('releases.cherry-ai.com')
+      expect(JSON.stringify(LITE_UPDATE_FEED)).not.toContain('CherryHQ')
+    })
+
+    it('packages the GitHub Releases feed for this fork', async () => {
+      const { readFileSync } = await import('node:fs')
+      const { parse } = await import('yaml')
+      const config = parse(readFileSync('electron-builder.yml', 'utf8')) as {
+        publish: { provider: string; owner: string; repo: string; url?: string }
+      }
+
+      expect(config.publish).toMatchObject({
+        provider: 'github',
+        owner: 'loadchange',
+        repo: 'cherry-studio-lite'
+      })
+      expect(config.publish.url).toBeUndefined()
+      expect(readFileSync('electron-builder.yml', 'utf8')).not.toContain('releases.cherry-ai.com')
+    })
+
     it('uses the latest channel and global region outside China', async () => {
       await (appUpdater as any).configureUpdaterForCheck()
 
+      expect(autoUpdater.setFeedURL).toHaveBeenCalledWith(LITE_UPDATE_FEED)
       expect(autoUpdater.channel).toBe(UpgradeChannel.LATEST)
       expect(autoUpdater.requestHeaders).toMatchObject({
         'User-Agent': 'test-user-agent',

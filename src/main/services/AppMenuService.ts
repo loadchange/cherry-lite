@@ -153,14 +153,14 @@ export class AppMenuService extends BaseService {
             type: 'custom',
             label: appMenu.website,
             click: () => {
-              void shell.openExternal('https://cherry-ai.com')
+              void shell.openExternal('https://github.com/loadchange/cherry-studio-lite')
             }
           },
           {
             type: 'custom',
             label: appMenu.documentation,
             click: () => {
-              void shell.openExternal('https://cherry-ai.com/docs')
+              void shell.openExternal('https://github.com/loadchange/cherry-studio-lite#readme')
             }
           },
           {

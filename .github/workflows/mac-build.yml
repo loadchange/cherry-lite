@@ -68,8 +68,20 @@ jobs:
       - name: Electron e2e
         run: pnpm test:e2e
 
+      - name: Stamp incrementing release version
+        id: meta
+        run: |
+          VERSION="2.0.${GITHUB_RUN_NUMBER}"
+          SHORT_SHA="${GITHUB_SHA:0:8}"
+          npm version "$VERSION" --no-git-tag-version --allow-same-version
+          {
+            echo "version=${VERSION}"
+            echo "short_sha=${SHORT_SHA}"
+            echo "tag=v${VERSION}"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Package macOS app
-        run: pnpm exec electron-builder --mac --arm64 --x64
+        run: pnpm exec electron-builder --mac --arm64 --x64 --publish never
         env:
           # Unsigned build: no Apple credentials are configured for this fork.
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
@@ -82,18 +94,8 @@ jobs:
           path: |
             dist/*.dmg
             dist/*.zip
+            dist/latest-mac.yml
           if-no-files-found: error
-
-      - name: Resolve release metadata
-        id: meta
-        run: |
-          VERSION="$(node -p "require('./package.json').version")"
-          SHORT_SHA="${GITHUB_SHA:0:8}"
-          {
-            echo "version=${VERSION}"
-            echo "short_sha=${SHORT_SHA}"
-            echo "tag=v${VERSION}-${SHORT_SHA}"
-          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -112,6 +114,7 @@ jobs:
           files: |
             dist/*.dmg
             dist/*.zip
+            dist/latest-mac.yml
           fail_on_unmatched_files: true
           generate_release_notes: true
           make_latest: true

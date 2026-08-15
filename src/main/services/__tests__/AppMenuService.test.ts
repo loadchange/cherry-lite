@@ -142,6 +142,22 @@ describe('AppMenuService', () => {
     expect(commandServiceMock.execute).toHaveBeenCalledWith('app.zoom.reset', window)
   })
 
+  it('opens Help website and documentation on this fork, not the original product', async () => {
+    await (service as any).onInit()
+
+    const helpSubmenu = latestTemplate().at(-1)?.submenu as MenuItemConstructorOptions[]
+    const websiteItem = helpSubmenu.find((item) => item.label === 'Website')
+    const documentationItem = helpSubmenu.find((item) => item.label === 'Documentation')
+
+    websiteItem?.click?.(undefined as never, undefined as never, undefined as never)
+    documentationItem?.click?.(undefined as never, undefined as never, undefined as never)
+
+    expect(shellMock.openExternal).toHaveBeenCalledWith('https://github.com/loadchange/cherry-studio-lite')
+    expect(shellMock.openExternal).toHaveBeenCalledWith('https://github.com/loadchange/cherry-studio-lite#readme')
+    expect(shellMock.openExternal).not.toHaveBeenCalledWith('https://cherry-ai.com')
+    expect(shellMock.openExternal).not.toHaveBeenCalledWith('https://cherry-ai.com/docs')
+  })
+
   it('preserves native role menu items', async () => {
     await (service as any).onInit()
 

@@ -17,6 +17,12 @@ import { autoUpdater } from 'electron-updater'
 
 const logger = loggerService.withContext('AppUpdaterService')
 
+export const LITE_UPDATE_FEED = {
+  provider: 'github' as const,
+  owner: 'loadchange',
+  repo: 'cherry-studio-lite'
+}
+
 type ReleaseRegion = 'cn' | 'global'
 
 function getUpdateHeaders(region: ReleaseRegion) {
@@ -170,8 +176,9 @@ export class AppUpdaterService extends BaseService {
     }
 
     logger.info(
-      `Using managed update feed for version ${currentVersion}, testPlan: ${testPlan}, channel: ${requestedChannel}, region: ${region} (IP country: ${ipCountry})`
+      `Using GitHub Releases feed ${LITE_UPDATE_FEED.owner}/${LITE_UPDATE_FEED.repo} for version ${currentVersion}, testPlan: ${testPlan}, channel: ${requestedChannel}, region: ${region} (IP country: ${ipCountry})`
     )
+    autoUpdater.setFeedURL({ ...LITE_UPDATE_FEED })
     autoUpdater.channel = requestedChannel
 
     // disable downgrade after change the channel

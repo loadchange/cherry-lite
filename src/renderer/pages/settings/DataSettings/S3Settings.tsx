@@ -51,7 +51,7 @@ const S3Settings: FC = () => {
   }
 
   const handleTitleClick = () => {
-    void ipcApi.request('system.shell.open_website', 'https://docs.cherry-ai.com/data-settings/s3-compatible')
+    void ipcApi.request('system.shell.open_website', 'https://github.com/loadchange/cherry-studio-lite#readme')
   }
 
   const onMaxBackupsChange = (value: number) => {

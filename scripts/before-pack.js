@@ -7,24 +7,6 @@ const { parse } = require('yaml')
 // if you want to add new prebuild binaries packages with different architectures, you can add them here
 // please add to allX64 and allArm64 from pnpm-lock.yaml
 const packages = [
-  '@anthropic-ai/claude-agent-sdk-darwin-arm64',
-  '@anthropic-ai/claude-agent-sdk-darwin-x64',
-  '@anthropic-ai/claude-agent-sdk-linux-arm64',
-  '@anthropic-ai/claude-agent-sdk-linux-arm64-musl',
-  '@anthropic-ai/claude-agent-sdk-linux-x64',
-  '@anthropic-ai/claude-agent-sdk-linux-x64-musl',
-  '@anthropic-ai/claude-agent-sdk-win32-arm64',
-  '@anthropic-ai/claude-agent-sdk-win32-x64',
-  // anydoc converts binary office documents to markdown for the knowledge base.
-  // It ships no win32-arm64 build and no wasm fallback, so existing formats use
-  // their legacy readers there while newly supported .ppt fails visibly.
-  '@firecrawl/anydoc-darwin-arm64',
-  '@firecrawl/anydoc-darwin-x64',
-  '@firecrawl/anydoc-linux-arm64-gnu',
-  '@firecrawl/anydoc-linux-arm64-musl',
-  '@firecrawl/anydoc-linux-x64-gnu',
-  '@firecrawl/anydoc-linux-x64-musl',
-  '@firecrawl/anydoc-win32-x64-msvc',
   '@img/sharp-darwin-arm64',
   '@img/sharp-darwin-x64',
   '@img/sharp-libvips-darwin-arm64',
@@ -58,16 +40,7 @@ const packages = [
   '@node-rs/xxhash-linux-x64-gnu',
   '@node-rs/xxhash-linux-x64-musl',
   '@node-rs/xxhash-win32-arm64-msvc',
-  '@node-rs/xxhash-win32-x64-msvc',
-  // sqlite-vec prebuilt extensions (vec0.dylib/.so/.dll), from the @aiany/sqlite-vec fork
-  // which adds a windows-arm64 build (upstream ships none). Note the package names use
-  // `windows`, not `win32` — see platformTokens below for why the keep-filter must match both.
-  '@aiany/sqlite-vec-darwin-arm64',
-  '@aiany/sqlite-vec-darwin-x64',
-  '@aiany/sqlite-vec-linux-arm64',
-  '@aiany/sqlite-vec-linux-x64',
-  '@aiany/sqlite-vec-windows-arm64',
-  '@aiany/sqlite-vec-windows-x64'
+  '@node-rs/xxhash-win32-x64-msvc'
 ]
 
 const platformToArch = {
@@ -78,8 +51,7 @@ const platformToArch = {
 }
 
 // Most native packages encode Electron's platform key (win32) in their name, but some
-// (e.g. sqlite-vec) use the npm `windows` convention. Match either so a win32 build keeps
-// sqlite-vec-windows-x64 instead of wrongly excluding it.
+// use the npm `windows` convention. Match either so a win32 build keeps those packages.
 const keepPackages = (platform, arch) => {
   const platformTokens = platform === 'win32' ? ['win32', 'windows'] : [platform]
   return packages.filter((p) => p.includes(arch) && platformTokens.some((t) => p.includes(t)))
@@ -139,9 +111,6 @@ exports.default = async function (context) {
     .map((p) => '!node_modules/' + p + '/**')
 
   const currentPlatformKey = `${platform}-${arch}`
-  // win32-arm64 is in this list so `build:win` (--x64 --arm64) can package it. The
-  // @aiany/sqlite-vec fork provides a windows-arm64 vec0.dll, so knowledge-base vector
-  // search works on that target too.
   const allBinaryPlatforms = ['darwin-arm64', 'darwin-x64', 'linux-x64', 'linux-arm64', 'win32-x64', 'win32-arm64']
   const excludeBundledBinaryFilters = allBinaryPlatforms
     .filter((p) => p !== currentPlatformKey)
