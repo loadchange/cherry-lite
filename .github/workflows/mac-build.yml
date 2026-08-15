@@ -9,6 +9,9 @@ concurrency:
   group: mac-build-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -80,3 +83,35 @@ jobs:
             dist/*.dmg
             dist/*.zip
           if-no-files-found: error
+
+      - name: Resolve release metadata
+        id: meta
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          SHORT_SHA="${GITHUB_SHA:0:8}"
+          {
+            echo "version=${VERSION}"
+            echo "short_sha=${SHORT_SHA}"
+            echo "tag=v${VERSION}-${SHORT_SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: Cherry Studio Lite ${{ steps.meta.outputs.version }} (${{ steps.meta.outputs.short_sha }})
+          body: |
+            Cherry Studio Lite `${{ steps.meta.outputs.version }}` 由主干提交自动构建。
+
+            - 提交：`${{ github.sha }}`
+            - 说明：${{ github.event.head_commit.message || github.event_name }}
+
+            macOS 安装包（未签名）：
+            - Apple Silicon (`arm64`)
+            - Intel (`x64`)
+          files: |
+            dist/*.dmg
+            dist/*.zip
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          make_latest: true
