@@ -237,7 +237,8 @@ describe('AppUpdaterService', () => {
     })
 
     it('returns Chinese notes for zh-TW users', () => {
-      MockMainPreferenceServiceUtils.setPreferenceValue('app.language', 'zh-TW')
+      // zh-TW is a legacy persisted value from before the UI language cut.
+      MockMainPreferenceServiceUtils.setPreferenceValue('app.language', 'zh-TW' as never)
 
       const result = (appUpdater as any).parseMultiLangReleaseNotes(sampleReleaseNotes)
 
@@ -255,7 +256,7 @@ describe('AppUpdaterService', () => {
     })
 
     it('returns English notes for other languages', () => {
-      MockMainPreferenceServiceUtils.setPreferenceValue('app.language', 'ru-RU')
+      MockMainPreferenceServiceUtils.setPreferenceValue('app.language', 'ru-RU' as never)
 
       const result = (appUpdater as any).parseMultiLangReleaseNotes(sampleReleaseNotes)
 

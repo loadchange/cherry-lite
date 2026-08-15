@@ -11,8 +11,15 @@ describe('main i18n', () => {
 
   describe('getAppLanguage', () => {
     it('uses the app.language preference when set', () => {
-      MockMainPreferenceServiceUtils.setPreferenceValue('app.language', 'ja-JP')
-      expect(getAppLanguage()).toBe('ja-JP')
+      MockMainPreferenceServiceUtils.setPreferenceValue('app.language', 'zh-CN')
+      expect(getAppLanguage()).toBe('zh-CN')
+    })
+
+    it('coerces legacy persisted locales to a supported language', () => {
+      MockMainPreferenceServiceUtils.setPreferenceValue('app.language', 'zh-TW' as never)
+      expect(getAppLanguage()).toBe('zh-CN')
+      MockMainPreferenceServiceUtils.setPreferenceValue('app.language', 'ja-JP' as never)
+      expect(getAppLanguage()).toBe('en-US')
     })
 
     it('falls back to the system locale (app.getLocale) when no preference is set', () => {
@@ -84,23 +91,8 @@ describe('main i18n', () => {
 
   describe('SUPPORTED_LANGUAGES', () => {
     it('lists every language main carries a catalog for', () => {
-      expect(SUPPORTED_LANGUAGES).toEqual(
-        expect.arrayContaining([
-          'en-US',
-          'zh-CN',
-          'zh-TW',
-          'ja-JP',
-          'ru-RU',
-          'de-DE',
-          'el-GR',
-          'es-ES',
-          'fr-FR',
-          'pt-PT',
-          'ro-RO',
-          'vi-VN'
-        ])
-      )
-      expect(SUPPORTED_LANGUAGES).toHaveLength(12)
+      expect(SUPPORTED_LANGUAGES).toEqual(expect.arrayContaining(['en-US', 'zh-CN']))
+      expect(SUPPORTED_LANGUAGES).toHaveLength(2)
     })
   })
 })

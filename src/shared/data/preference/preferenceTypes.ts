@@ -64,19 +64,7 @@ export enum ThemeMode {
 }
 
 /** 有限的UI语言 */
-export type LanguageVarious =
-  | 'zh-CN'
-  | 'zh-TW'
-  | 'de-DE'
-  | 'el-GR'
-  | 'en-US'
-  | 'es-ES'
-  | 'fr-FR'
-  | 'ja-JP'
-  | 'pt-PT'
-  | 'ro-RO'
-  | 'ru-RU'
-  | 'vi-VN'
+export type LanguageVarious = 'zh-CN' | 'en-US'
 
 export type WindowStyle = 'transparent' | 'opaque'
 

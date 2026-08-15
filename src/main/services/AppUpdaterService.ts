@@ -9,6 +9,7 @@ import { generateUserAgent, getClientId } from '@main/utils/systemInfo'
 import type { RetryPolicy } from '@shared/data/api/schemas/jobs'
 import { UpgradeChannel } from '@shared/data/preference/preferenceTypes'
 import { APP_NAME } from '@shared/utils/constants'
+import { coerceAppLanguage } from '@shared/utils/languages'
 import type { ProgressInfo, UpdateInfo } from 'builder-util-runtime'
 import { CancellationToken } from 'builder-util-runtime'
 import { app } from 'electron'
@@ -293,8 +294,9 @@ export class AppUpdaterService extends BaseService {
    */
   private parseMultiLangReleaseNotes(releaseNotes: string): string {
     try {
-      const language = application.get('PreferenceService').get('app.language')
-      const isChineseUser = language === 'zh-CN' || language === 'zh-TW'
+      // Coerce: pre-zh/en-only versions could persist locales like zh-TW.
+      const language = coerceAppLanguage(application.get('PreferenceService').get('app.language'))
+      const isChineseUser = language === 'zh-CN'
 
       // Create regex patterns using constants
       const enPattern = new RegExp(

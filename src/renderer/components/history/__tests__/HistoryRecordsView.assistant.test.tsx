@@ -6,16 +6,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import enUS from '../../../i18n/locales/en-us.json'
 import zhCN from '../../../i18n/locales/zh-cn.json'
-import deDE from '../../../i18n/translate/de-de.json'
-import elGR from '../../../i18n/translate/el-gr.json'
-import esES from '../../../i18n/translate/es-es.json'
-import frFR from '../../../i18n/translate/fr-fr.json'
-import jaJP from '../../../i18n/translate/ja-jp.json'
-import ptPT from '../../../i18n/translate/pt-pt.json'
-import roRO from '../../../i18n/translate/ro-ro.json'
-import ruRU from '../../../i18n/translate/ru-ru.json'
-import viVN from '../../../i18n/translate/vi-vn.json'
-import zhTW from '../../../i18n/translate/zh-tw.json'
 
 const hookMocks = vi.hoisted(() => ({
   deleteTopic: vi.fn(),
@@ -1368,10 +1358,9 @@ describe('HistoryRecordsView locale resources', () => {
       'table.time',
       'title'
     ]
-    const originalLocaleResources = [enUS, zhCN, zhTW]
-    const runtimeLocaleResources = [enUS, zhCN, zhTW, deDE, elGR, esES, frFR, jaJP, ptPT, roRO, ruRU, viVN]
+    const localeResources = [enUS, zhCN]
 
-    for (const resource of runtimeLocaleResources) {
+    for (const resource of localeResources) {
       for (const key of requiredGlobalKeys) {
         expect(getNestedValue(resource, key)).toEqual(expect.any(String))
       }
@@ -1384,7 +1373,7 @@ describe('HistoryRecordsView locale resources', () => {
       }
     }
 
-    for (const resource of originalLocaleResources) {
+    for (const resource of localeResources) {
       const history = getNestedValue(resource, 'history') as Record<string, unknown>
       const records = getNestedValue(resource, 'history.records') as Record<string, unknown>
 

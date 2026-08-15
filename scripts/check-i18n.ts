@@ -118,6 +118,9 @@ function checkCatalog(label: string, baseFilePath: string, files: string[]): I18
 }
 
 function listJsonFiles(dir: string): string[] {
+  // The machine-translated translate/ pack dirs are optional — they no longer
+  // exist now that the UI ships only zh-CN and en-US.
+  if (!fs.existsSync(dir)) return []
   return fs
     .readdirSync(dir)
     .filter((file) => file.endsWith('.json'))
@@ -207,7 +210,8 @@ function checkTranslations(): void {
   // historical behavior (the machine-translated translate/ files are validated by the sync job).
   checkCatalog('renderer', path.join(rendererLocalesDir, baseFileName), listJsonFiles(rendererLocalesDir))
 
-  // Main catalog: all 12 files (locales/ + translate/) must be aligned and sorted.
+  // Main catalog: every file present (locales/ plus the optional translate/
+  // machine packs) must be aligned and sorted.
   const mainBaseFilePath = path.join(mainI18nDir, 'locales', baseFileName)
   const mainFiles = [
     ...listJsonFiles(path.join(mainI18nDir, 'locales')),

@@ -128,10 +128,14 @@ function syncCatalog(localesDir: string, translateDir: string) {
     .readdirSync(localesDir)
     .filter((file) => file.endsWith('.json') && file !== baseFileName)
     .map((filename) => path.join(localesDir, filename))
-  const translateFiles = fs
-    .readdirSync(translateDir)
-    .filter((file) => file.endsWith('.json') && file !== baseFileName)
-    .map((filename) => path.join(translateDir, filename))
+  // The machine-translated translate/ pack dirs are optional (the UI now
+  // ships only zh-CN and en-US locales).
+  const translateFiles = fs.existsSync(translateDir)
+    ? fs
+        .readdirSync(translateDir)
+        .filter((file) => file.endsWith('.json') && file !== baseFileName)
+        .map((filename) => path.join(translateDir, filename))
+    : []
   const files = [...localeFiles, ...translateFiles]
 
   // Sync keys

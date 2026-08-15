@@ -42,27 +42,5 @@ export const relocationLocales = {
         to: '新目录'
       }
     }
-  },
-  'zh-TW': {
-    translation: {
-      relocation: {
-        title: '資料目錄遷移',
-        preparing: '正在準備遷移...',
-        copying: '正在複製資料...',
-        committing: '正在儲存新的資料目錄...',
-        completed: {
-          title: '遷移完成',
-          description: '請重新啟動 Cherry Studio 以使用新的資料目錄。'
-        },
-        failed: {
-          title: '遷移失敗',
-          description: 'Cherry Studio 將繼續使用原資料目錄。'
-        },
-        restart_success: '重新啟動 Cherry Studio',
-        restart_failure: '繼續使用原資料目錄',
-        from: '目前目錄',
-        to: '新目錄'
-      }
-    }
   }
-} as const
+}

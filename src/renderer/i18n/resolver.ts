@@ -1,19 +1,9 @@
-import 'dayjs/locale/de'
-import 'dayjs/locale/el'
-import 'dayjs/locale/es'
-import 'dayjs/locale/fr'
-import 'dayjs/locale/ja'
-import 'dayjs/locale/pt'
-import 'dayjs/locale/ro'
-import 'dayjs/locale/ru'
-import 'dayjs/locale/vi'
 import 'dayjs/locale/zh-cn'
-import 'dayjs/locale/zh-tw'
 
 import { preferenceService } from '@data/PreferenceService'
 import { loggerService } from '@logger'
 import type { LanguageVarious } from '@shared/data/preference/preferenceTypes'
-import { defaultLanguage } from '@shared/utils/languages'
+import { coerceAppLanguage, defaultLanguage } from '@shared/utils/languages'
 import dayjs from 'dayjs'
 import i18n from 'i18next'
 import resourcesToBackend from 'i18next-resources-to-backend'
@@ -26,21 +16,12 @@ const logger = loggerService.withContext('I18N')
 // the current language (and the en-US fallback) on demand inside initI18n().
 const localeLoaders = {
   'en-US': () => import('./locales/en-us.json'),
-  'zh-CN': () => import('./locales/zh-cn.json'),
-  'zh-TW': () => import('./translate/zh-tw.json'),
-  'de-DE': () => import('./translate/de-de.json'),
-  'el-GR': () => import('./translate/el-gr.json'),
-  'es-ES': () => import('./translate/es-es.json'),
-  'fr-FR': () => import('./translate/fr-fr.json'),
-  'ja-JP': () => import('./translate/ja-jp.json'),
-  'pt-PT': () => import('./translate/pt-pt.json'),
-  'ro-RO': () => import('./translate/ro-ro.json'),
-  'ru-RU': () => import('./translate/ru-ru.json'),
-  'vi-VN': () => import('./translate/vi-vn.json')
+  'zh-CN': () => import('./locales/zh-cn.json')
 } satisfies Record<LanguageVarious, () => Promise<unknown>>
 
-export const getLanguage = async () => {
-  return (await preferenceService.get('app.language')) || navigator.language || defaultLanguage
+export const getLanguage = async (): Promise<LanguageVarious> => {
+  const saved = await preferenceService.get('app.language')
+  return coerceAppLanguage(saved ?? navigator.language)
 }
 
 export const getLanguageCode = async () => {
@@ -50,17 +31,7 @@ export const getLanguageCode = async () => {
 // Map i18n language codes to dayjs locale codes
 const dayjsLocaleMap: Record<string, string> = {
   'en-US': 'en',
-  'ja-JP': 'ja',
-  'ru-RU': 'ru',
-  'zh-CN': 'zh-cn',
-  'zh-TW': 'zh-tw',
-  'de-DE': 'de',
-  'el-GR': 'el',
-  'es-ES': 'es',
-  'fr-FR': 'fr',
-  'pt-PT': 'pt',
-  'ro-RO': 'ro',
-  'vi-VN': 'vi'
+  'zh-CN': 'zh-cn'
 }
 
 export const setDayjsLocale = (language: string) => {
