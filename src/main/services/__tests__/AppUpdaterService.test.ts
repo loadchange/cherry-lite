@@ -103,8 +103,6 @@ describe('AppUpdaterService', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     MockMainPreferenceServiceUtils.resetMocks()
-    MockMainPreferenceServiceUtils.setPreferenceValue('app.dist.test_plan.enabled', false)
-    MockMainPreferenceServiceUtils.setPreferenceValue('app.dist.test_plan.channel', UpgradeChannel.LATEST)
     vi.mocked(app.getVersion).mockReturnValue('1.0.0')
     vi.mocked(regionService.getCountry).mockResolvedValue('US')
     vi.mocked(autoUpdater.checkForUpdates).mockResolvedValue(null)
@@ -186,26 +184,13 @@ describe('AppUpdaterService', () => {
       })
     })
 
-    it.each([
-      ['RC', UpgradeChannel.RC],
-      ['Beta', UpgradeChannel.BETA]
-    ])('requests the %s manifest when that test channel is enabled', async (_label, channel) => {
-      MockMainPreferenceServiceUtils.setPreferenceValue('app.dist.test_plan.enabled', true)
-      MockMainPreferenceServiceUtils.setPreferenceValue('app.dist.test_plan.channel', channel)
-
-      await (appUpdater as any).configureUpdaterForCheck()
-
-      expect(autoUpdater.channel).toBe(channel)
-    })
-
-    it('uses the selected test channel when the installed prerelease came from another channel', async () => {
-      vi.mocked(app.getVersion).mockReturnValue('2.0.0-rc.1')
+    it('ignores leftover test-plan preferences and always uses latest', async () => {
       MockMainPreferenceServiceUtils.setPreferenceValue('app.dist.test_plan.enabled', true)
       MockMainPreferenceServiceUtils.setPreferenceValue('app.dist.test_plan.channel', UpgradeChannel.BETA)
 
       await (appUpdater as any).configureUpdaterForCheck()
 
-      expect(autoUpdater.channel).toBe(UpgradeChannel.BETA)
+      expect(autoUpdater.channel).toBe(UpgradeChannel.LATEST)
     })
 
     it('applies the channel and request headers before checking for updates', async () => {

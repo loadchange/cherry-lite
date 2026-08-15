@@ -98,13 +98,10 @@ describe('AppUpdaterService — auto update-check scheduling', () => {
 
     prefValues = {
       'app.dist.auto_update.enabled': true,
-      'app.dist.test_plan.enabled': false,
-      'app.dist.test_plan.channel': undefined,
       'app.language': 'en'
     }
     const prefStub = {
       get: vi.fn((key: string) => prefValues[key]),
-      // onInit subscribes to test_plan changes; return an unsubscribe fn.
       subscribeMultipleChanges: vi.fn(() => vi.fn())
     }
     const powerStub = { registerShutdownHandler: vi.fn() }
