@@ -10,33 +10,27 @@
 2. 钥匙串里的 **Developer ID Application** 证书（不是 Mac App Store 的 Apple Distribution）
 3. 仓库 Settings → Secrets and variables → Actions 里配置下面这些密钥
 
+云构建复用 [CCBuddy](https://github.com/ccbud/CCBuddy) 同一套材料：Developer ID 的 `.p12` 签名，App Store Connect API Key（`.p8`）公证。**不需要**应用专用密码。
+
 | Secret | 内容 |
 | --- | --- |
-| `CSC_LINK` | Developer ID Application 的 `.p12`，**整文件**做 base64 |
-| `CSC_KEY_PASSWORD` | 导出 `.p12` 时设的密码 |
-| `APPLE_ID` | Apple ID 邮箱 |
-| `APPLE_APP_SPECIFIC_PASSWORD` | [appleid.apple.com](https://appleid.apple.com) 生成的应用专用密码 |
-| `APPLE_TEAM_ID` | 开发者账号 10 位 Team ID（Membership 页面） |
+| `CSC_LINK` | Developer ID Application 的 `.p12`，整文件 base64（已从 `~/clawdy-signing/clawdy.p12` 写入） |
+| `CSC_KEY_PASSWORD` | 导出 `.p12` 时的密码（已写入） |
+| `APPLE_TEAM_ID` | `2CGR266XD2`（已写入） |
+| `APPLE_API_KEY_P8` | `AuthKey.p8` 整文件 base64（与 CCBuddy 的 `APPLE_API_KEY_P8` 同类） |
+| `APPLE_API_KEY_ID` | App Store Connect 密钥的 10 位 Key ID |
+| `APPLE_API_ISSUER` | App Store Connect 密钥页上的 Issuer UUID |
 
 Bundle ID 是 `com.loadchange.CherryStudioLite`，与 `electron-builder.yml` 的 `appId` 一致。Developer ID 分发一般不用先在开发者后台注册这个 ID。
 
-## 导出证书并写成 CSC_LINK
+## 还缺的两个公开 ID
 
-在本机钥匙串里选中 **Developer ID Application: 你的名字 (TEAMID)**，导出为 `.p12`，设一个密码。然后：
+打开 [App Store Connect → 用户和访问 → 密钥](https://appstoreconnect.apple.com/access/integrations/api)：
 
-```bash
-base64 -i ~/Desktop/developer-id.p12 | pbcopy
-```
+- **Issuer ID**：页面顶部的 UUID
+- **Key ID**：对应那把密钥的 10 位 ID（下载 `.p8` 时文件名一般是 `AuthKey_XXXXXXXXXX.p8`）
 
-把剪贴板内容贴进 GitHub Secret `CSC_LINK`。`CSC_KEY_PASSWORD` 填导出时的密码。
-
-没有 Developer ID 证书时，到 [developer.apple.com/account/resources/certificates](https://developer.apple.com/account/resources/certificates/list) 新建 **Developer ID Application**，用钥匙串的证书助理生成 CSR。
-
-## 应用专用密码
-
-1. 打开 [appleid.apple.com](https://appleid.apple.com) → 登录与安全 → 应用专用密码
-2. 生成一个，标注 `cherry-lite-notarize`
-3. 填进 `APPLE_APP_SPECIFIC_PASSWORD`（不是账号登录密码）
+这两个不是密码，可以发在对话里。GitHub 无法从 CCBuddy 仓库把 Secret **读出来**再拷过来，所以只能从 App Store Connect 再看一眼。
 
 ## 配好之后
 
