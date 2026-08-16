@@ -107,7 +107,12 @@ portable:
   artifactName: ${productName}-${version}-${arch}-portable.${ext}
   buildUniversalInstaller: false
 mac:
+  category: public.app-category.productivity
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
+  # Notarization runs in scripts/notarize.js (afterSign) so CI can fail closed.
   notarize: false
   artifactName: ${productName}-${version}-${arch}.${ext}
   extendInfo:

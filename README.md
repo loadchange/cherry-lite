@@ -33,7 +33,7 @@ Cherry Lite 从 [Cherry Studio](https://github.com/CherryHQ/cherry-studio) 裁�
 - **数据**：本地备份 / 恢复 / 导入；可改数据目录
 - **界面**：浅色 / 深色；语言为简体中文、English
 
-当前仓库的发布流水线只打 **macOS**（Apple Silicon 与 Intel）`.dmg`，并发布到 [GitHub Releases](https://github.com/loadchange/cherry-studio-lite/releases)。Windows / Linux 的打包脚本还在，但没有对应的云构建。
+当前仓库的发布流水线只打 **macOS**（Apple Silicon 与 Intel）`.dmg`，用 Developer ID 签名并公证后发到 [GitHub Releases](https://github.com/loadchange/cherry-studio-lite/releases)。Windows / Linux 的打包脚本还在，但没有对应的云构建。签名密钥配置见 [macOS 云构建签名](./docs/guides/macos-signing.md)。
 
 ## 和完整版的差别
 

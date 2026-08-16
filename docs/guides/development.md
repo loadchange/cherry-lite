@@ -107,7 +107,7 @@ pnpm test
 
 ### Build
 
-当前云构建只打 macOS。本机仍可调用其它平台脚本，但仓库不发布对应安装包。
+当前云构建只打 macOS，并用仓库 Secrets 做 Developer ID 签名和公证。本机没有这些环境变量时，`pnpm build:mac` 仍打未签名包。密钥怎么配见 [macOS 云构建签名](./macos-signing.md)。
 
 ```bash
 # macOS（与 GitHub Actions 一致）

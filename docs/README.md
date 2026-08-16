@@ -9,6 +9,7 @@
 | 文档 | 说明 |
 | --- | --- |
 | [开发环境](./guides/development.md) | 安装、启动、构建 |
+| [macOS 签名](./guides/macos-signing.md) | 云构建 Developer ID 签名与公证 |
 | [贡献](./guides/contributing.md) | 如何给本仓库提改动 |
 | [分支策略](./guides/branching-strategy.md) | `main` 与分支命名 |
 | [i18n](./guides/i18n.md) | 文案约定与脚本（仅 `zh-CN` / `en-US`） |
