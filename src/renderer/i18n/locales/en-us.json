@@ -5509,12 +5509,9 @@
         "title": "Data Reset"
       },
       "divider": {
+        "backup_settings": "Cloud Backup",
         "basic": "Basic Data",
-        "cloud_storage": "Cloud Backup",
-        "export_settings": "Export",
-        "import_settings": "Import",
-        "note_export": "Note Export",
-        "third_party": "Third-party Connections"
+        "import_settings": "Import"
       },
       "export_menu": {
         "categories": {
@@ -5701,58 +5698,6 @@
         "page_name_key_placeholder": "Enter page title field name, default is Name",
         "title": "Notion Settings"
       },
-      "nutstore": {
-        "backup": {
-          "button": "Backup to Nutstore",
-          "modal": {
-            "filename": {
-              "placeholder": "Enter backup filename"
-            },
-            "title": "Backup to Nutstore"
-          }
-        },
-        "checkConnection": {
-          "fail": "Nutstore connection failed",
-          "name": "Check Connection",
-          "success": "Connected to Nutstore"
-        },
-        "isLogin": "Logged in",
-        "login": {
-          "button": "Login"
-        },
-        "logout": {
-          "button": "Logout",
-          "content": "After logout, you will not be able to backup to Nutstore or restore from Nutstore.",
-          "title": "Are you sure you want to logout from Nutstore?"
-        },
-        "new_folder": {
-          "button": {
-            "cancel": "Cancel",
-            "confirm": "Confirm",
-            "label": "New Folder"
-          }
-        },
-        "notLogin": "Not logged in",
-        "path": {
-          "label": "Nutstore Storage Path",
-          "placeholder": "Enter Nutstore storage path"
-        },
-        "pathSelector": {
-          "currentPath": "Current Path",
-          "fetchError": "Failed to load the Nutstore folder list",
-          "return": "Return",
-          "title": "Nutstore Storage Path"
-        },
-        "restore": {
-          "button": "Restore from Nutstore",
-          "confirm": {
-            "content": "Restoring from Nutstore will overwrite current data. Do you want to continue?",
-            "title": "Restore from Nutstore"
-          }
-        },
-        "title": "Nutstore",
-        "username": "Nutstore Username"
-      },
       "obsidian": {
         "default_vault": "Default Obsidian Vault",
         "default_vault_export_failed": "Export failed",
@@ -5761,131 +5706,6 @@
         "default_vault_no_vaults": "No Obsidian vaults found",
         "default_vault_placeholder": "Please select the default Obsidian vault",
         "title": "Obsidian"
-      },
-      "s3": {
-        "accessKeyId": {
-          "label": "Access Key ID",
-          "placeholder": "Access Key ID"
-        },
-        "autoSync": {
-          "hour": "Every {{count}} hour",
-          "label": "Auto Sync",
-          "minute": "Every {{count}} minute",
-          "off": "Off"
-        },
-        "backup": {
-          "button": "Backup Now",
-          "error": "S3 backup failed: {{message}}",
-          "manager": {
-            "button": "Manage Backups"
-          },
-          "modal": {
-            "filename": {
-              "placeholder": "Please enter backup filename"
-            },
-            "title": "S3 Backup"
-          },
-          "operation": "Backup Operation",
-          "success": "S3 backup successful"
-        },
-        "bucket": {
-          "label": "Bucket",
-          "placeholder": "Bucket, e.g: example"
-        },
-        "endpoint": {
-          "label": "API Endpoint",
-          "placeholder": "https://s3.example.com"
-        },
-        "manager": {
-          "close": "Close",
-          "columns": {
-            "actions": "Actions",
-            "fileName": "File Name",
-            "modifiedTime": "Modified Time",
-            "size": "File Size"
-          },
-          "config": {
-            "incomplete": "Please fill in complete S3 configuration"
-          },
-          "delete": {
-            "confirm": {
-              "multiple": "Are you sure you want to delete {{count}} selected backup files? This action cannot be undone.",
-              "single": "Are you sure you want to delete backup file \"{{fileName}}\"? This action cannot be undone.",
-              "title": "Confirm Delete"
-            },
-            "error": "Failed to delete backup file: {{message}}",
-            "label": "Delete",
-            "selected": "Delete Selected ({{count}})",
-            "success": {
-              "multiple": "Successfully deleted {{count}} backup files",
-              "single": "Backup file deleted successfully"
-            }
-          },
-          "files": {
-            "fetch": {
-              "error": "Failed to fetch backup file list: {{message}}"
-            }
-          },
-          "refresh": "Refresh",
-          "restore": "Restore",
-          "select": {
-            "warning": "Please select backup files to delete"
-          },
-          "title": "S3 Backup File Manager"
-        },
-        "maxBackups": {
-          "label": "Maximum Backups",
-          "unlimited": "Unlimited"
-        },
-        "region": {
-          "label": "Region",
-          "placeholder": "Region, e.g: us-east-1"
-        },
-        "restore": {
-          "config": {
-            "incomplete": "Please fill in complete S3 configuration"
-          },
-          "confirm": {
-            "cancel": "Cancel",
-            "content": "Restoring data will overwrite all current data. This action cannot be undone. Are you sure you want to continue?",
-            "ok": "Confirm Restore",
-            "title": "Confirm Restore Data"
-          },
-          "error": "Data restore failed: {{message}}",
-          "file": {
-            "required": "Please select backup file to restore"
-          },
-          "modal": {
-            "select": {
-              "placeholder": "Please select backup file to restore"
-            },
-            "title": "S3 Data Restore"
-          },
-          "success": "Data restore successful"
-        },
-        "root": {
-          "label": "Backup Directory (Optional)",
-          "placeholder": "e.g: /cherry-studio"
-        },
-        "secretAccessKey": {
-          "label": "Secret Access Key",
-          "placeholder": "Secret Access Key"
-        },
-        "skipBackupFile": {
-          "help": "When enabled, file data will be skipped during backup, only configuration information will be backed up, significantly reducing backup file size",
-          "label": "Lightweight Backup"
-        },
-        "syncStatus": {
-          "error": "Sync error: {{message}}",
-          "label": "Sync Status",
-          "lastSync": "Last sync: {{time}}",
-          "noSync": "Not synced"
-        },
-        "title": {
-          "help": "S3 compatible object storage services, such as AWS S3, Cloudflare R2, Aliyun OSS, Tencent COS, etc.",
-          "label": "S3 Storage",
-          "tooltip": "S3 Compatible Storage Configuration Document"
-        }
       },
       "siyuan": {
         "api_url": "Siyuan Note API URL",
@@ -5910,91 +5730,6 @@
         "token_placeholder": "Please enter Siyuan Note Token"
       },
       "title": "Data",
-      "webdav": {
-        "autoSync": {
-          "label": "Auto Backup",
-          "off": "Off"
-        },
-        "backup": {
-          "button": "Backup to WebDAV",
-          "manager": {
-            "columns": {
-              "actions": "Actions",
-              "fileName": "Filename",
-              "modifiedTime": "Modified Time",
-              "size": "Size"
-            },
-            "delete": {
-              "confirm": {
-                "multiple": "Are you sure you want to delete {{count}} selected backup files? This action cannot be undone.",
-                "single": "Are you sure you want to delete backup file \"{{fileName}}\"? This action cannot be undone.",
-                "title": "Confirm Delete"
-              },
-              "error": "Delete failed",
-              "selected": "Delete Selected",
-              "success": {
-                "multiple": "Successfully deleted {{count}} backup files",
-                "single": "Deleted successfully"
-              },
-              "text": "Delete"
-            },
-            "fetch": {
-              "error": "Failed to get backup files"
-            },
-            "refresh": "Refresh",
-            "restore": {
-              "error": "Restore failed",
-              "success": "Restore successful, application will refresh shortly",
-              "text": "Restore"
-            },
-            "select": {
-              "files": {
-                "delete": "Please select backup files to delete"
-              }
-            },
-            "title": "Backup Data Management"
-          },
-          "modal": {
-            "filename": {
-              "placeholder": "Please enter backup filename"
-            },
-            "title": "Backup to WebDAV"
-          }
-        },
-        "disableStream": {
-          "help": "When enabled, loads the file into memory before uploading. This can solve incompatibility issues with some WebDAV servers that do not support chunked uploads, but it will increase memory usage.",
-          "title": "Disable Stream Upload"
-        },
-        "host": {
-          "label": "WebDAV Host",
-          "placeholder": "http://localhost:8080"
-        },
-        "hour_interval_one": "{{count}} hour",
-        "hour_interval_other": "{{count}} hours",
-        "lastSync": "Last Backup",
-        "maxBackups": "Maximum Backups",
-        "minute_interval_one": "{{count}} minute",
-        "minute_interval_other": "{{count}} minutes",
-        "noSync": "Waiting for next backup",
-        "password": "WebDAV Password",
-        "path": {
-          "label": "WebDAV Path",
-          "placeholder": "/backup"
-        },
-        "restore": {
-          "button": "Restore from WebDAV",
-          "confirm": {
-            "content": "Restoring from WebDAV will overwrite current data. Do you want to continue?",
-            "title": "Confirm Restore"
-          },
-          "content": "Restore from WebDAV will overwrite the current data, continue?",
-          "title": "Restore from WebDAV"
-        },
-        "syncError": "Backup Error",
-        "syncStatus": "Backup Status",
-        "title": "WebDAV",
-        "user": "WebDAV User"
-      },
       "yuque": {
         "check": {
           "button": "Check",

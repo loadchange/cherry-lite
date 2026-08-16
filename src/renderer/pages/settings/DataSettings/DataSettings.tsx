@@ -1,5 +1,4 @@
 import { MenuDivider, MenuItem, MenuList, PageHeader, RowFlex } from '@cherrystudio/ui'
-import { NutstoreIcon } from '@renderer/components/icons/NutstoreIcons'
 import Scrollbar from '@renderer/components/Scrollbar'
 import { SettingsContentColumn } from '@renderer/components/SettingsPrimitives'
 import { useTheme } from '@renderer/hooks/useTheme'
@@ -12,16 +11,13 @@ import {
   settingsSubmenuScrollClassName,
   settingsSubmenuSectionTitleClassName
 } from '@renderer/pages/settings/settingsStyles'
-import { CloudUpload, FolderCog, Import, Server } from 'lucide-react'
+import { FolderCog, Import } from 'lucide-react'
 import type { FC } from 'react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import BasicDataSettings from './BasicDataSettings'
 import LocalBackupSettings from './LocalBackupSettings'
-import NutstoreSettings from './NutstoreSettings'
-import S3Settings from './S3Settings'
-import WebDavSettings from './WebDavSettings'
 
 const DataSettings: FC = () => {
   const { t } = useTranslation()
@@ -30,11 +26,8 @@ const DataSettings: FC = () => {
 
   const menuItems = [
     { key: 'data', title: t('settings.data.data.title'), icon: <FolderCog size={16} /> },
-    { key: 'divider_1', isDivider: true, text: t('settings.data.divider.cloud_storage') },
+    { key: 'divider_1', isDivider: true, text: t('settings.data.divider.backup_settings') },
     { key: 'local_backup', title: t('settings.data.local.title'), icon: <FolderCog size={16} /> },
-    { key: 'webdav', title: t('settings.data.webdav.title'), icon: <CloudUpload size={16} /> },
-    { key: 'nutstore', title: t('settings.data.nutstore.title'), icon: <NutstoreIcon /> },
-    { key: 's3', title: t('settings.data.s3.title.label'), icon: <Server size={16} /> },
     { key: 'divider_2', isDivider: true, text: t('settings.data.divider.import_settings') },
     {
       key: 'import_settings',
@@ -73,9 +66,6 @@ const DataSettings: FC = () => {
       </div>
       <SettingsContentColumn theme={theme}>
         {menu === 'data' && <BasicDataSettings />}
-        {menu === 'webdav' && <WebDavSettings />}
-        {menu === 'nutstore' && <NutstoreSettings />}
-        {menu === 's3' && <S3Settings />}
         {menu === 'import_settings' && <ImportMenuOptions />}
         {menu === 'local_backup' && <LocalBackupSettings />}
       </SettingsContentColumn>

@@ -5509,12 +5509,9 @@
         "title": "重置数据"
       },
       "divider": {
+        "backup_settings": "云备份设置",
         "basic": "基础数据设置",
-        "cloud_storage": "云备份设置",
-        "export_settings": "导出设置",
-        "import_settings": "导入设置",
-        "note_export": "笔记导出",
-        "third_party": "第三方连接"
+        "import_settings": "导入设置"
       },
       "export_menu": {
         "categories": {
@@ -5701,58 +5698,6 @@
         "page_name_key_placeholder": "请输入页面标题字段名，默认为 Name",
         "title": "Notion 设置"
       },
-      "nutstore": {
-        "backup": {
-          "button": "备份到坚果云",
-          "modal": {
-            "filename": {
-              "placeholder": "请输入备份文件名"
-            },
-            "title": "备份到坚果云"
-          }
-        },
-        "checkConnection": {
-          "fail": "坚果云连接失败",
-          "name": "检查连接",
-          "success": "已连接坚果云"
-        },
-        "isLogin": "已登录",
-        "login": {
-          "button": "登录"
-        },
-        "logout": {
-          "button": "退出登录",
-          "content": "退出后将无法备份至坚果云和从坚果云恢复",
-          "title": "确定要退出坚果云登录？"
-        },
-        "new_folder": {
-          "button": {
-            "cancel": "取消",
-            "confirm": "确定",
-            "label": "新建文件夹"
-          }
-        },
-        "notLogin": "未登录",
-        "path": {
-          "label": "坚果云存储路径",
-          "placeholder": "请输入坚果云的存储路径"
-        },
-        "pathSelector": {
-          "currentPath": "当前路径",
-          "fetchError": "获取坚果云文件夹列表失败",
-          "return": "返回",
-          "title": "坚果云存储路径"
-        },
-        "restore": {
-          "button": "从坚果云恢复",
-          "confirm": {
-            "content": "从坚果云恢复将会覆盖当前数据，是否继续？",
-            "title": "从坚果云恢复"
-          }
-        },
-        "title": "坚果云配置",
-        "username": "坚果云用户名"
-      },
       "obsidian": {
         "default_vault": "默认 Obsidian 仓库",
         "default_vault_export_failed": "导出失败",
@@ -5761,131 +5706,6 @@
         "default_vault_no_vaults": "未找到 Obsidian 仓库",
         "default_vault_placeholder": "请选择默认 Obsidian 仓库",
         "title": "Obsidian 配置"
-      },
-      "s3": {
-        "accessKeyId": {
-          "label": "Access Key ID",
-          "placeholder": "Access Key ID"
-        },
-        "autoSync": {
-          "hour": "每 {{count}} 小时",
-          "label": "自动同步",
-          "minute": "每 {{count}} 分钟",
-          "off": "关闭"
-        },
-        "backup": {
-          "button": "立即备份",
-          "error": "S3 备份失败: {{message}}",
-          "manager": {
-            "button": "管理备份"
-          },
-          "modal": {
-            "filename": {
-              "placeholder": "请输入备份文件名"
-            },
-            "title": "S3 备份"
-          },
-          "operation": "备份操作",
-          "success": "S3 备份成功"
-        },
-        "bucket": {
-          "label": "存储桶",
-          "placeholder": "Bucket, 例如: example"
-        },
-        "endpoint": {
-          "label": "API 地址",
-          "placeholder": "https://s3.example.com"
-        },
-        "manager": {
-          "close": "关闭",
-          "columns": {
-            "actions": "操作",
-            "fileName": "文件名",
-            "modifiedTime": "修改时间",
-            "size": "文件大小"
-          },
-          "config": {
-            "incomplete": "请填写完整的 S3 配置信息"
-          },
-          "delete": {
-            "confirm": {
-              "multiple": "确定要删除选中的 {{count}} 个备份文件吗？此操作不可撤销。",
-              "single": "确定要删除备份文件 \"{{fileName}}\" 吗？此操作不可撤销。",
-              "title": "确认删除"
-            },
-            "error": "删除备份文件失败: {{message}}",
-            "label": "删除",
-            "selected": "删除选中 ({{count}})",
-            "success": {
-              "multiple": "成功删除 {{count}} 个备份文件",
-              "single": "删除备份文件成功"
-            }
-          },
-          "files": {
-            "fetch": {
-              "error": "获取备份文件列表失败: {{message}}"
-            }
-          },
-          "refresh": "刷新",
-          "restore": "恢复",
-          "select": {
-            "warning": "请选择要删除的备份文件"
-          },
-          "title": "S3 备份文件管理"
-        },
-        "maxBackups": {
-          "label": "最大备份数",
-          "unlimited": "不限"
-        },
-        "region": {
-          "label": "区域",
-          "placeholder": "Region, 例如: us-east-1"
-        },
-        "restore": {
-          "config": {
-            "incomplete": "请填写完整的 S3 配置信息"
-          },
-          "confirm": {
-            "cancel": "取消",
-            "content": "恢复数据将覆盖当前所有数据，此操作不可撤销。确定要继续吗？",
-            "ok": "确认恢复",
-            "title": "确认恢复数据"
-          },
-          "error": "数据恢复失败: {{message}}",
-          "file": {
-            "required": "请选择要恢复的备份文件"
-          },
-          "modal": {
-            "select": {
-              "placeholder": "请选择要恢复的备份文件"
-            },
-            "title": "S3 数据恢复"
-          },
-          "success": "数据恢复成功"
-        },
-        "root": {
-          "label": "备份目录（可选）",
-          "placeholder": "例如：/cherry-studio"
-        },
-        "secretAccessKey": {
-          "label": "Secret Access Key",
-          "placeholder": "Secret Access Key"
-        },
-        "skipBackupFile": {
-          "help": "开启后备份时将跳过文件数据，仅备份配置信息，显著减小备份文件体积",
-          "label": "精简备份"
-        },
-        "syncStatus": {
-          "error": "同步错误: {{message}}",
-          "label": "同步状态",
-          "lastSync": "上次同步: {{time}}",
-          "noSync": "未同步"
-        },
-        "title": {
-          "help": "与AWS S3 API兼容的对象存储服务, 例如AWS S3, Cloudflare R2, 阿里云OSS, 腾讯云COS等",
-          "label": "S3 兼容存储",
-          "tooltip": "S3 兼容存储配置文档"
-        }
       },
       "siyuan": {
         "api_url": "API 地址",
@@ -5910,91 +5730,6 @@
         "token_placeholder": "请输入思源笔记令牌"
       },
       "title": "数据",
-      "webdav": {
-        "autoSync": {
-          "label": "自动备份",
-          "off": "关闭"
-        },
-        "backup": {
-          "button": "备份到 WebDAV",
-          "manager": {
-            "columns": {
-              "actions": "操作",
-              "fileName": "文件名",
-              "modifiedTime": "修改时间",
-              "size": "大小"
-            },
-            "delete": {
-              "confirm": {
-                "multiple": "确定要删除选中的 {{count}} 个备份文件吗？此操作不可恢复",
-                "single": "确定要删除备份文件 \"{{fileName}}\" 吗？此操作不可恢复",
-                "title": "确认删除"
-              },
-              "error": "删除失败",
-              "selected": "删除选中",
-              "success": {
-                "multiple": "成功删除 {{count}} 个备份文件",
-                "single": "删除成功"
-              },
-              "text": "删除"
-            },
-            "fetch": {
-              "error": "获取备份文件失败"
-            },
-            "refresh": "刷新",
-            "restore": {
-              "error": "恢复失败",
-              "success": "恢复成功，应用将在几秒后刷新",
-              "text": "恢复"
-            },
-            "select": {
-              "files": {
-                "delete": "请选择要删除的备份文件"
-              }
-            },
-            "title": "备份数据管理"
-          },
-          "modal": {
-            "filename": {
-              "placeholder": "请输入备份文件名"
-            },
-            "title": "备份到 WebDAV"
-          }
-        },
-        "disableStream": {
-          "help": "开启后，将文件加载到内存中再上传，可解决部分WebDAV服务不兼容chunked上传的问题，但会增加内存占用。",
-          "title": "禁用流式上传"
-        },
-        "host": {
-          "label": "WebDAV 地址",
-          "placeholder": "http://localhost:8080"
-        },
-        "hour_interval_one": "{{count}} 小时",
-        "hour_interval_other": "{{count}} 小时",
-        "lastSync": "上次备份时间",
-        "maxBackups": "最大备份数",
-        "minute_interval_one": "{{count}} 分钟",
-        "minute_interval_other": "{{count}} 分钟",
-        "noSync": "等待下次备份",
-        "password": "WebDAV 密码",
-        "path": {
-          "label": "WebDAV 路径",
-          "placeholder": "/backup"
-        },
-        "restore": {
-          "button": "从 WebDAV 恢复",
-          "confirm": {
-            "content": "从 WebDAV 恢复将会覆盖当前数据，是否继续？",
-            "title": "确认恢复"
-          },
-          "content": "从 WebDAV 恢复将覆盖当前数据，是否继续？",
-          "title": "从 WebDAV 恢复"
-        },
-        "syncError": "备份错误",
-        "syncStatus": "备份状态",
-        "title": "WebDAV",
-        "user": "WebDAV 用户名"
-      },
       "yuque": {
         "check": {
           "button": "检测",

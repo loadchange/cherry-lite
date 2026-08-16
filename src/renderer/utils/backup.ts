@@ -6,7 +6,6 @@ type BackupErrorFallbackKey =
   | 'message.backup.failed'
   | 'message.restore.failed'
   | 'settings.data.local.backup.manager.restore.error'
-  | 'settings.data.webdav.backup.manager.restore.error'
 
 export function getLocalizedBackupErrorMessage(
   error: unknown,
