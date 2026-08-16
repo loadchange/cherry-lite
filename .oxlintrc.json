@@ -18,8 +18,7 @@
     "src/main/services/nutstore/sso/lib/**",
     "src/renderer/ui/**",
     "packages/**/dist",
-    "eslint.config.mjs",
-    "v2-refactor-temp/**"
+    "eslint.config.mjs"
   ],
   "options": {
     "typeAware": true

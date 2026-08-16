@@ -3,9 +3,8 @@
  *
  * Also owns the one-shot migration of the legacy Dexie `pinned:models` key
  * into the `pin` table (entityType='model'). `pinned:models` is therefore
- * intentionally NOT classified as a preference in classification.json —
- * codegen must not emit a generic preference mapping for it, or the same
- * data would be written twice.
+ * intentionally not a generic preference mapping, or the same data would
+ * be written twice.
  */
 
 import { application } from '@application'

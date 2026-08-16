@@ -46,7 +46,7 @@ describe('resolveRequestContextSettings — compression-model assembly', () => {
 
   // The assistant override's schema is `z.string().min(1)`, so clearing it there
   // yields null. The GLOBAL preference is a plain `string | null` — its schema is
-  // generated from classification.json and can't carry that refinement — so an
+  // a plain `string | null` and can't carry that refinement — so an
   // empty string is representable. `??` alone would pass it through to
   // `resolveCompressionModel('')`, which returns null and silently switched
   // compression off; blank must read as "no pick" and use the current model.

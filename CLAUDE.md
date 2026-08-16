@@ -200,13 +200,13 @@ Services without long-lived resources or persistent side effects: use **named ex
 
 **Resolving migration merge conflicts: regenerate, never rename.** When an upstream migration conflicts with your local one, delete your local `.sql` + its `meta/*_snapshot.json` and re-run `pnpm db:migrations:generate`. Renaming/renumbering instead silently reuses the snapshot's random `id`, forking the chain for everyone — and `drizzle-kit generate` still exits `0`; only `pnpm db:migrations:check` catches it. CI enforces both the chain check and a schema↔migration generate-and-diff step.
 
-### Data Classification Toolchain
+### Preference and BootConfig schemas
 
-`v2-refactor-temp/tools/data-classify/` is the code generation pipeline for the v2 data layer; `classification.json` is the single source of truth (see its README). Four files are **auto-generated — NEVER edit them by hand**: `src/shared/data/preference/preferenceSchemas.ts`, `src/shared/data/bootConfig/bootConfigSchemas.ts`, and `PreferencesMappings.ts` + `BootConfigMappings.ts` in `src/main/data/migration/v2/migrators/mappings/`. To change them, edit `classification.json` or `target-key-definitions.json` (both in `data/`), then run `cd v2-refactor-temp/tools/data-classify && npm run generate`.
+Edit these files directly: `src/shared/data/preference/preferenceSchemas.ts`, `src/shared/data/bootConfig/bootConfigSchemas.ts`, and the v1→v2 mappings in `src/main/data/migration/v2/migrators/mappings/`.
 
 ### User-facing changes
 
-Cherry Lite 不再维护 `v2-refactor-temp/docs/breaking-changes/`。用户能感知的变化写进 GitHub Release 说明即可。
+用户能感知的变化写进 GitHub Release 说明即可。
 
 ## Local Instructions
 

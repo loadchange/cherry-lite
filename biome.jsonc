@@ -28,7 +28,6 @@
       "!**/.claude/**",
       "!**/.vscode/**",
       "!**/.conductor/**",
-      "!v2-refactor-temp/**",
       "!resources/**",
       "!**/storybook-static/**",
       "!**/dist/**",
@@ -63,8 +62,7 @@
       "!**/tailwind.css",
       "!**/package.json",
       "!src/renderer/routeTree.gen.ts",
-      "!.zed/**",
-      "!v2-refactor-temp/**"
+      "!.zed/**"
     ],
     "indentStyle": "space",
     "indentWidth": 2,
@@ -97,7 +95,6 @@
     "includes": [
       "!**/tailwind.css",
       "!src/renderer/routeTree.gen.ts",
-      "!v2-refactor-temp/**",
       "src/renderer/**/*.{tsx,ts}"
     ],
     // only enable sorted tailwind css rule. used as formatter instead of linter

@@ -1,11 +1,7 @@
 /**
- * Auto-generated boot config mappings from classification.json
- * Generated at: 2026-08-07T07:58:30.976Z
+ * v1 → v2 boot config mappings.
  *
- * This file contains pure mapping relationships without default values.
- * Default values are managed in src/shared/data/bootConfig/bootConfigSchemas.ts
- *
- * === AUTO-GENERATED CONTENT START ===
+ * Edit this file directly. Default values live in bootConfigSchemas.ts.
  */
 
 import type { BootConfigKey } from '@shared/data/bootConfig/bootConfigTypes'
