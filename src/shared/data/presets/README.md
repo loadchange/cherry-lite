@@ -4,11 +4,4 @@ This directory contains predefined configuration data that can be used throughou
 
 ## Usage Guidelines
 
-For detailed information on how to use this directory, including:
-
-- File naming conventions
-- Constant naming patterns
-- Type definitions structure
-- Implementation with Preference for user overrides
-
-Please refer to the [Layered Preset Configuration Pattern](../../../../docs/references/data/best-practice-layered-preset-pattern.md#preset-file-standards) documentation.
+Preset files in this directory supply default configuration. User overrides belong in Preference, not here.

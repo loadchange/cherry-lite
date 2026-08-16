@@ -1,16 +1,13 @@
 <!-- Template from https://github.com/kubevirt/kubevirt/blob/main/.github/PULL_REQUEST_TEMPLATE.md?-->
-<!--  Thanks for sending a pull request!  Here are some tips for you:
-1. Consider creating this PR as draft: https://github.com/CherryHQ/cherry-studio/blob/main/CONTRIBUTING.md
--->
 
 > ### 🚨 Branch strategy — read before opening this PR
 >
-> The v2 refactor has merged into `main`, so **`main` is the default branch for active development** (v1 and v2 code currently coexist there — expect large, breaking changes).
+> **`main` is the default branch for active development** (v1 and v2 code currently coexist there — expect large, breaking changes).
 >
 > - **Active development** (features, refactors, optimizations, fixes for the current codebase) → target **`main`** (the default base).
 > - **v1 maintenance** (hotfixes and subsequent v1 releases) → branch from and target **`v1`**, _not_ `main`.
 >
-> A v1 fix does **not** auto-carry to `main`: if the same bug exists on `main`, open a separate forward-port PR targeting `main`. Before touching subsystems being replaced, read `docs/references/data/` and watch for `@deprecated` markers — they flag code being deleted.
+> A v1 fix does **not** auto-carry to `main`: if the same bug exists on `main`, open a separate forward-port PR targeting `main`. Watch for `@deprecated` markers — they flag code being deleted.
 
 ### What this PR does
 
@@ -51,7 +48,7 @@ Approvers are expected to review this list.
 - [ ] Refactor: You have [left the code cleaner than you found it (Boy Scout Rule)](https://learning.oreilly.com/library/view/97-things-every/9780596809515/ch08.html)
 - [ ] Upgrade: Impact of this change on upgrade flows was considered and addressed if required
 - [ ] Documentation: A [user-guide update](https://docs.cherry-ai.com) was considered and is present (link) or not required. Check this only when the PR introduces or changes a user-facing feature or behavior.
-- [ ] Self-review: I have reviewed my own code (e.g., via [`/gh-pr-review`](/.claude/skills/gh-pr-review/SKILL.md), `gh pr diff`, or GitHub UI) before requesting review from others
+- [ ] Self-review: I have reviewed my own code (e.g., via `gh pr diff` or GitHub UI) before requesting review from others
 
 ### Release note
 

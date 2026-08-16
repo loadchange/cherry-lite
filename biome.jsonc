@@ -31,7 +31,8 @@
       "!v2-refactor-temp/**",
       "!resources/**",
       "!**/storybook-static/**",
-      "!**/dist/**"
+      "!**/dist/**",
+      "!out/**"
     ],
     "maxSize": 2097152
   },

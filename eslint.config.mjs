@@ -82,7 +82,7 @@ const PAGE_SIBLING = process.env.RENDERER_PAGE_SIBLING_ERROR ? 'error' : 'warn'
 const BAN_RENDERER_FROM_MAIN = {
   group: ['@renderer', '@renderer/**', '**/renderer/**'],
   message:
-    'Main/preload must not import renderer code. Use `@shared` for cross-process types, or `src/main` for main-only types. See docs/references/shared-layer-architecture.md.'
+    'Main/preload must not import renderer code. Use `@shared` for cross-process types, or `src/main` for main-only types.'
 }
 // Only reaches src/main + src/preload (below). `tests/**` is globally ignored by this
 // config, so the out-of-src harness is not covered — it goes through applyMigrations by
@@ -455,7 +455,7 @@ export default defineConfig([
         {
           selector: 'CallExpression[callee.object.name="console"]',
           message:
-            '❗CherryStudio uses unified LoggerService: 📖 docs/en/guides/logging.md\n\n'
+            '❗CherryStudio uses unified LoggerService (`loggerService`), not console.*\n\n'
         }
       ]
     }
@@ -547,7 +547,7 @@ export default defineConfig([
               },
               messages: {
                 restricted:
-                  'Quit-related APIs and events are managed by the Application lifecycle. Do not use "{{name}}" directly. See docs/en/references/lifecycle/application-overview.md'
+                  'Quit-related APIs and events are managed by the Application lifecycle. Do not use "{{name}}" directly.'
               }
             },
             create(context) {

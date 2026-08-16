@@ -10,8 +10,7 @@ lerna-debug.log*
 .yarn-cache
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode/
 .idea
 .DS_Store
 *.suo
@@ -53,17 +52,14 @@ local
 .aider*
 .cursorrules
 .cursor/*
-.claude/*
-!.claude/skills/
-!.claude/skills/**
+.claude/
 .gemini/*
 .qwen/*
 .trae/*
 .claude-code-router/*
 .codebuddy/*
 .antigravitycli/*
-.zed/*
-!.zed/settings.json.example
+.zed/
 CLAUDE.local.md
 AGENTS.override.md
 

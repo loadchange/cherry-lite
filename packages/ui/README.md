@@ -275,10 +275,8 @@ Only the runtime surface should be treated as consumable package API.
 When Cherry Studio consumes the package source, the app's UI-contract generator treats those markers as structural
 semantics and emits the corresponding public `data-ui` `part:*` tokens without removing the original attributes.
 Existing renderer code, application tests, and custom themes that use `data-slot` continue to work; new selectors can
-use the generated semantic layer. The application-level token grammar, stability tiers, maintained anchors, and
-selector rules are defined by the
-[UI Semantic Contract](../../docs/references/ui-semantic-contract.md). Explicit roles and maintained `part:*` tokens
-are public selectors; inferred roles are best-effort discovery coordinates.
+use the generated semantic layer. Explicit roles and maintained `part:*` tokens are public selectors;
+inferred roles are best-effort discovery coordinates.
 
 ## Directory Structure
 

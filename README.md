@@ -5,12 +5,6 @@
 
 <p align="center">
   轻量桌面 AI 助手：对话 + 翻译。<br>
-  <a href="./docs/guides/development.md">开发</a>
-  ·
-  <a href="./docs/README.md">文档</a>
-  ·
-  <a href="./CONTRIBUTING.md">贡献</a>
-  ·
   <a href="https://github.com/loadchange/cherry-studio-lite/issues">反馈</a>
   ·
   <a href="https://github.com/loadchange/cherry-studio-lite/releases">下载</a>
@@ -33,7 +27,7 @@ Cherry Lite 从 [Cherry Studio](https://github.com/CherryHQ/cherry-studio) 裁�
 - **数据**：本地备份 / 恢复 / 导入；可改数据目录
 - **界面**：浅色 / 深色；语言为简体中文、English
 
-当前仓库的发布流水线只打 **macOS**（Apple Silicon 与 Intel）`.dmg`，用 Developer ID 签名并公证后发到 [GitHub Releases](https://github.com/loadchange/cherry-studio-lite/releases)。Windows / Linux 的打包脚本还在，但没有对应的云构建。签名密钥配置见 [macOS 云构建签名](./docs/guides/macos-signing.md)。
+当前仓库的发布流水线只打 **macOS**（Apple Silicon 与 Intel）`.dmg`，用 Developer ID 签名并公证后发到 [GitHub Releases](https://github.com/loadchange/cherry-studio-lite/releases)。Windows / Linux 的打包脚本还在，但没有对应的云构建。
 
 ## 和完整版的差别
 
@@ -69,21 +63,28 @@ pnpm lint
 pnpm build:mac     # 本地打 macOS 包
 ```
 
-更完整的环境说明见 [开发指南](./docs/guides/development.md)，架构见 [文档索引](./docs/README.md)。
+提交前跑通 `pnpm lint`、`pnpm test`、`pnpm format`。请从 `main` 开分支，提交用 `git commit -S --signoff`（至少 `--signoff`）做 DCO 签署。
 
-## 文档
+## macOS 云构建签名
 
-| 文档 | 内容 |
+签过并公证的包，用户下载后可以直接打开，不用再执行 `xattr -cr`。本地 `pnpm build:mac` 如果没有这些环境变量，仍会打未签名包。
+
+在仓库 Settings → Secrets and variables → Actions 配置：
+
+| Secret | 内容 |
 | --- | --- |
-| [开发指南](./docs/guides/development.md) | 环境、启动、构建 |
-| [文档索引](./docs/README.md) | 架构与子系统入口 |
-| [贡献指南](./CONTRIBUTING.md) | 分支、提交、PR |
-| [隐私协议](./PRIVACY.md) | 数据放哪、何时联网 |
-| [安全政策](./SECURITY.md) | 漏洞报告 |
+| `CSC_LINK` | Developer ID Application 的 `.p12`，整文件 base64 |
+| `CSC_KEY_PASSWORD` | 导出 `.p12` 时的密码 |
+| `APPLE_TEAM_ID` | Apple Team ID |
+| `APPLE_API_KEY_P8` | App Store Connect API Key（`.p8`）整文件 base64 |
+| `APPLE_API_KEY_ID` | 该密钥的 10 位 Key ID |
+| `APPLE_API_ISSUER` | App Store Connect 密钥页上的 Issuer UUID |
+
+Bundle ID 是 `com.loadchange.CherryStudioLite`。证书必须是 **Developer ID Application**，公证走 App Store Connect API Key，不需要应用专用密码。
 
 ## 贡献
 
-欢迎针对本仓库提 Issue 和 PR。请从 `main` 开分支，提交前跑通 `pnpm lint`、`pnpm test`、`pnpm format`，并用 `git commit -S --signoff`（至少 `--signoff`）做 DCO 签署。细节见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+欢迎针对本仓库提 Issue 和 PR。
 
 ## 上游与许可
 

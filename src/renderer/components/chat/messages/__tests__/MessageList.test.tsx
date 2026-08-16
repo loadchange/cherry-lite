@@ -773,7 +773,11 @@ describe('MessageList', () => {
     act(() => {
       view.rerender(
         <MessageListProvider
-          value={createValue([createMessage('user-1', 'user'), createMessage('assistant-1', 'assistant')], undefined, actions)}>
+          value={createValue(
+            [createMessage('user-1', 'user'), createMessage('assistant-1', 'assistant')],
+            undefined,
+            actions
+          )}>
           <MessageList />
         </MessageListProvider>
       )

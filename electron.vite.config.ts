@@ -24,7 +24,7 @@ const isProd = process.env.NODE_ENV === 'production'
 // `devDependencies` for exactly this reason — it is pure JS and bundles cleanly. Do NOT
 // move it to `dependencies`: that would externalize it, and since devDependencies are
 // pruned from production packages, the packaged app would fail at runtime with
-// MODULE_NOT_FOUND (no test catches this). See docs/references/api-gateway/README.md.
+// MODULE_NOT_FOUND (no test catches this).
 const mainExternalDependencies = Object.keys(pkg.dependencies)
 const mainExternalModules = ['bufferutil', 'utf-8-validate', 'electron', ...mainExternalDependencies]
 
