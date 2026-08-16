@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "private": true,
   "description": "A lightweight AI chat and translate assistant.",
-  "desktopName": "CherryStudio.desktop",
+  "desktopName": "CherryLite.desktop",
   "main": "./out/main/main.js",
   "author": "loadchange",
   "homepage": "https://github.com/loadchange/cherry-studio-lite",

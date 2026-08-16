@@ -74,7 +74,7 @@ describe('initCrashTelemetry', () => {
     expect(crashReporterStartMock).toHaveBeenCalledTimes(1)
     expect(crashReporterStartMock).toHaveBeenCalledWith({
       companyName: 'loadchange',
-      productName: 'CherryStudioLite',
+      productName: 'CherryLite',
       submitURL: '',
       uploadToServer: false
     })

@@ -1,6 +1,6 @@
 <h1 align="center">
-  <img src="./build/icon.png" width="120" height="120" alt="Cherry Studio Lite" /><br>
-  Cherry Studio Lite
+  <img src="./build/icon.png" width="120" height="120" alt="Cherry Lite" /><br>
+  Cherry Lite
 </h1>
 
 <p align="center">
@@ -22,7 +22,7 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-AGPLv3-important.svg?logo=gnu" alt="License" /></a>
 </p>
 
-Cherry Studio Lite 从 [Cherry Studio](https://github.com/CherryHQ/cherry-studio) 裁剪而来，只保留助手对话和翻译。除了你自己配置的模型服务（以及你主动打开的可选能力），应用不会向其它云端发业务请求。
+Cherry Lite 从 [Cherry Studio](https://github.com/CherryHQ/cherry-studio) 裁剪而来，只保留助手对话和翻译。除了你自己配置的模型服务（以及你主动打开的可选能力），应用不会向其它云端发业务请求。
 
 ## 功能
 

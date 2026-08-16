@@ -1,4 +1,4 @@
-# Cherry Studio Lite 文档
+# Cherry Lite 文档
 
 本目录是 Lite 的开发与架构文档。产品定位见仓库根目录 [README](../README.md)：只保留对话和翻译，其余完整版能力已裁掉。
 

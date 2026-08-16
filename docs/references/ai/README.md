@@ -1,6 +1,6 @@
 # AI Reference
 
-This is the entry point for the AI pipeline in Cherry Studio Lite — the
+This is the entry point for the AI pipeline in Cherry Lite — the
 main-process runtimes that own provider calls through the AI SDK, plus the
 renderer-side transport that connects to them.
 

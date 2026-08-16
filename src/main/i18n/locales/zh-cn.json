@@ -2,7 +2,7 @@
   "agent": {
     "builtin": {
       "cherry_assistant": {
-        "description": "Cherry Studio Lite 内置使用顾问。诊断问题、引导操作、收录 FAQ、提交 Bug/需求、搜索和创建 Skills"
+        "description": "Cherry Lite 内置使用顾问。诊断问题、引导操作、收录 FAQ、提交 Bug/需求、搜索和创建 Skills"
       }
     },
     "session": {
@@ -74,10 +74,10 @@
   },
   "openclaw": {
     "errors": {
-      "binary_incompatible": "Cherry Studio Lite 当前使用的 OpenClaw 与生成的配置不兼容，请升级 OpenClaw。{{details}}",
-      "external_config_invalid": "OpenClaw 拒绝了 Cherry Studio Lite 管理区之外的配置，请修正该配置或升级 OpenClaw。{{details}}",
+      "binary_incompatible": "Cherry Lite 当前使用的 OpenClaw 与生成的配置不兼容，请升级 OpenClaw。{{details}}",
+      "external_config_invalid": "OpenClaw 拒绝了 Cherry Lite 管理区之外的配置，请修正该配置或升级 OpenClaw。{{details}}",
       "more_issues": "另有 {{count}} 个问题",
-      "preflight_failed": "Cherry Studio Lite 无法验证 OpenClaw 配置。"
+      "preflight_failed": "Cherry Lite 无法验证 OpenClaw 配置。"
     }
   },
   "paintings": {
@@ -91,7 +91,7 @@
     "mcp": {
       "oauth": {
         "callback": {
-          "message": "您可以关闭此页面并返回 Cherry Studio Lite",
+          "message": "您可以关闭此页面并返回 Cherry Lite",
           "title": "认证成功"
         }
       }

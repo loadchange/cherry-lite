@@ -1,6 +1,6 @@
 # 开发指南
 
-Cherry Studio Lite 的本地开发说明。产品范围见仓库根目录 [README](../../README.md)。
+Cherry Lite 的本地开发说明。产品范围见仓库根目录 [README](../../README.md)。
 
 ## IDE Setup
 

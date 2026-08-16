@@ -1,5 +1,5 @@
 appId: com.loadchange.CherryStudioLite
-productName: Cherry Studio Lite
+productName: Cherry Lite
 electronLanguages:
   - zh-CN
   - zh-TW
@@ -14,7 +14,7 @@ directories:
   buildResources: build
 
 protocols:
-  - name: Cherry Studio
+  - name: Cherry Lite
     schemes:
       - cherrystudio
 files:
@@ -85,7 +85,7 @@ extraResources:
   - from: "packages/provider-registry/data"
     to: "provider-registry"
 win:
-  executableName: Cherry Studio Lite
+  executableName: Cherry Lite
   artifactName: ${productName}-${version}-${arch}-setup.${ext}
   target:
     - target: nsis
@@ -121,7 +121,7 @@ dmg:
   writeUpdateInfo: true
 linux:
   artifactName: ${productName}-${version}-${arch}.${ext}
-  executableName: CherryStudioLite
+  executableName: CherryLite
   target:
     - target: AppImage
     - target: deb
@@ -151,7 +151,7 @@ artifactBuildCompleted: scripts/artifact-build-completed.js
 releaseInfo:
   releaseNotes: |
     <!--LANG:en-->
-    Cherry Studio Lite 2.0.0 - Chat and translate, with your own model service
+    Cherry Lite 2.0.0 - Chat and translate, with your own model service
 
     ✨ Focused Lite
     - Keeps assistant chat and translate; you bind the model provider yourself
@@ -160,7 +160,7 @@ releaseInfo:
     🔄 Updates
     - Check for Updates uses this repository's GitHub Releases
     <!--LANG:zh-CN-->
-    Cherry Studio Lite 2.0.0 - 聊天与翻译，使用你自己配置的模型服务
+    Cherry Lite 2.0.0 - 聊天与翻译，使用你自己配置的模型服务
 
     ✨ 精简版
     - 只保留助手聊天和翻译，模型服务由你自己绑定

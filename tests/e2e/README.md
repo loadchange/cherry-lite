@@ -1,6 +1,6 @@
 # E2E Testing Guide
 
-本目录包含 Cherry Studio Lite 的端到端 (E2E) 测试，使用 Playwright 测试 Electron 应用。
+本目录包含 Cherry Lite 的端到端 (E2E) 测试，使用 Playwright 测试 Electron 应用。
 
 ## 目录结构
 

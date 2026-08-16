@@ -33,7 +33,7 @@
     },
     "builtin": {
       "cherry_assistant": {
-        "description": "Built-in Cherry Studio Lite advisor. Diagnose issues, guide operations, collect FAQs, submit bugs/feature requests, and search/create Skills"
+        "description": "Built-in Cherry Lite advisor. Diagnose issues, guide operations, collect FAQs, submit bugs/feature requests, and search/create Skills"
       }
     },
     "channels": {
@@ -4483,12 +4483,12 @@
       "select_other_provider": "Select Other Provider",
       "setup_hint": "You can change providers anytime in Settings",
       "subtitle": "Connect a provider to unlock your All-in-One AI Workstation",
-      "title": "Welcome to Cherry Studio Lite"
+      "title": "Welcome to Cherry Lite"
     }
   },
   "openclaw": {
     "checking_installation": "Checking OpenClaw installation...",
-    "description": "Use Cherry Studio Lite providers to power OpenClaw, your personal AI assistant that works across WhatsApp, Telegram, Slack, Discord and more.",
+    "description": "Use Cherry Lite providers to power OpenClaw, your personal AI assistant that works across WhatsApp, Telegram, Slack, Discord and more.",
     "error": {
       "select_provider_model": "Please select a provider and model first"
     },
@@ -4509,7 +4509,7 @@
     },
     "installed_at": "OpenClaw installed at",
     "migration": {
-      "description": "An external OpenClaw installation was detected in PATH, but Cherry Studio Lite uses its managed OpenClaw binary. Install the managed version to continue.",
+      "description": "An external OpenClaw installation was detected in PATH, but Cherry Lite uses its managed OpenClaw binary. Install the managed version to continue.",
       "install_button": "Reinstall OpenClaw",
       "title": "OpenClaw Needs Update"
     },
@@ -5207,7 +5207,7 @@
           },
           "description": {
             "0": "Selection Assistant requires <strong>Accessibility Permission</strong> to work properly.",
-            "1": "Please click \"<strong>Go to Settings</strong>\" and click the \"<strong>Open System Settings</strong>\" button in the permission request popup that appears later. Then find \"<strong>Cherry Studio Lite</strong>\" in the application list that appears later and turn on the permission switch.",
+            "1": "Please click \"<strong>Go to Settings</strong>\" and click the \"<strong>Open System Settings</strong>\" button in the permission request popup that appears later. Then find \"<strong>Cherry Lite</strong>\" in the application list that appears later and turn on the permission switch.",
             "2": "After completing the settings, please reopen the selection assistant."
           },
           "title": "Accessibility Permission"
@@ -5231,7 +5231,7 @@
         "wayland_checklist_subtitle": "Ensure the following conditions are met to optimize the Wayland experience:",
         "wayland_description": "You are in a Wayland session. Due to system limitations, the toolbar may only appear at the center of the screen instead of following the selected text on some desktop environments. It is recommended to switch to an X11 session for the full experience.",
         "wayland_title": "Wayland Session Notice",
-        "xwayland_fail": "Not enabled, please launch Cherry Studio Lite with the `--ozone-platform=x11` flag",
+        "xwayland_fail": "Not enabled, please launch Cherry Lite with the `--ozone-platform=x11` flag",
         "xwayland_label": "XWayland mode: ",
         "xwayland_pass": "Enabled"
       },
@@ -5395,7 +5395,7 @@
         "agent_error": "Unable to open Cherry Assistant for feedback. Please try again.",
         "button": "Feedback",
         "dialog": {
-          "description": "Choose how to share feedback and help us make Cherry Studio Lite better.",
+          "description": "Choose how to share feedback and help us make Cherry Lite better.",
           "title": "Choose a feedback channel"
         },
         "github": {
@@ -5471,9 +5471,9 @@
         "path_changed_without_copy": "Path changed successfully",
         "restart_notice": "The app may need to restart multiple times to apply the changes",
         "select": "Modify Directory",
-        "select_error": "The selected directory may be used by another Cherry Studio Lite instance. Close other instances and try again. If none are running, remove stale SingletonLock and SingletonSocket files from that directory.",
+        "select_error": "The selected directory may be used by another Cherry Lite instance. Close other instances and try again. If none are running, remove stale SingletonLock and SingletonSocket files from that directory.",
         "select_error_in_app_path": "New path is the same as the application installation path, please select another path",
-        "select_error_protected_path": "The selected path is protected by the operating system or Cherry Studio Lite. Please choose another folder.",
+        "select_error_protected_path": "The selected path is protected by the operating system or Cherry Lite. Please choose another folder.",
         "select_error_root_path": "New path cannot be the root path",
         "select_error_same_path": "New path is the same as the old path, please select another path",
         "select_error_write_permission": "New path does not have write permission",
@@ -5804,14 +5804,14 @@
       "notInstalled": "Not installed",
       "openBinariesDir": "Open binaries directory",
       "remove": "Remove tool",
-      "removeConfirmMessage": "Remove \"{{name}}\" from Cherry Studio Lite? Its portable definition will be deleted. Cherry will also clean up an exact mise-managed copy when present. System and bundled executables are never changed.",
+      "removeConfirmMessage": "Remove \"{{name}}\" from Cherry Lite? Its portable definition will be deleted. Cherry will also clean up an exact mise-managed copy when present. System and bundled executables are never changed.",
       "removeConfirmTitle": "Remove Tool",
       "removeDefinitionOnlyConfirmMessage": "Cherry could not safely clean up \"{{name}}\": {{details}} Removing only its definition will hide the card but leave its backend files installed. Continue?",
       "removeDefinitionOnlyConfirmTitle": "Remove Definition Only?",
       "removeDefinitionOnlyDependents": "Installed tools depend on it: {{dependents}}.",
       "removeError": "Failed to remove tool",
       "removeErrorHint": "The cleanup command failed. Copy the log below to troubleshoot or share it for help.",
-      "removeRuntimeConfirmMessage": "Remove \"{{name}}\" from Cherry Studio Lite? Cherry will clean up only an exact mise-managed copy. System and bundled runtimes are never changed. Installed npm or pip tools may block removal if they depend on this runtime.",
+      "removeRuntimeConfirmMessage": "Remove \"{{name}}\" from Cherry Lite? Cherry will clean up only an exact mise-managed copy. System and bundled runtimes are never changed. Installed npm or pip tools may block removal if they depend on this runtime.",
       "runtimeDependency": "Runtime",
       "runtimeDependencyHint": "Runtime for npm/pip tools",
       "searchFailed": "Search failed, check logs",
@@ -5838,7 +5838,7 @@
         "uv": "Python package manager for MCP services and dependency installation."
       },
       "uninstall": "Uninstall",
-      "uninstallConfirmMessage": "Are you sure you want to uninstall \"{{name}}\"? Cherry Studio Lite's backend copy will be deleted.",
+      "uninstallConfirmMessage": "Are you sure you want to uninstall \"{{name}}\"? Cherry Lite's backend copy will be deleted.",
       "uninstallConfirmTitle": "Uninstall Tool",
       "uninstallFailed": "Failed to uninstall tool",
       "uninstallSuccess": "Tool uninstalled",

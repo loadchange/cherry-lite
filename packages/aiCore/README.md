@@ -388,7 +388,7 @@ await client.streamObject({
 ## 📚 相关资源
 
 - [Vercel AI SDK 文档](https://ai-sdk.dev/)
-- [Cherry Studio Lite](https://github.com/loadchange/cherry-studio-lite)
+- [Cherry Lite](https://github.com/loadchange/cherry-studio-lite)
 - [Cherry Studio（上游）](https://github.com/CherryHQ/cherry-studio)
 - [AI SDK Providers](https://ai-sdk.dev/providers/ai-sdk-providers)
 
@@ -401,7 +401,7 @@ await client.streamObject({
 
 ## 📄 License
 
-见仓库根目录 [LICENSE](../../LICENSE)（AGPLv3）。该包随 Cherry Studio Lite 分发，不单独按 MIT 授权。
+见仓库根目录 [LICENSE](../../LICENSE)（AGPLv3）。该包随 Cherry Lite 分发，不单独按 MIT 授权。
 
 ---
 

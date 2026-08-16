@@ -1,6 +1,6 @@
 # Code of Conduct
 
-This code of conduct applies to Cherry Studio Lite (`loadchange/cherry-studio-lite`).
+This code of conduct applies to Cherry Lite (`loadchange/cherry-studio-lite`).
 
 ## Our Pledge
 

@@ -2,7 +2,7 @@
 
 ## 概览
 
-Cherry Studio Lite 通过本仓库的 GitHub Releases 检查更新，不走上游的 `releases.cherry-ai.com`。
+Cherry Lite 通过本仓库的 GitHub Releases 检查更新，不走上游的 `releases.cherry-ai.com`。
 
 打包配置见 `electron-builder.yml` 的 `publish`：
 

@@ -1,6 +1,6 @@
 # 分支策略
 
-Cherry Studio Lite 只维护一条产品线。
+Cherry Lite 只维护一条产品线。
 
 > **`main` 是唯一的开发与发布分支。** 功能、重构、优化、缺陷修复都从这里拉分支，PR 也打回这里。推到 `main` 会触发 macOS 云构建。本仓库没有上游的 `v1` 维护线，也没有 Test Plan / `testplan` 分支。
 

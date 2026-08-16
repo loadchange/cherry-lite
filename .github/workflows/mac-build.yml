@@ -100,9 +100,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
-          name: Cherry Studio Lite ${{ steps.meta.outputs.version }} (${{ steps.meta.outputs.short_sha }})
+          name: Cherry Lite ${{ steps.meta.outputs.version }} (${{ steps.meta.outputs.short_sha }})
           body: |
-            Cherry Studio Lite `${{ steps.meta.outputs.version }}` 由主干提交自动构建。
+            Cherry Lite `${{ steps.meta.outputs.version }}` 由主干提交自动构建。
 
             - 提交：`${{ github.sha }}`
             - 说明：${{ github.event.head_commit.message || github.event_name }}

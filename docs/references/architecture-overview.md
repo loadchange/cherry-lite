@@ -1,12 +1,12 @@
 # Architecture Overview
 
-> **Note**: Cherry Studio Lite keeps the v2 Electron architecture (main / preload / renderer). Some leftover v1 types and comments may still appear in code; do not add new fallbacks for them. Product scope is chat + translate only.
+> **Note**: Cherry Lite keeps the v2 Electron architecture (main / preload / renderer). Some leftover v1 types and comments may still appear in code; do not add new fallbacks for them. Product scope is chat + translate only.
 
 This is the cross-process entry point to the architecture: the Electron process model, data flow, the data systems, the monorepo structure, and a map to the detailed per-process and per-subsystem references. Per-process directory layout and dependency rules live in their own documents — this page does not duplicate them.
 
 ## Process Model
 
-Cherry Studio Lite is an Electron app with two app processes (plus preload), each mapping to a `src/` root and its top-level directories:
+Cherry Lite is an Electron app with two app processes (plus preload), each mapping to a `src/` root and its top-level directories:
 
 ```
 ═══ Main Process · Node.js · src/main/ ══════════════════════════════════

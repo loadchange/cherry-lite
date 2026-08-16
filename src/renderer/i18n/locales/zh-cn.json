@@ -33,7 +33,7 @@
     },
     "builtin": {
       "cherry_assistant": {
-        "description": "Cherry Studio Lite 内置使用顾问。诊断问题、引导操作、收录 FAQ、提交 Bug/需求、搜索和创建 Skills"
+        "description": "Cherry Lite 内置使用顾问。诊断问题、引导操作、收录 FAQ、提交 Bug/需求、搜索和创建 Skills"
       }
     },
     "channels": {
@@ -4483,12 +4483,12 @@
       "select_other_provider": "选择其他服务商",
       "setup_hint": "您可以随时在设置中更换服务商",
       "subtitle": "连接服务商，开启您的全能 AI 工作站",
-      "title": "欢迎使用 Cherry Studio Lite"
+      "title": "欢迎使用 Cherry Lite"
     }
   },
   "openclaw": {
     "checking_installation": "正在检查 OpenClaw 安装状态...",
-    "description": "使用 Cherry Studio Lite 服务商为 OpenClaw 提供支持，OpenClaw 是您的个人 AI 助手，可在 WhatsApp、Telegram、Slack、Discord 等平台上使用。",
+    "description": "使用 Cherry Lite 服务商为 OpenClaw 提供支持，OpenClaw 是您的个人 AI 助手，可在 WhatsApp、Telegram、Slack、Discord 等平台上使用。",
     "error": {
       "select_provider_model": "请先选择服务商和模型"
     },
@@ -4509,7 +4509,7 @@
     },
     "installed_at": "OpenClaw 安装路径",
     "migration": {
-      "description": "检测到 PATH 中存在外部 OpenClaw 安装，但 Cherry Studio Lite 只使用托管的 OpenClaw 二进制文件。请安装托管版本后继续。",
+      "description": "检测到 PATH 中存在外部 OpenClaw 安装，但 Cherry Lite 只使用托管的 OpenClaw 二进制文件。请安装托管版本后继续。",
       "install_button": "重新安装 OpenClaw",
       "title": "OpenClaw 需要更新"
     },
@@ -5207,7 +5207,7 @@
           },
           "description": {
             "0": "划词助手需「<strong>辅助功能权限</strong>」才能正常工作。",
-            "1": "请点击「<strong>去设置</strong>」，并在稍后弹出的权限请求弹窗中点击 「<strong>打开系统设置</strong>」 按钮，然后在之后的应用列表中找到 「<strong>Cherry Studio Lite</strong>」，并打开权限开关。",
+            "1": "请点击「<strong>去设置</strong>」，并在稍后弹出的权限请求弹窗中点击 「<strong>打开系统设置</strong>」 按钮，然后在之后的应用列表中找到 「<strong>Cherry Lite</strong>」，并打开权限开关。",
             "2": "完成设置后，请再次开启划词助手。"
           },
           "title": "辅助功能权限"
@@ -5231,7 +5231,7 @@
         "wayland_checklist_subtitle": "确认以下条件已满足，以尽可能优化 Wayland 下的体验：",
         "wayland_description": "当前为 Wayland 模式，受系统限制，部分桌面环境下工具栏只能显示在屏幕中央，无法跟随选中文本定位。建议切换到 X11 模式以获得完整体验。",
         "wayland_title": "Wayland 模式提示",
-        "xwayland_fail": "未启用，请使用 `--ozone-platform=x11` 参数启动 Cherry Studio Lite",
+        "xwayland_fail": "未启用，请使用 `--ozone-platform=x11` 参数启动 Cherry Lite",
         "xwayland_label": "XWayland 模式：",
         "xwayland_pass": "已启用"
       },
@@ -5395,7 +5395,7 @@
         "agent_error": "无法为反馈打开 Cherry Assistant，请重试。",
         "button": "反馈",
         "dialog": {
-          "description": "选择一种方式反馈问题，帮助我们把 Cherry Studio Lite 做得更好。",
+          "description": "选择一种方式反馈问题，帮助我们把 Cherry Lite 做得更好。",
           "title": "选择反馈方式"
         },
         "github": {
@@ -5471,9 +5471,9 @@
         "path_changed_without_copy": "路径已更改成功",
         "restart_notice": "应用可能会重启多次以应用更改",
         "select": "修改目录",
-        "select_error": "所选目录可能正被另一个 Cherry Studio Lite 实例使用。请关闭其他实例后重试；若确认没有实例运行，请删除该目录中遗留的 SingletonLock 和 SingletonSocket 文件。",
+        "select_error": "所选目录可能正被另一个 Cherry Lite 实例使用。请关闭其他实例后重试；若确认没有实例运行，请删除该目录中遗留的 SingletonLock 和 SingletonSocket 文件。",
         "select_error_in_app_path": "新路径与应用安装路径相同，请选择其他路径",
-        "select_error_protected_path": "所选路径受操作系统或 Cherry Studio Lite 保护，请选择其他文件夹",
+        "select_error_protected_path": "所选路径受操作系统或 Cherry Lite 保护，请选择其他文件夹",
         "select_error_root_path": "新路径不能是根路径",
         "select_error_same_path": "新路径与旧路径相同，请选择其他路径",
         "select_error_write_permission": "新路径没有写入权限",
@@ -5804,14 +5804,14 @@
       "notInstalled": "未安装",
       "openBinariesDir": "打开二进制文件目录",
       "remove": "移除工具",
-      "removeConfirmMessage": "要从 Cherry Studio Lite 中移除 \"{{name}}\" 吗？其可移植工具定义将被删除；如果存在 Cherry 管理的 mise 副本，也会一并清理。系统和应用内置的可执行文件不会被修改。",
+      "removeConfirmMessage": "要从 Cherry Lite 中移除 \"{{name}}\" 吗？其可移植工具定义将被删除；如果存在 Cherry 管理的 mise 副本，也会一并清理。系统和应用内置的可执行文件不会被修改。",
       "removeConfirmTitle": "移除工具",
       "removeDefinitionOnlyConfirmMessage": "Cherry 无法安全清理 \"{{name}}\"：{{details}} 仅移除定义会隐藏该卡片，但后端文件仍会保留。是否继续？",
       "removeDefinitionOnlyConfirmTitle": "仅移除定义？",
       "removeDefinitionOnlyDependents": "以下已安装工具依赖它：{{dependents}}。",
       "removeError": "工具移除失败",
       "removeErrorHint": "清理命令执行失败。复制下方日志以便排查或寻求帮助。",
-      "removeRuntimeConfirmMessage": "要从 Cherry Studio Lite 中移除 \"{{name}}\" 吗？Cherry 只会清理其管理的 mise 副本，系统和应用内置的运行时不会被修改。如果已安装的 npm 或 pip 工具依赖此运行时，移除操作会被阻止。",
+      "removeRuntimeConfirmMessage": "要从 Cherry Lite 中移除 \"{{name}}\" 吗？Cherry 只会清理其管理的 mise 副本，系统和应用内置的运行时不会被修改。如果已安装的 npm 或 pip 工具依赖此运行时，移除操作会被阻止。",
       "runtimeDependency": "运行时依赖",
       "runtimeDependencyHint": "npm/pip 工具使用的运行时",
       "searchFailed": "搜索失败，请查看日志",
@@ -5838,7 +5838,7 @@
         "uv": "用于 MCP 服务与依赖安装的 Python 包管理工具。"
       },
       "uninstall": "卸载",
-      "uninstallConfirmMessage": "确定要卸载 \"{{name}}\" 吗？Cherry Studio Lite 管理的后端副本将被删除。",
+      "uninstallConfirmMessage": "确定要卸载 \"{{name}}\" 吗？Cherry Lite 管理的后端副本将被删除。",
       "uninstallConfirmTitle": "卸载工具",
       "uninstallFailed": "工具卸载失败",
       "uninstallSuccess": "工具已卸载",

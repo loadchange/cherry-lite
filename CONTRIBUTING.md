@@ -1,4 +1,4 @@
-# Cherry Studio Lite 贡献指南
+# Cherry Lite 贡献指南
 
 欢迎给本仓库提改动。这里是从 Cherry Studio 裁出来的轻量分叉，只维护对话和翻译相关能力。
 
