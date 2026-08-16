@@ -1,6 +1,6 @@
 # Changesets
 
-This folder contains configuration and changeset files for managing package versioning and publishing in the Cherry Studio monorepo.
+This folder contains configuration and changeset files for the workspace packages. Cherry Studio Lite does **not** run the upstream `release-packages.yml` workflow; packages stay private to this repo unless a maintainer publishes them by hand.
 
 ## What is Changesets?
 
@@ -28,7 +28,7 @@ This will:
 3. Ask for a description of the change
 4. Create a changeset file in `.changeset/`
 
-> **Note**: CI will check that PRs modifying packages include a changeset.
+> **Note**: This fork’s macOS pipeline does not enforce or publish changesets. Keep them if you touch a workspace package so the changelog stays usable.
 
 ### Versioning and publishing
 
@@ -58,25 +58,9 @@ ai-core (peer-depends on) → ai-sdk-provider
 
 Changeset automatically handles updating peer dependency ranges when `ai-sdk-provider` is published.
 
-## CI/CD Integration
+## Publishing
 
-The release workflow (`.github/workflows/release-packages.yml`) uses [changesets/action](https://github.com/changesets/changesets/blob/main/packages/action/README.md) and works in two phases:
-
-### Phase 1 — Accumulate changes
-
-When a PR containing changeset files is merged to `main`, the action detects pending changesets and **creates or updates** a "Version Packages" PR. This PR:
-
-- Bumps package versions based on all accumulated changesets
-- Generates/updates `CHANGELOG.md` for each package
-- Deletes consumed changeset files
-
-Multiple PRs with changesets can merge before a release — the Version Packages PR keeps updating to include all of them.
-
-### Phase 2 — Publish
-
-When a maintainer decides it's time to release, they **merge the Version Packages PR**. This triggers the workflow again, and since there are no more pending changesets, the action runs `pnpm changeset:publish` to publish the updated packages to npm.
-
-**In short**: changesets accumulate automatically; you control when to release by merging the Version Packages PR.
+There is no automated package-publish job in this fork. If a workspace package must go to npm, a maintainer runs `pnpm changeset:version` and `pnpm changeset:publish` locally after reviewing the pending files.
 
 ## Learn more
 

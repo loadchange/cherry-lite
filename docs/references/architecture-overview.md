@@ -1,29 +1,29 @@
 # Architecture Overview
 
-> **Note**: `main` is undergoing a major v2 architecture refactoring (v1 and v2 coexist). This document is updated as it progresses; some sections describe the **target** architecture rather than the current state.
+> **Note**: Cherry Studio Lite keeps the v2 Electron architecture (main / preload / renderer). Some leftover v1 types and comments may still appear in code; do not add new fallbacks for them. Product scope is chat + translate only.
 
-This is the cross-process entry point to Cherry Studio's architecture: the Electron process model, data flow, the data systems, the monorepo structure, and a map to the detailed per-process and per-subsystem references. Per-process directory layout and dependency rules live in their own documents — this page does not duplicate them.
+This is the cross-process entry point to the architecture: the Electron process model, data flow, the data systems, the monorepo structure, and a map to the detailed per-process and per-subsystem references. Per-process directory layout and dependency rules live in their own documents — this page does not duplicate them.
 
 ## Process Model
 
-Cherry Studio is an Electron app with two app processes (plus preload), each mapping to a `src/` root and its top-level directories:
+Cherry Studio Lite is an Electron app with two app processes (plus preload), each mapping to a `src/` root and its top-level directories:
 
 ```
 ═══ Main Process · Node.js · src/main/ ══════════════════════════════════
 
   core/       app runtime — IoC container, paths, logger, window, scheduler/jobs
   data/       data layer — Db, Cache, Preference, DataApi, BootConfig
-  ai/         AI subsystem — providers, middleware, MCP, agents, streams
+  ai/         AI subsystem — providers, middleware, MCP, streams
   features/   large domain modules    ·    services/  small business services
   ipc/        IpcApi — the typed boundary to the renderer
-  (also hosts: Express API server · MCP servers · knowledge / RAG)
+  (also hosts: MCP servers)
 
                    ↕   IPC over contextBridge   ·   src/preload/
 
 ═══ Renderer Process · Chromium · src/renderer/ ═════════════════════════
 
   windows/     per-window entry roots — Main, Sub, Selection, …
-  pages/       route views — Chat, Agent, Settings, …
+  pages/       route views — Chat, Translate, Settings, …
   features/    domain UI modules
   data hooks   useQuery / useMutation / usePreference / useCache
   ai core      provider middleware
@@ -54,7 +54,7 @@ User Input (React UI)
 
 ## Four Data Systems
 
-Cherry Studio uses four data systems, each optimized for different data characteristics:
+The app uses four data systems, each optimized for different data characteristics:
 
 | System | Storage | Timing | Use Case |
 |--------|---------|--------|----------|

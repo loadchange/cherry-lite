@@ -9,19 +9,19 @@
 在 `src/renderer/routes/` 目录下创建文件：
 
 ```typescript
-// routes/knowledge.tsx
+// routes/translate.tsx
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/knowledge')({
-  component: KnowledgePage
+export const Route = createFileRoute('/translate')({
+  component: TranslatePage
 })
 
-function KnowledgePage() {
-  return <div>Knowledge Page</div>
+function TranslatePage() {
+  return <div>Translate Page</div>
 }
 ```
 
-运行 `yarn dev` 后，TanStack Router 会自动更新 `routeTree.gen.ts`。
+运行 `pnpm dev` 后，TanStack Router 会自动更新 `routeTree.gen.ts`。
 
 ### 2. 带参数的路由
 

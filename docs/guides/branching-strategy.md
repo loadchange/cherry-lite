@@ -1,75 +1,35 @@
-# 🌿 Branching Strategy
+# 分支策略
 
-Cherry Studio implements a structured branching strategy to maintain code quality and streamline the development process.
+Cherry Studio Lite 只维护一条产品线。
 
-> **Current model.** `main` is the default branch for active development — submit features, refactors, optimizations, and fixes for the current codebase here. The `v1` branch is the maintenance line for the shipped v1 release: its hotfixes and subsequent v1 releases go there via `hotfix/*`, targeting `v1` (not `main`). A v1 fix does not auto-carry to `main`; if the same bug exists on `main`, open a separate forward-port PR targeting `main`. (v1 and v2 code currently coexist on `main` — expect large, breaking changes.) The generic flow below predates this phase; where it conflicts, this note wins.
+> **`main` 是唯一的开发与发布分支。** 功能、重构、优化、缺陷修复都从这里拉分支，PR 也打回这里。推到 `main` 会触发 macOS 云构建。本仓库没有上游的 `v1` 维护线，也没有 Test Plan / `testplan` 分支。
 
-## Main Branches
+## 长期分支
 
-- `main`: Main development branch
+- `main`
+  - 当前产品代码
+  - 不要直接往远程 `main` 堆未审的大改，走 PR
+  - 云构建会在每次 push 后跑 typecheck、单测、e2e，并发布 macOS 安装包
 
-  - Contains the latest development code
-  - Direct commits are not allowed - changes must come through pull requests
-  - Code may contain features in development and might not be fully stable
+## 工作分支
 
-- `release/*`: Release branches
-  - Created from `main` branch
-  - Contains stable code ready for release
-  - Only accepts documentation updates and bug fixes
-  - Thoroughly tested before production deployment
+从最新 `main` 拉出，完成后 PR 回 `main`：
 
-For details about the `testplan` branch used in the Test Plan, please refer to the [Test Plan](./test-plan.md).
+| 类型 | 命名 | 用途 |
+| --- | --- | --- |
+| 功能 | `feat/简要说明` 或 `feat/issue号-简要说明` | 新能力 |
+| 修复 | `fix/简要说明` | 缺陷 |
+| 文档 | `docs/简要说明` | 只改文档 |
+| 发布 | `release/版本号` | 可选的发版准备，只收修复和文档 |
 
-## Contributing Branches
+## Pull Request
 
-When contributing to Cherry Studio, please follow these guidelines:
+- 目标分支是 `main`
+- 提交前与最新 `main` 对齐（`git fetch` 后 rebase，不要用会生成 merge commit 的 `git pull`）
+- 描述里写清动机和验证
+- 改 UI 时附前后对比
+- 本地检查：`pnpm lint`、`pnpm test`、`pnpm format`
 
-1. **Feature Branches:**
+## 版本
 
-   - Create from `main` branch
-   - Naming format: `feature/issue-number-brief-description`
-   - Submit PR back to `main`
-
-2. **Bug Fix Branches:**
-
-   - Create from `main` branch
-   - Naming format: `fix/issue-number-brief-description`
-   - Submit PR back to `main`
-
-3. **Documentation Branches:**
-
-   - Create from `main` branch
-   - Naming format: `docs/brief-description`
-   - Submit PR back to `main`
-
-4. **Hotfix Branches:**
-
-   - Create from the `v1` branch
-   - Naming format: `hotfix/issue-number-brief-description`
-   - Submit PR to `v1`, not `main`. A v1 fix does not auto-carry to `main` — if the same bug exists on `main`, open a separate forward-port PR targeting `main`
-
-5. **Release Branches:**
-   - Create from `main` branch
-   - Naming format: `release/version-number`
-   - Used for final preparation work before version release
-   - Only accepts bug fixes and documentation updates
-   - After testing and preparation, merge back to `main` and tag with version
-
-## Workflow Diagram
-
-![](https://github.com/user-attachments/assets/61db64a2-fab1-4a16-8253-0c64c9df1a63)
-
-## Pull Request Guidelines
-
-- Active development (features, refactors, optimizations, fixes for the current codebase) goes to `main`; v1 hotfixes and subsequent v1 releases go to the `v1` branch (see the note at the top). A v1 fix is not auto-carried to `main` — forward-port it with a separate PR if the bug also exists on `main`
-- Ensure your branch is up to date with the latest `main` changes before submitting
-- Include relevant issue numbers in your PR description
-- Make sure all tests pass and code meets our quality standards
-- Add before/after screenshots if you add a new feature or modify a UI component
-
-## Version Tag Management
-
-- Major releases: v1.0.0, v2.0.0, etc.
-- Feature releases: v1.1.0, v1.2.0, etc.
-- Patch releases: v1.0.1, v1.0.2, etc.
-- Hotfix releases: v1.0.1-hotfix, etc.
+云构建用 `2.0.${GITHUB_RUN_NUMBER}` 打 GitHub Release。本地开发版本见根目录 `package.json`。

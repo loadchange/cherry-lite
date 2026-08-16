@@ -1,41 +1,38 @@
-# App Update Architecture
+# 应用更新
 
-## Overview
+## 概览
 
-Cherry Studio clients check for updates through the managed release service at `https://releases.cherry-ai.com`. The client selects an update channel and sends application, client, platform, and region metadata. The release service owns target-version selection, regional mirrors, rollout policy, and required upgrade gateways.
+Cherry Studio Lite 通过本仓库的 GitHub Releases 检查更新，不走上游的 `releases.cherry-ai.com`。
 
-## Update Feed Configuration
+打包配置见 `electron-builder.yml` 的 `publish`：
 
-- Packaged builds use `publish.url` from `electron-builder.yml`. electron-builder writes this value to the packaged `app-update.yml`.
-- Development builds set `forceDevUpdateConfig = true`, so electron-updater reads `dev-app-update.yml` from the repository root. The default development feed is `http://127.0.0.1:3378`.
-- Production base URL changes take effect through the build configuration in newly produced application builds. The client does not override the packaged feed URL at runtime.
+```yaml
+publish:
+  provider: github
+  owner: loadchange
+  repo: cherry-studio-lite
+```
 
-## Channels
+开发态 `forceDevUpdateConfig = true`，electron-updater 读仓库根目录的 `dev-app-update.yml`（同样指向这个 GitHub 仓库）。
 
-The client requests one of these electron-updater channels:
+## 通道
 
-- `latest`: stable release channel.
-- `rc`: release candidate channel.
-- `beta`: beta release channel.
+客户端始终使用 `latest`。About 页已去掉测试通道开关；即便偏好里还留着 `app.dist.test_plan.*`，更新服务也会忽略，不会切到 `rc` / `beta`。
 
-When the test plan is disabled, the client selects `latest`. When it is enabled, the client uses the RC or Beta channel selected in settings. electron-updater requests the corresponding channel manifest from the managed feed.
+## 请求头
 
-## Request Contract
+每次检查前会带上：
 
-Before each update check, the client preserves existing updater headers and sets these values:
-
-| Header | Value |
+| Header | 值 |
 | --- | --- |
-| `Client-Id` | Persistent client identifier |
-| `App-Name` | Application name |
-| `App-Version` | Installed version with a `v` prefix |
-| `OS` | `process.platform` value |
-| `X-Region` | `cn` for China, otherwise `global` |
-| `User-Agent` | Generated Cherry Studio user agent |
+| `Client-Id` | 本机客户端 ID |
+| `App-Name` | 应用名 |
+| `App-Version` | 当前版本，带 `v` 前缀 |
+| `OS` | `process.platform` |
+| `X-Region` | 中国为 `cn`，否则 `global` |
+| `User-Agent` | 生成的应用 UA |
 | `Cache-Control` | `no-cache` |
 
-The selected electron-updater channel determines whether the client requests the `latest`, `rc`, or `beta` manifest; no separate release-channel header is sent.
+## 检查节奏
 
-## Check Lifecycle
-
-Manual checks are available in development and packaged, non-portable builds. Portable builds do not perform update checks. Packaged, non-portable builds also schedule automatic checks in the main process. Successful checks return to the normal cadence, while failed scheduled checks use exponential backoff before retrying. Update events and download progress continue to reach the main window through IpcApi.
+手动检查在开发态和已打包的非 portable 构建里可用。portable 不查更新。已打包的非 portable 构建还会在主进程里定时检查：成功后按正常间隔，失败则指数退避。进度通过 IpcApi 推到主窗口。

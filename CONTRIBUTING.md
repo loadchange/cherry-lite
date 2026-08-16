@@ -1,98 +1,73 @@
-# Cherry Studio Contributor Guide
+# Cherry Studio Lite 贡献指南
 
-Welcome to the Cherry Studio contributor community! We are committed to making Cherry Studio a project that provides long-term value and hope to invite more developers to join us. Whether you are an experienced developer or a beginner just starting out, your contributions will help us better serve users and improve software quality.
+欢迎给本仓库提改动。这里是从 Cherry Studio 裁出来的轻量分叉，只维护对话和翻译相关能力。
 
-## How to Contribute
+请先读 [行为准则](CODE_OF_CONDUCT.md) 和 [LICENSE](LICENSE)。
 
-Here are several ways you can participate:
+## 怎么参与
 
-1.  **Contribute Code**: Help us develop new features or optimize existing code. Please ensure your code adheres to our coding standards and passes all tests.
+1. **改代码**：新功能或优化。代码要符合仓库约定，并带测试。
+2. **修缺陷**：先复现，再提交修复和回归测试。
+3. **整理 Issue**：帮忙分类、复现、补信息。
+4. **写文档**：用户说明、架构文档、开发指南。
 
-2.  **Fix Bugs**: If you find a bug, you are welcome to submit a fix. Please confirm the issue is resolved before submitting and include relevant tests.
+不要往本仓库回填完整版已经删掉的能力（知识库、笔记、绘图、云备份、会话导出、Agent 通道等），除非 Issue 里明确要做。
 
-3.  **Maintain Issues**: Help us manage issues on GitHub by assisting with tagging, classifying, and resolving problems.
+## 开发环境
 
-4.  **Product Design**: Participate in product design discussions to help us improve user experience and interface design.
+见 [开发指南](docs/guides/development.md)。架构、分层和命令总览见 [`AGENTS.md`](AGENTS.md)。
 
-5.  **Write Documentation**: Help us improve the user manual, API documentation, and developer guides.
+## 分支
 
-6.  **Community Maintenance**: Participate in community discussions, help answer user questions, and promote community activity.
+本仓库的产品线只有 **`main`**。
 
-7.  **Promote Usage**: Promote Cherry Studio through blogs, social media, and other channels to attract more users and developers.
+- 功能、重构、优化、缺陷修复都针对 `main`
+- 从最新 `main` 拉分支：`feat/...`、`fix/...`、`docs/...`
+- PR 也打到 `main`
+- 没有上游那套 `v1` 维护线，也没有 Test Plan / `testplan` 分支
+- 推到 `main` 会跑 [Build macOS](.github/workflows/mac-build.yml)
 
-## Before You Start
+更细的命名见 [分支策略](docs/guides/branching-strategy.md)。
 
-Please make sure you have read the [Code of Conduct](CODE_OF_CONDUCT.md) and the [LICENSE](LICENSE).
+## 提交
 
-## Setting Up Your Development Environment
+使用 [Conventional Commits](https://www.conventionalcommits.org/)，scope 用具体模块的 kebab-case（例如 `backup`、`i18n`、`ci`），不要写泛称 `main`。
 
-Please refer to the [Developer Guide](docs/guides/development.md) for instructions on setting up your local development environment, including prerequisites, installation steps, and available commands.
+每个提交需要 DCO 签署：
 
-For a comprehensive overview of the project architecture, tech stack, conventions, and available commands, see [`CLAUDE.md`](CLAUDE.md).
-
-## Getting Started
-
-To help you get familiar with the codebase, we recommend tackling issues tagged with one or more of the following labels: [good-first-issue](https://github.com/CherryHQ/cherry-studio/labels/good%20first%20issue), [help-wanted](https://github.com/CherryHQ/cherry-studio/labels/help%20wanted), or [kind/bug](https://github.com/CherryHQ/cherry-studio/labels/kind%2Fbug). Any help is welcome.
-
-### Testing
-
-Features without tests are considered non-existent. To ensure code is truly effective, relevant processes should be covered by unit tests and functional tests. Therefore, when considering contributions, please also consider testability. All tests can be run locally without dependency on CI. Please refer to the "Testing" section in the [Developer Guide](docs/guides/development.md).
-
-### Automated Testing for Pull Requests
-
-Automated tests are triggered on pull requests (PRs) opened by members of the Cherry Studio organization, except for draft PRs. PRs opened by new contributors will initially be marked with the `needs-ok-to-test` label and will not be automatically tested. Once a Cherry Studio organization member adds `/ok-to-test` to the PR, the test pipeline will be created.
-
-### Consider Opening Your Pull Request as a Draft
-
-Not all pull requests are ready for review when created. This might be because the author wants to start a discussion, they are not entirely sure if the changes are heading in the right direction, or the changes are not yet complete. Please consider creating these PRs as [draft pull requests](https://github.blog/2019-02-14-introducing-draft-pull-requests/). Draft PRs are skipped by CI, thus saving CI resources. This also means reviewers will not be automatically assigned, and the community will understand that this PR is not yet ready for review.
-Reviewers will be assigned after you mark the draft pull request as ready for review.
-
-### Contributor Compliance with Project Terms
-
-We require every contributor to certify that they have the right to legally contribute to our project. Contributors express this by consciously signing their commits, thereby indicating their compliance with the [LICENSE](LICENSE).
-A signed commit is one where the commit message includes the following:
-
-You can generate a signed commit using the following command [git commit --signoff](https://git-scm.com/docs/git-commit#Documentation/git-commit.txt---signoff):
-
-```
-git commit --signoff -m "Your commit message"
+```bash
+git commit -S --signoff -m "fix(updater): ignore leftover test-plan channels"
 ```
 
-### Getting Code Reviewed/Merged
+本机没有 GPG 时至少加上 `--signoff`。提交说明里应出现：
 
-Maintainers are here to help you implement your use case within a reasonable timeframe. They will do their best to review your code and provide constructive feedback promptly. However, if you get stuck during the review process or feel your Pull Request is not receiving the attention it deserves, please contact us via comments in the Issue or through the [Community](README.md#-community).
+```
+Signed-off-by: Your Name <your.email@example.com>
+```
 
-### Participating in the Test Plan
+共享分支保持线性历史：用 `git pull --rebase`，不要用会生成 merge commit 的 `git pull`。
 
-The Test Plan aims to provide users with a more stable application experience and faster iteration speed. For details, please refer to the [Test Plan](docs/guides/test-plan.md).
+## 测试与检查
 
-### Other Suggestions
+没有测试的功能视为不存在。改完在本地跑：
 
-- **Contact Developers**: Before submitting a PR, you can contact the developers first to discuss or get help.
+```bash
+pnpm lint
+pnpm test
+pnpm format
+```
 
-## Important Contribution Guidelines & Focus Areas
+提交前建议再跑 `pnpm build:check`。i18n 缺 key 时先 `pnpm i18n:sync`。
 
-Please review the following critical information before submitting your Pull Request:
+本仓库没有上游的 `/ok-to-test` 门禁。推到 `main` 的构建流水线会跑 typecheck、单测、e2e 和 macOS 打包。
 
-### Branch Strategy 🚨
+草稿 PR 适合还没写完、只想先讨论的改动。
 
-**The v2 refactor has merged into `main`.** `main` is now the default branch for active development, where v1 and v2 code coexist. Expect large, frequent, and breaking changes during this phase.
+## 文档
 
-*   **`main` branch**: New feature development, refactoring, optimizations, and fixes for the current codebase go here. Before touching subsystems being replaced, read [docs/references/data](./docs/references/data/README.md) to learn which are being deleted, and heed `@deprecated` annotations in the code — they mark call sites slated for removal.
-*   **`v1` branch**: Maintenance line for the shipped v1 release — its hotfixes and subsequent v1 releases go here, via `hotfix/*` branches (e.g., `hotfix/fix-crash-on-startup`), kept minimal in scope. Target your PR to `v1`, not `main`. A v1 fix does **not** auto-carry to `main`; if the same bug exists on `main`, open a separate forward-port PR targeting `main`.
+用户可见文案走 i18next，不要硬编码。新增或修改文档用中文、Markdown。改完跑 `pnpm docs:check-links`，避免留下失效链接。
 
-### Participate in v2 Development 🚀
+## 联系
 
-v2 is the next major milestone for Cherry Studio, and we invite every developer to actively participate! Whether it's new feature development, architecture optimization, or code refactoring, your contributions on `main` are welcome. Let's build a better Cherry Studio together!
-
-We appreciate your understanding and continued support during this important development phase. Thank you!
-
-
-## Contact Us
-
-If you have any questions or suggestions, feel free to contact us through the following ways:
-
-- WeChat: kangfenmao
-- [GitHub Issues](https://github.com/CherryHQ/cherry-studio/issues)
-
-Thank you for your support and contributions! We look forward to working with you to make Cherry Studio a better product.
+- [GitHub Issues](https://github.com/loadchange/cherry-studio-lite/issues)
+- 安全问题见 [SECURITY.md](SECURITY.md)

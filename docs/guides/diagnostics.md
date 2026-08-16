@@ -20,13 +20,13 @@ Double-clicking from Finder / Dock / Start Menu does **not** pass shell env vars
 
 ```bash
 # macOS
-CS_DIAGNOSTICS=1 "/Applications/Cherry Studio.app/Contents/MacOS/Cherry Studio"
+CS_DIAGNOSTICS=1 "/Applications/Cherry Studio Lite.app/Contents/MacOS/Cherry Studio Lite"
 
-# Windows (PowerShell) — adjust the path to your install location
-$env:CS_DIAGNOSTICS=1; & "$env:LOCALAPPDATA\Programs\Cherry Studio\Cherry Studio.exe"
+# Windows（本仓库不发布官方 Windows 包；若本机自行打包）
+$env:CS_DIAGNOSTICS=1; & "$env:LOCALAPPDATA\Programs\Cherry Studio Lite\Cherry Studio Lite.exe"
 
-# Linux (AppImage; or the installed binary, whose path varies by distro)
-CS_DIAGNOSTICS=1 "./Cherry Studio-<version>-<arch>.AppImage"
+# Linux（同样仅限本机自行打包）
+CS_DIAGNOSTICS=1 "./Cherry-Studio-Lite-<version>-<arch>.AppImage"
 ```
 
 ### Output

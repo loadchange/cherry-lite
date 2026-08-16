@@ -1,4 +1,6 @@
-# 🖥️ Develop
+# 开发指南
+
+Cherry Studio Lite 的本地开发说明。产品范围见仓库根目录 [README](../../README.md)。
 
 ## IDE Setup
 
@@ -105,13 +107,13 @@ pnpm test
 
 ### Build
 
+当前云构建只打 macOS。本机仍可调用其它平台脚本，但仓库不发布对应安装包。
+
 ```bash
-# For windows
-$ pnpm build:win
+# macOS（与 GitHub Actions 一致）
+pnpm build:mac
 
-# For macOS
-$ pnpm build:mac
-
-# For Linux
-$ pnpm build:linux
+# 可选：本机打 Windows / Linux
+pnpm build:win
+pnpm build:linux
 ```

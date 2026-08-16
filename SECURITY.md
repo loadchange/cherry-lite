@@ -1,64 +1,26 @@
-# Security Policy
+# 安全政策
 
-## 📢 Reporting a Vulnerability
+## 报告漏洞
 
-At Cherry Studio, we take security seriously and appreciate your efforts to responsibly disclose vulnerabilities. If you discover a security issue, please report it as soon as possible.
+本仓库认真对待安全问题。发现漏洞请尽早私下告知，**不要开公开 Issue**。
 
-**Please do not create public issues for security-related reports.**
+1. 优先使用本仓库的 [Security Advisories](https://github.com/loadchange/cherry-studio-lite/security/advisories/new) 提交草稿
+2. 写清影响、复现步骤、可能的修复思路
+3. 如有 PoC 或截图请一并附上
 
-- To report a security issue, please use the GitHub Security Advisories tab to "[Open a draft security advisory](https://github.com/CherryHQ/cherry-studio/security/advisories/new)".
-- Include a detailed description of the issue, steps to reproduce, potential impact, and any possible mitigations.
-- If applicable, please also attach proof-of-concept code or screenshots.
+我们会在确认后跟进，并在修复发布前采用协同披露。
 
-We will acknowledge your report within **72 hours** and provide a status update as we investigate.
+## 支持范围
 
----
+| 版本 | 是否支持 |
+| --- | --- |
+| 当前 `main` 打出的最新 Release | 支持 |
+| 更早的 Lite 构建 | 不支持 |
 
-## 🔒 Supported Versions
+请升级到 [最新 Release](https://github.com/loadchange/cherry-studio-lite/releases)。
 
-We aim to support the latest released version and one previous minor release.
+本仓库是 Cherry Studio 的独立分叉，安全修复不会自动同步到上游，上游的修复也不会自动进本仓库。
 
-| Version         | Supported        |
-| --------------- | ---------------- |
-| Latest (`main`) | ✅ Supported     |
-| Previous minor  | ✅ Supported     |
-| Older versions  | ❌ Not supported |
+## 非漏洞问题
 
-If you are using an unsupported version, we strongly recommend updating to the latest release to receive security fixes.
-
----
-
-## 💡 Security Measures
-
-Cherry Studio integrates several security best practices, including:
-
-- Strict dependency updates and regular vulnerability scanning.
-- TypeScript strict mode and linting to reduce potential injection or runtime issues.
-- Enforced code formatting and pre-commit hooks.
-- Internal security reviews before releases.
-- Dedicated MCP (Model Context Protocol) safeguards for model interactions and data privacy.
-
----
-
-## 🛡️ Disclosure Policy
-
-- We follow a **coordinated disclosure** approach.
-- We will not publicly disclose vulnerabilities until a fix has been developed and released.
-- Credit will be given to researchers who responsibly disclose vulnerabilities, if requested.
-
----
-
-## 🤝 Acknowledgements
-
-We greatly appreciate contributions from the security community and strive to recognize all researchers who help keep Cherry Studio safe.
-
----
-
-## 🌟 Questions?
-
-For any security-related questions not involving vulnerabilities, please reach out to:  
-**security@cherry-ai.com**
-
----
-
-Thank you for helping keep Cherry Studio and its users secure!
+一般缺陷和改进请走 [GitHub Issues](https://github.com/loadchange/cherry-studio-lite/issues)。

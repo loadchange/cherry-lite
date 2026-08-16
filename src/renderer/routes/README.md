@@ -9,19 +9,19 @@ This project uses **TanStack Router + Multi MemoryRouter** architecture, where e
 Create a file in the `src/renderer/routes/` directory:
 
 ```typescript
-// routes/knowledge.tsx
+// routes/translate.tsx
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/knowledge')({
-  component: KnowledgePage
+export const Route = createFileRoute('/translate')({
+  component: TranslatePage
 })
 
-function KnowledgePage() {
-  return <div>Knowledge Page</div>
+function TranslatePage() {
+  return <div>Translate Page</div>
 }
 ```
 
-After running `yarn dev`, TanStack Router will automatically update `routeTree.gen.ts`.
+After running `pnpm dev`, TanStack Router will automatically update `routeTree.gen.ts`.
 
 ### 2. Routes with Parameters
 
