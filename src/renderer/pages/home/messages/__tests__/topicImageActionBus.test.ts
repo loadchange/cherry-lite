@@ -12,8 +12,7 @@ import {
 
 vi.mock('@renderer/services/EventService', () => ({
   EVENT_NAMES: {
-    COPY_TOPIC_IMAGE: 'COPY_TOPIC_IMAGE',
-    EXPORT_TOPIC_IMAGE: 'EXPORT_TOPIC_IMAGE'
+    COPY_TOPIC_IMAGE: 'COPY_TOPIC_IMAGE'
   },
   EventEmitter: {
     emit: vi.fn()
@@ -21,6 +20,7 @@ vi.mock('@renderer/services/EventService', () => ({
 }))
 
 const topic = { id: 'topic-a', name: 'Topic A' } as Topic
+const otherTopic = { ...topic, id: 'topic-b' }
 
 describe('topicImageActionBus', () => {
   beforeEach(() => {
@@ -29,39 +29,35 @@ describe('topicImageActionBus', () => {
   })
 
   it('buffers topic image requests before broadcasting the event', () => {
-    const request = requestTopicImageAction('export', topic)
+    const request = requestTopicImageAction('copy', topic)
 
-    expect(EventEmitter.emit).toHaveBeenCalledWith(EVENT_NAMES.EXPORT_TOPIC_IMAGE, topic)
+    expect(EventEmitter.emit).toHaveBeenCalledWith(EVENT_NAMES.COPY_TOPIC_IMAGE, topic)
     expect(consumePendingTopicImageActions('topic-a')).toEqual([
-      expect.objectContaining({ id: request.id, topic, type: 'export', promise: expect.any(Promise) })
+      expect.objectContaining({ id: request.id, topic, type: 'copy', promise: expect.any(Promise) })
     ])
   })
 
   it('can buffer topic image requests without broadcasting the event', () => {
-    const request = requestTopicImageAction('export', topic, { emit: false })
+    const request = requestTopicImageAction('copy', topic, { emit: false })
 
     expect(EventEmitter.emit).not.toHaveBeenCalled()
     expect(consumePendingTopicImageActions('topic-a')).toEqual([
-      expect.objectContaining({ id: request.id, topic, type: 'export', promise: expect.any(Promise) })
+      expect.objectContaining({ id: request.id, topic, type: 'copy', promise: expect.any(Promise) })
     ])
   })
 
-  it('consumes only matching topic and action requests', () => {
+  it('consumes only matching topic requests', () => {
     requestTopicImageAction('copy', topic)
-    requestTopicImageAction('export', topic)
-    requestTopicImageAction('export', { ...topic, id: 'topic-b' })
+    requestTopicImageAction('copy', otherTopic)
 
-    expect(consumePendingTopicImageActions('topic-a', 'export')).toEqual([
-      expect.objectContaining({ topic, type: 'export' })
-    ])
     expect(consumePendingTopicImageActions('topic-a')).toEqual([expect.objectContaining({ topic, type: 'copy' })])
     expect(consumePendingTopicImageActions('topic-b')).toEqual([
-      expect.objectContaining({ topic: expect.objectContaining({ id: 'topic-b' }), type: 'export' })
+      expect.objectContaining({ topic: expect.objectContaining({ id: 'topic-b' }), type: 'copy' })
     ])
   })
 
   it('settles the request promise when the runtime action resolves', async () => {
-    const request = requestTopicImageAction('export', topic)
+    const request = requestTopicImageAction('copy', topic)
     const actionPromise = Promise.resolve()
 
     settleTopicImageActionRequest(request, actionPromise)
@@ -70,8 +66,8 @@ describe('topicImageActionBus', () => {
   })
 
   it('rejects the request promise when the runtime action rejects', async () => {
-    const request = requestTopicImageAction('export', topic)
-    const error = new Error('export failed')
+    const request = requestTopicImageAction('copy', topic)
+    const error = new Error('copy failed')
 
     settleTopicImageActionRequest(request, Promise.reject(error))
 
@@ -79,7 +75,7 @@ describe('topicImageActionBus', () => {
   })
 
   it('rejects and removes pending requests when they are cancelled', async () => {
-    const request = requestTopicImageAction('export', topic)
+    const request = requestTopicImageAction('copy', topic)
     const error = new Error('cancelled')
 
     rejectPendingTopicImageActions('topic-a', error)
@@ -89,8 +85,8 @@ describe('topicImageActionBus', () => {
   })
 
   it('only cancels pending requests for the selected topic', async () => {
-    const requestA = requestTopicImageAction('export', topic)
-    const requestB = requestTopicImageAction('export', { ...topic, id: 'topic-b' })
+    const requestA = requestTopicImageAction('copy', topic)
+    const requestB = requestTopicImageAction('copy', otherTopic)
     const error = new Error('cancelled')
 
     rejectPendingTopicImageActions('topic-a', error)
@@ -98,13 +94,13 @@ describe('topicImageActionBus', () => {
     await expect(requestA.promise).rejects.toBe(error)
     expect(consumePendingTopicImageActions('topic-a')).toEqual([])
     expect(consumePendingTopicImageActions('topic-b')).toEqual([
-      expect.objectContaining({ id: requestB.id, type: 'export' })
+      expect.objectContaining({ id: requestB.id, type: 'copy' })
     ])
   })
 
   it('cancels all pending requests when no topic id is provided', async () => {
     const requestA = requestTopicImageAction('copy', topic)
-    const requestB = requestTopicImageAction('export', { ...topic, id: 'topic-b' })
+    const requestB = requestTopicImageAction('copy', otherTopic)
     const error = new Error('cancelled')
 
     rejectPendingTopicImageActions(undefined, error)

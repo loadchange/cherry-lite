@@ -5,13 +5,8 @@ import { type ReactNode, useEffect } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const eventMocks = vi.hoisted(() => ({
-  emit: vi.fn(),
-  on: vi.fn(() => vi.fn())
-}))
-
-const exportActionsMock = vi.hoisted(() => ({
-  saveTextFile: vi.fn(),
-  saveImage: vi.fn()
+  emit: vi.fn<(channel: string, handler?: unknown) => void>(),
+  on: vi.fn<(channel: string, handler?: unknown) => () => void>(() => vi.fn())
 }))
 
 const leafCapabilitiesMock = vi.hoisted(() => ({
@@ -124,10 +119,6 @@ vi.mock('@renderer/components/chat/messages/hooks/useMessageErrorActions', () =>
   useMessageErrorActions: useMessageErrorActionsMock
 }))
 
-vi.mock('@renderer/components/chat/messages/hooks/useMessageExportActions', () => ({
-  useMessageExportActions: () => exportActionsMock
-}))
-
 vi.mock('@renderer/components/chat/messages/hooks/useMessageHeaderCapabilities', () => ({
   useMessageHeaderCapabilities: () => ({
     userProfile: undefined
@@ -182,7 +173,6 @@ vi.mock('@renderer/services/EventService', () => ({
     CLEAR_MESSAGES: 'CLEAR_MESSAGES',
     COPY_TOPIC_IMAGE: 'COPY_TOPIC_IMAGE',
     EDIT_MESSAGE: 'EDIT_MESSAGE',
-    EXPORT_TOPIC_IMAGE: 'EXPORT_TOPIC_IMAGE',
     FOCUS_CHAT_COMPOSER: 'FOCUS_CHAT_COMPOSER',
     LOCATE_MESSAGE: 'LOCATE_MESSAGE',
     SEND_MESSAGE: 'SEND_MESSAGE'
@@ -390,8 +380,8 @@ describe('useHomeMessageListProviderValue topic image actions', () => {
   })
 
   it('rejects pending requests for its topic when unmounted before runtime binding', async () => {
-    const requestA = requestTopicImageAction('export', createTopic('topic-a'))
-    const requestB = requestTopicImageAction('export', createTopic('topic-b'))
+    const requestA = requestTopicImageAction('copy', createTopic('topic-a'))
+    const requestB = requestTopicImageAction('copy', createTopic('topic-b'))
     requestA.promise.catch(() => undefined)
     requestB.promise.catch(() => undefined)
 
@@ -400,7 +390,7 @@ describe('useHomeMessageListProviderValue topic image actions', () => {
     view.unmount()
 
     expect(consumePendingTopicImageActions('topic-a')).toEqual([])
-    await expect(requestA.promise).rejects.toThrow('Topic image export was cancelled')
+    await expect(requestA.promise).rejects.toThrow('Topic image capture was cancelled')
     expect(consumePendingTopicImageActions('topic-b')).toEqual([
       expect.objectContaining({ id: requestB.id, topic: expect.objectContaining({ id: 'topic-b' }) })
     ])
@@ -420,7 +410,6 @@ describe('useHomeMessageListProviderValue topic image actions', () => {
 
     const runtime: MessageListRuntime = {
       copyTopicImage: vi.fn(),
-      exportTopicImage: vi.fn(),
       locateMessage: vi.fn(),
       scrollToBottom: vi.fn()
     }
@@ -430,7 +419,7 @@ describe('useHomeMessageListProviderValue topic image actions', () => {
     expect(onBindRuntime).toHaveBeenCalledWith(runtime)
     expect(eventMocks.on).not.toHaveBeenCalledWith('SEND_MESSAGE', runtime.scrollToBottom)
     expect(eventMocks.on).toHaveBeenCalledWith('COPY_TOPIC_IMAGE', expect.any(Function))
-    expect(eventMocks.on).toHaveBeenCalledWith('EXPORT_TOPIC_IMAGE', expect.any(Function))
+    expect(eventMocks.on.mock.calls.some(([name]) => String(name).includes('EXPORT_TOPIC_IMAGE'))).toBe(false)
 
     unbindRuntime?.()
     expect(unbindExternalRuntime).toHaveBeenCalledOnce()
@@ -524,7 +513,6 @@ describe('useHomeMessageListProviderValue topic image actions', () => {
 
     const runtime: MessageListRuntime = {
       copyTopicImage: vi.fn().mockResolvedValue(undefined),
-      exportTopicImage: vi.fn(),
       locateMessage: vi.fn(),
       scrollToBottom: vi.fn()
     }
@@ -541,7 +529,7 @@ describe('useHomeMessageListProviderValue topic image actions', () => {
     })
     expect(eventMocks.on).not.toHaveBeenCalledWith('CLEAR_MESSAGES', expect.any(Function))
     expect(eventMocks.on).not.toHaveBeenCalledWith('COPY_TOPIC_IMAGE', expect.any(Function))
-    expect(eventMocks.on).not.toHaveBeenCalledWith('EXPORT_TOPIC_IMAGE', expect.any(Function))
+    expect(eventMocks.on.mock.calls.some(([name]) => String(name).includes('EXPORT_TOPIC_IMAGE'))).toBe(false)
     expect(value?.actions.getMessageDeleteAvailability).toBeUndefined()
     expect(value?.actions.deleteMessage).toBeUndefined()
     expect(consumePendingTopicImageActions('topic-a')).toEqual([])

@@ -3,24 +3,11 @@ import {
   executeTopicMenuAction,
   resolveTopicMenuActions,
   type TopicActionContext,
-  type TopicExportMenuOptions,
   type TopicMoveAssistantTarget
 } from '@renderer/components/chat/actions/topicContextMenuActions'
-import ObsidianExportPopup from '@renderer/components/ObsidianExportPopup'
-import { getTopicMessages } from '@renderer/hooks/useTopic'
-import { ipcApi } from '@renderer/ipc'
 import { copyTopicAsMarkdown, copyTopicAsPlainText } from '@renderer/services/copy'
 import { EVENT_NAMES, EventEmitter } from '@renderer/services/EventService'
-import {
-  exportMarkdownToJoplin,
-  exportMarkdownToSiyuan,
-  exportMarkdownToYuque,
-  exportTopicAsMarkdown,
-  exportTopicToNotion,
-  topicToMarkdown
-} from '@renderer/services/ExportService'
 import type { Topic } from '@renderer/types/topic'
-import { removeSpecialCharactersForFileName } from '@renderer/utils/file'
 import type { TopicTabPosition } from '@shared/data/preference/preferenceTypes'
 import type { TFunction } from 'i18next'
 import { useCallback, useMemo } from 'react'
@@ -29,14 +16,12 @@ type TopicMenuHandler = (topic: Topic) => void | Promise<void>
 type TopicMoveToAssistantHandler = (topic: Topic, assistantId: string) => void | Promise<void>
 
 export interface TopicMenuActionOptions {
-  exportMenuOptions: TopicExportMenuOptions
   isActiveInCurrentTab: boolean
   isRenaming: boolean
   onAutoRename: TopicMenuHandler
   onClearMessages: TopicMenuHandler
   onCopyImage?: TopicMenuHandler
   onDelete: TopicMenuHandler
-  onExportImage?: TopicMenuHandler
   assistantMoveTargets?: readonly TopicMoveAssistantTarget[]
   onMoveToAssistant?: TopicMoveToAssistantHandler
   onOpenInNewTab?: TopicMenuHandler
@@ -51,7 +36,6 @@ export interface TopicMenuActionOptions {
 }
 
 export function createTopicActionContext({
-  exportMenuOptions,
   isActiveInCurrentTab,
   isRenaming,
   assistantMoveTargets = [],
@@ -59,7 +43,6 @@ export function createTopicActionContext({
   onClearMessages,
   onCopyImage,
   onDelete,
-  onExportImage,
   onMoveToAssistant,
   onOpenInNewTab,
   onOpenInNewWindow,
@@ -72,7 +55,6 @@ export function createTopicActionContext({
   topicsLength
 }: TopicMenuActionOptions): TopicActionContext {
   return {
-    exportMenuOptions,
     isActiveInCurrentTab,
     isRenaming,
     onAutoRename,
@@ -81,34 +63,6 @@ export function createTopicActionContext({
     onCopyMarkdown: copyTopicAsMarkdown,
     onCopyPlainText: copyTopicAsPlainText,
     onDelete,
-    onExportImage: onExportImage ?? ((topic) => void EventEmitter.emit(EVENT_NAMES.EXPORT_TOPIC_IMAGE, topic)),
-    onExportJoplin: async (topic) => {
-      const topicMessages = await getTopicMessages(topic.id)
-      void exportMarkdownToJoplin(topic.name, topicMessages)
-    },
-    onExportMarkdown: exportTopicAsMarkdown,
-    onExportMarkdownReason: (topic) => exportTopicAsMarkdown(topic, true),
-    onExportNotion: (topic) => {
-      void exportTopicToNotion(topic)
-    },
-    onExportObsidian: (topic) => {
-      void ObsidianExportPopup.show({ title: topic.name, topic, processingMethod: '3' })
-    },
-    onExportSiyuan: async (topic) => {
-      const markdown = await topicToMarkdown(topic)
-      void exportMarkdownToSiyuan(topic.name, markdown)
-    },
-    onExportWord: async (topic) => {
-      const markdown = await topicToMarkdown(topic)
-      void ipcApi.request('export.word.from_markdown', {
-        markdown,
-        fileName: removeSpecialCharactersForFileName(topic.name)
-      })
-    },
-    onExportYuque: async (topic) => {
-      const markdown = await topicToMarkdown(topic)
-      void exportMarkdownToYuque(topic.name, markdown)
-    },
     assistantMoveTargets: assistantMoveTargets.filter((target) => target.id !== topic.assistantId),
     onMoveToAssistant,
     onOpenInNewTab,
@@ -177,7 +131,6 @@ export function useTopicMenuPreset<TItem>({
 
 export function useTopicMenuActions(options: TopicMenuActionOptions) {
   const {
-    exportMenuOptions,
     isActiveInCurrentTab,
     isRenaming,
     assistantMoveTargets,
@@ -185,7 +138,6 @@ export function useTopicMenuActions(options: TopicMenuActionOptions) {
     onClearMessages,
     onCopyImage,
     onDelete,
-    onExportImage,
     onMoveToAssistant,
     onOpenInNewTab,
     onOpenInNewWindow,
@@ -200,7 +152,6 @@ export function useTopicMenuActions(options: TopicMenuActionOptions) {
   const actionContext = useMemo(
     () =>
       createTopicActionContext({
-        exportMenuOptions,
         isActiveInCurrentTab,
         isRenaming,
         assistantMoveTargets,
@@ -208,7 +159,6 @@ export function useTopicMenuActions(options: TopicMenuActionOptions) {
         onClearMessages,
         onCopyImage,
         onDelete,
-        onExportImage,
         onMoveToAssistant,
         onOpenInNewTab,
         onOpenInNewWindow,
@@ -221,7 +171,6 @@ export function useTopicMenuActions(options: TopicMenuActionOptions) {
         topicsLength
       }),
     [
-      exportMenuOptions,
       isActiveInCurrentTab,
       isRenaming,
       assistantMoveTargets,
@@ -229,7 +178,6 @@ export function useTopicMenuActions(options: TopicMenuActionOptions) {
       onClearMessages,
       onCopyImage,
       onDelete,
-      onExportImage,
       onMoveToAssistant,
       onOpenInNewTab,
       onOpenInNewWindow,

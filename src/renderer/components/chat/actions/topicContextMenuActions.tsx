@@ -16,24 +16,9 @@ import {
   PinIcon,
   PinOffIcon,
   Sparkles,
-  Trash2,
-  UploadIcon
+  Trash2
 } from 'lucide-react'
 import type { ReactNode } from 'react'
-
-export type TopicExportMenuOptions = Record<
-  | 'docx'
-  | 'image'
-  | 'joplin'
-  | 'markdown'
-  | 'markdown_reason'
-  | 'notion'
-  | 'obsidian'
-  | 'plain_text'
-  | 'siyuan'
-  | 'yuque',
-  boolean
->
 
 type TopicMenuHandler = (topic: Topic) => void | Promise<void>
 type TopicMoveToAssistantHandler = (topic: Topic, assistantId: string) => void | Promise<void>
@@ -45,7 +30,6 @@ export interface TopicMoveAssistantTarget {
 }
 
 export interface TopicActionContext {
-  exportMenuOptions: TopicExportMenuOptions
   isActiveInCurrentTab: boolean
   isRenaming: boolean
   onAutoRename: TopicMenuHandler
@@ -54,15 +38,6 @@ export interface TopicActionContext {
   onCopyMarkdown: TopicMenuHandler
   onCopyPlainText: TopicMenuHandler
   onDelete: TopicMenuHandler
-  onExportImage: TopicMenuHandler
-  onExportJoplin: TopicMenuHandler
-  onExportMarkdown: TopicMenuHandler
-  onExportMarkdownReason: TopicMenuHandler
-  onExportNotion: TopicMenuHandler
-  onExportObsidian: TopicMenuHandler
-  onExportSiyuan: TopicMenuHandler
-  onExportWord: TopicMenuHandler
-  onExportYuque: TopicMenuHandler
   assistantMoveTargets: readonly TopicMoveAssistantTarget[]
   onMoveToAssistant?: TopicMoveToAssistantHandler
   onOpenInNewTab?: TopicMenuHandler
@@ -100,17 +75,6 @@ function renderMoveAssistantTargetIcon(icon: ReactNode) {
     <span className="flex size-4 items-center justify-center [&>*]:m-0 [&>*]:max-h-full [&>*]:max-w-full">{icon}</span>
   )
 }
-
-const hasExportOption = ({ exportMenuOptions }: TopicActionContext) =>
-  exportMenuOptions.image ||
-  exportMenuOptions.markdown ||
-  exportMenuOptions.markdown_reason ||
-  exportMenuOptions.docx ||
-  exportMenuOptions.notion ||
-  exportMenuOptions.yuque ||
-  exportMenuOptions.obsidian ||
-  exportMenuOptions.joplin ||
-  exportMenuOptions.siyuan
 
 topicActionRegistry.registerCommand({
   id: 'topic.auto-rename',
@@ -169,56 +133,7 @@ topicActionRegistry.registerCommand({
 })
 
 topicActionRegistry.registerCommand({
-  id: 'topic.export.image',
-  run: ({ onExportImage, topic }) => onExportImage(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.export.markdown',
-  run: ({ onExportMarkdown, topic }) => onExportMarkdown(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.export.markdown-reason',
-  run: ({ onExportMarkdownReason, topic }) => onExportMarkdownReason(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.export.word',
-  run: ({ onExportWord, topic }) => onExportWord(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.export.notion',
-  run: ({ onExportNotion, topic }) => onExportNotion(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.export.yuque',
-  run: ({ onExportYuque, topic }) => onExportYuque(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.export.obsidian',
-  run: ({ onExportObsidian, topic }) => onExportObsidian(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.export.joplin',
-  run: ({ onExportJoplin, topic }) => onExportJoplin(topic)
-})
-
-topicActionRegistry.registerCommand({
-  id: 'topic.export.siyuan',
-  run: ({ onExportSiyuan, topic }) => onExportSiyuan(topic)
-})
-
-topicActionRegistry.registerCommand({
   id: 'topic.copy.image',
-  availability: ({ exportMenuOptions }) => ({
-    visible: exportMenuOptions.image,
-    enabled: exportMenuOptions.image
-  }),
   run: ({ onCopyImage, topic }) => onCopyImage(topic)
 })
 
@@ -229,10 +144,6 @@ topicActionRegistry.registerCommand({
 
 topicActionRegistry.registerCommand({
   id: 'topic.copy.plain-text',
-  availability: ({ exportMenuOptions }) => ({
-    visible: exportMenuOptions.plain_text,
-    enabled: exportMenuOptions.plain_text
-  }),
   run: ({ onCopyPlainText, topic }) => onCopyPlainText(topic)
 })
 
@@ -340,90 +251,6 @@ topicActionRegistry.registerAction({
   icon: () => <BrushCleaning size={14} />,
   order: 40,
   surface: 'menu'
-})
-
-topicActionRegistry.registerAction({
-  id: 'topic.export',
-  label: ({ t }) => t('chat.topics.export.title'),
-  icon: () => <UploadIcon size={14} />,
-  group: 'share',
-  order: 70,
-  surface: 'menu',
-  availability: (context) => ({ visible: hasExportOption(context) }),
-  children: [
-    {
-      id: 'topic.export.image',
-      commandId: 'topic.export.image',
-      label: ({ t }) => t('chat.topics.export.image'),
-      order: 10,
-      surface: 'menu',
-      availability: ({ exportMenuOptions }) => ({ visible: exportMenuOptions.image })
-    },
-    {
-      id: 'topic.export.markdown',
-      commandId: 'topic.export.markdown',
-      label: ({ t }) => t('chat.topics.export.md.label'),
-      order: 20,
-      surface: 'menu',
-      availability: ({ exportMenuOptions }) => ({ visible: exportMenuOptions.markdown })
-    },
-    {
-      id: 'topic.export.markdown-reason',
-      commandId: 'topic.export.markdown-reason',
-      label: ({ t }) => t('chat.topics.export.md.reason'),
-      order: 30,
-      surface: 'menu',
-      availability: ({ exportMenuOptions }) => ({ visible: exportMenuOptions.markdown_reason })
-    },
-    {
-      id: 'topic.export.word',
-      commandId: 'topic.export.word',
-      label: ({ t }) => t('chat.topics.export.word'),
-      order: 40,
-      surface: 'menu',
-      availability: ({ exportMenuOptions }) => ({ visible: exportMenuOptions.docx })
-    },
-    {
-      id: 'topic.export.notion',
-      commandId: 'topic.export.notion',
-      label: ({ t }) => t('chat.topics.export.notion'),
-      order: 50,
-      surface: 'menu',
-      availability: ({ exportMenuOptions }) => ({ visible: exportMenuOptions.notion })
-    },
-    {
-      id: 'topic.export.yuque',
-      commandId: 'topic.export.yuque',
-      label: ({ t }) => t('chat.topics.export.yuque'),
-      order: 60,
-      surface: 'menu',
-      availability: ({ exportMenuOptions }) => ({ visible: exportMenuOptions.yuque })
-    },
-    {
-      id: 'topic.export.obsidian',
-      commandId: 'topic.export.obsidian',
-      label: ({ t }) => t('chat.topics.export.obsidian'),
-      order: 70,
-      surface: 'menu',
-      availability: ({ exportMenuOptions }) => ({ visible: exportMenuOptions.obsidian })
-    },
-    {
-      id: 'topic.export.joplin',
-      commandId: 'topic.export.joplin',
-      label: ({ t }) => t('chat.topics.export.joplin'),
-      order: 80,
-      surface: 'menu',
-      availability: ({ exportMenuOptions }) => ({ visible: exportMenuOptions.joplin })
-    },
-    {
-      id: 'topic.export.siyuan',
-      commandId: 'topic.export.siyuan',
-      label: ({ t }) => t('chat.topics.export.siyuan'),
-      order: 90,
-      surface: 'menu',
-      availability: ({ exportMenuOptions }) => ({ visible: exportMenuOptions.siyuan })
-    }
-  ]
 })
 
 topicActionRegistry.registerAction({

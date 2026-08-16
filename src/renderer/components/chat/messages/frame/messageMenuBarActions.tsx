@@ -9,11 +9,10 @@ import CopyIcon from '@renderer/components/icons/CopyIcon'
 import DeleteIcon from '@renderer/components/icons/DeleteIcon'
 import EditIcon from '@renderer/components/icons/EditIcon'
 import RefreshIcon from '@renderer/components/icons/RefreshIcon'
-import { getMessageTitle, messageToMarkdown } from '@renderer/services/ExportService'
 import type { MessageExportView } from '@renderer/types/messageExport'
 import { formatErrorMessageWithPrefix } from '@renderer/utils/error'
 import { messageToPlainText } from '@renderer/utils/export'
-import { captureScrollableAsBlob, captureScrollableAsDataUrl } from '@renderer/utils/image'
+import { captureScrollableAsBlob } from '@renderer/utils/image'
 import { removeTrailingDoubleSpaces } from '@renderer/utils/markdown'
 import { createComposerRichClipboardContentFromParts } from '@renderer/utils/message/composerClipboard'
 import { getTranslationFromParts } from '@renderer/utils/message/partsHelpers'
@@ -25,14 +24,14 @@ import {
   AtSign,
   Check,
   CirclePause,
+  Copy,
   FilePenLine,
   Languages,
   ListChecks,
   Menu,
   Save,
   Split,
-  ThumbsUp,
-  Upload
+  ThumbsUp
 } from 'lucide-react'
 import type { ReactNode, RefObject } from 'react'
 
@@ -220,56 +219,6 @@ registerCommand('message.copyImage', async ({ actions, messageContainerRef }) =>
       await actions.copyImage?.(blob)
     }
   })
-})
-
-registerCommand('message.exportImage', async ({ actions, messageContainerRef, messageForExport, t }) => {
-  const imageData = await captureScrollableAsDataUrl(messageContainerRef)
-  const title = await getMessageTitle(messageForExport)
-  if (!title || !imageData || !actions.saveImage) {
-    actions.notifyError?.(t('message.error.unknown'))
-    return
-  }
-
-  const success = await actions.saveImage(title, imageData)
-  if (success) {
-    actions.notifySuccess?.(t('chat.topics.export.image_saved'))
-  } else {
-    actions.notifyError?.(t('message.error.unknown'))
-  }
-})
-
-registerCommand('message.exportMarkdown', async ({ actions, messageForExport }) => {
-  await actions.exportMessageAsMarkdown?.(messageForExport)
-})
-
-registerCommand('message.exportMarkdownReason', async ({ actions, messageForExport }) => {
-  await actions.exportMessageAsMarkdown?.(messageForExport, true)
-})
-
-registerCommand('message.exportWord', async ({ actions, messageForExport }) => {
-  const markdown = await messageToMarkdown(messageForExport)
-  const title = await getMessageTitle(messageForExport)
-  await actions.exportToWord?.(markdown, title)
-})
-
-registerCommand('message.exportNotion', async ({ actions, messageForExport }) => {
-  await actions.exportToNotion?.(messageForExport)
-})
-
-registerCommand('message.exportYuque', async ({ actions, messageForExport }) => {
-  await actions.exportToYuque?.(messageForExport)
-})
-
-registerCommand('message.exportObsidian', async ({ actions, messageForExport }) => {
-  await actions.exportToObsidian?.(messageForExport)
-})
-
-registerCommand('message.exportJoplin', async ({ actions, messageForExport }) => {
-  await actions.exportToJoplin?.(messageForExport)
-})
-
-registerCommand('message.exportSiyuan', async ({ actions, messageForExport }) => {
-  await actions.exportToSiyuan?.(messageForExport)
 })
 
 registerCommand('message.useful', ({ message, onSelectContext }) => {
@@ -462,102 +411,27 @@ registerAction({
 })
 
 registerAction({
-  id: 'export',
-  label: ({ t }) => t('chat.topics.export.title'),
-  icon: <Upload size={15} />,
+  // Distinct from the toolbar 'copy' action: registrations share one id map.
+  id: 'copy-content',
+  label: ({ t }) => t('chat.topics.copy.title'),
+  icon: <Copy size={15} />,
   group: 'export',
   order: 200,
   surface: 'menu',
   children: [
     {
-      id: 'export.image',
-      commandId: 'message.exportImage',
-      label: ({ t }) => t('chat.topics.export.image'),
-      group: 'file',
-      order: 10,
-      availability: ({ actions, menuConfig }) => menuConfig.exportMenuOptions.image && !!actions.saveImage
-    },
-    {
-      id: 'export.markdown',
-      commandId: 'message.exportMarkdown',
-      label: ({ t }) => t('chat.topics.export.md.label'),
-      group: 'file',
-      order: 20,
-      availability: ({ actions, menuConfig }) =>
-        menuConfig.exportMenuOptions.markdown && !!actions.exportMessageAsMarkdown
-    },
-    {
-      id: 'export.markdown-reason',
-      commandId: 'message.exportMarkdownReason',
-      label: ({ t }) => t('chat.topics.export.md.reason'),
-      group: 'file',
-      order: 30,
-      availability: ({ actions, menuConfig }) =>
-        menuConfig.exportMenuOptions.markdown_reason && !!actions.exportMessageAsMarkdown
-    },
-    {
-      id: 'export.word',
-      commandId: 'message.exportWord',
-      label: ({ t }) => t('chat.topics.export.word'),
-      group: 'file',
-      order: 40,
-      availability: ({ actions, menuConfig }) => menuConfig.exportMenuOptions.docx && !!actions.exportToWord
-    },
-    {
-      id: 'export.notion',
-      commandId: 'message.exportNotion',
-      label: ({ t }) => t('chat.topics.export.notion'),
-      group: 'external',
-      order: 50,
-      availability: ({ actions, menuConfig }) => menuConfig.exportMenuOptions.notion && !!actions.exportToNotion
-    },
-    {
-      id: 'export.yuque',
-      commandId: 'message.exportYuque',
-      label: ({ t }) => t('chat.topics.export.yuque'),
-      group: 'external',
-      order: 60,
-      availability: ({ actions, menuConfig }) => menuConfig.exportMenuOptions.yuque && !!actions.exportToYuque
-    },
-    {
-      id: 'export.obsidian',
-      commandId: 'message.exportObsidian',
-      label: ({ t }) => t('chat.topics.export.obsidian'),
-      group: 'external',
-      order: 70,
-      availability: ({ actions, menuConfig }) => menuConfig.exportMenuOptions.obsidian && !!actions.exportToObsidian
-    },
-    {
-      id: 'export.joplin',
-      commandId: 'message.exportJoplin',
-      label: ({ t }) => t('chat.topics.export.joplin'),
-      group: 'external',
-      order: 80,
-      availability: ({ actions, menuConfig }) => menuConfig.exportMenuOptions.joplin && !!actions.exportToJoplin
-    },
-    {
-      id: 'export.siyuan',
-      commandId: 'message.exportSiyuan',
-      label: ({ t }) => t('chat.topics.export.siyuan'),
-      group: 'external',
-      order: 90,
-      availability: ({ actions, menuConfig }) => menuConfig.exportMenuOptions.siyuan && !!actions.exportToSiyuan
-    },
-    {
-      id: 'export.copy-plain-text',
+      id: 'copy.plain-text',
       commandId: 'message.copyPlainText',
       label: ({ t }) => t('chat.topics.copy.plain_text'),
-      group: 'copy',
-      order: 100,
-      availability: ({ actions, menuConfig }) => menuConfig.exportMenuOptions.plain_text && !!actions.copyText
+      order: 10,
+      availability: ({ actions }) => !!actions.copyText
     },
     {
-      id: 'export.copy-image',
+      id: 'copy.image',
       commandId: 'message.copyImage',
       label: ({ t }) => t('chat.topics.copy.image'),
-      group: 'copy',
-      order: 110,
-      availability: ({ actions, menuConfig }) => menuConfig.exportMenuOptions.image && !!actions.copyImage
+      order: 20,
+      availability: ({ actions }) => !!actions.copyImage
     }
   ]
 })

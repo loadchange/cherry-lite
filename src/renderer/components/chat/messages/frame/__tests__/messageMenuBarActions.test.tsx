@@ -106,11 +106,6 @@ vi.mock('@renderer/components/command', async () => {
   }
 })
 
-vi.mock('@renderer/services/ExportService', () => ({
-  getMessageTitle: vi.fn(),
-  messageToMarkdown: vi.fn()
-}))
-
 vi.mock('@renderer/utils/export', () => ({
   messageToPlainText: vi.fn(() => 'plain text')
 }))
@@ -676,7 +671,8 @@ describe('messageMenuBarActions', () => {
     const menuActions = resolveMessageMenuBarMenuActions(
       createActionContext({
         actions: {
-          exportMessageAsMarkdown: vi.fn(),
+          copyText: vi.fn(),
+          copyImage: undefined,
           saveTextFile: vi.fn(),
           startMessageBranch: vi.fn(),
           toggleMultiSelectMode: vi.fn()
@@ -685,70 +681,27 @@ describe('messageMenuBarActions', () => {
           enabled: true,
           isMultiSelectMode: false,
           selectedMessageIds: []
-        },
-        menuConfig: {
-          ...defaultMessageMenuConfig,
-          exportMenuOptions: {
-            ...defaultMessageMenuConfig.exportMenuOptions,
-            markdown: true
-          }
         }
       })
     )
 
-    expect(menuActions.map((action) => action.id)).toEqual(['new-branch', 'multi-select', 'save', 'export'])
+    expect(menuActions.map((action) => action.id)).toEqual(['new-branch', 'multi-select', 'save', 'copy-content'])
     expect(menuActions[2]?.children.map((action) => action.id)).toEqual(['save.file'])
-    expect(menuActions[3]?.children.map((action) => action.id)).toEqual(['export.markdown'])
+    expect(menuActions[3]?.children.map((action) => action.id)).toEqual(['copy.plain-text'])
   })
 
-  it('orders message export actions by destination and behavior', () => {
+  it('lists copy image next to plain text when both clipboard actions exist', () => {
     const menuActions = resolveMessageMenuBarMenuActions(
       createActionContext({
         actions: {
           copyImage: vi.fn(),
-          copyText: vi.fn(),
-          exportMessageAsMarkdown: vi.fn(),
-          exportToJoplin: vi.fn(),
-          exportToNotion: vi.fn(),
-          exportToObsidian: vi.fn(),
-          exportToSiyuan: vi.fn(),
-          exportToWord: vi.fn(),
-          exportToYuque: vi.fn(),
-          saveImage: vi.fn()
-        } as MessageListActions,
-        menuConfig: {
-          ...defaultMessageMenuConfig,
-          exportMenuOptions: {
-            ...defaultMessageMenuConfig.exportMenuOptions,
-            docx: true,
-            image: true,
-            joplin: true,
-            markdown: true,
-            markdown_reason: true,
-            notion: true,
-            obsidian: true,
-            plain_text: true,
-            siyuan: true,
-            yuque: true
-          }
-        }
+          copyText: vi.fn()
+        } as MessageListActions
       })
     )
 
-    const exportActions = menuActions.find((action) => action.id === 'export')?.children
-    expect(exportActions?.map((action) => action.id)).toEqual([
-      'export.image',
-      'export.markdown',
-      'export.markdown-reason',
-      'export.word',
-      'export.notion',
-      'export.yuque',
-      'export.obsidian',
-      'export.joplin',
-      'export.siyuan',
-      'export.copy-plain-text',
-      'export.copy-image'
-    ])
+    const copyActions = menuActions.find((action) => action.id === 'copy-content')?.children
+    expect(copyActions?.map((action) => action.id)).toEqual(['copy.plain-text', 'copy.image'])
   })
 
   it('shows disabled new branch with a reason in the latest message menu', () => {
@@ -767,7 +720,7 @@ describe('messageMenuBarActions', () => {
       })
     )
 
-    expect(menuActions.map((action) => action.id)).toEqual(['new-branch', 'multi-select'])
+    expect(menuActions.map((action) => action.id)).toEqual(['new-branch', 'multi-select', 'copy-content'])
     expect(menuActions[0]?.availability).toEqual({
       visible: true,
       enabled: false,
@@ -792,7 +745,7 @@ describe('messageMenuBarActions', () => {
       })
     )
 
-    expect(menuActions.map((action) => action.id)).toEqual(['multi-select'])
+    expect(menuActions.map((action) => action.id)).toEqual(['multi-select', 'copy-content'])
   })
 
   it('disables streaming-unsafe toolbar actions while keeping copy enabled', () => {

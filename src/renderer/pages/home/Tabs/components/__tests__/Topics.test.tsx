@@ -269,8 +269,7 @@ vi.mock('@renderer/utils/aiGeneration', () => ({
 vi.mock('@renderer/services/EventService', () => ({
   EVENT_NAMES: {
     CLEAR_MESSAGES: 'CLEAR_MESSAGES',
-    COPY_TOPIC_IMAGE: 'COPY_TOPIC_IMAGE',
-    EXPORT_TOPIC_IMAGE: 'EXPORT_TOPIC_IMAGE'
+    COPY_TOPIC_IMAGE: 'COPY_TOPIC_IMAGE'
   },
   EventEmitter: {
     emit: vi.fn()
@@ -287,21 +286,8 @@ const { confirmActionShow } = vi.hoisted(() => ({
 }))
 vi.mock('@renderer/components/popups/ConfirmActionPopup', () => ({ default: { show: confirmActionShow } }))
 
-vi.mock('@renderer/components/ObsidianExportPopup', () => ({
-  default: { show: vi.fn() }
-}))
-
 vi.mock('@renderer/components/popups/PromptPopup', () => ({
   default: { show: vi.fn() }
-}))
-
-vi.mock('@renderer/services/ExportService', () => ({
-  exportMarkdownToJoplin: vi.fn(),
-  exportMarkdownToSiyuan: vi.fn(),
-  exportMarkdownToYuque: vi.fn(),
-  exportTopicAsMarkdown: vi.fn(),
-  exportTopicToNotion: vi.fn(),
-  topicToMarkdown: vi.fn().mockResolvedValue('# topic')
 }))
 
 vi.mock('@renderer/services/copy', () => ({
@@ -369,19 +355,6 @@ vi.mock('react-i18next', () => ({
         if (key === 'chat.topics.copy.image') return 'Copy as Image'
         if (key === 'chat.topics.copy.md') return 'Copy as Markdown'
         if (key === 'chat.topics.copy.plain_text') return 'Copy as Plain Text'
-        if (key === 'chat.topics.export.title') return 'Export'
-        if (key === 'chat.topics.export.image') return 'Export as Image'
-        if (key === 'chat.topics.export.image_exporting_keep_page') return 'Exporting image. Please stay on this page.'
-        if (key === 'chat.topics.export.image_saved') return 'Image saved successfully'
-        if (key === 'chat.topics.export.failed') return 'Export failed'
-        if (key === 'chat.topics.export.md.label') return 'Export as Markdown'
-        if (key === 'chat.topics.export.md.reason') return 'Export as Markdown with Reasoning'
-        if (key === 'chat.topics.export.word') return 'Export as Word'
-        if (key === 'chat.topics.export.notion') return 'Export to Notion'
-        if (key === 'chat.topics.export.yuque') return 'Export to Yuque'
-        if (key === 'chat.topics.export.obsidian') return 'Export to Obsidian'
-        if (key === 'chat.topics.export.joplin') return 'Export to Joplin'
-        if (key === 'chat.topics.export.siyuan') return 'Export to Siyuan'
         if (key === 'common.delete') return 'Delete'
         if (key === 'common.delete_success') return 'Deleted'
         if (key === 'common.delete_failed') return 'Delete failed'
@@ -705,17 +678,7 @@ describe('Topics', () => {
       'assistant.icon_type': 'emoji',
       'assistant.tab.sort_type': 'list',
       'topic.tab.display_mode': 'assistant',
-      'topic.tab.position': 'left',
-      'data.export.menus.docx': true,
-      'data.export.menus.image': true,
-      'data.export.menus.joplin': true,
-      'data.export.menus.markdown': true,
-      'data.export.menus.markdown_reason': true,
-      'data.export.menus.notion': true,
-      'data.export.menus.obsidian': true,
-      'data.export.menus.plain_text': true,
-      'data.export.menus.siyuan': true,
-      'data.export.menus.yuque': true
+      'topic.tab.position': 'left'
     })
     pinMutationMocks.createPin.mockResolvedValue(createTopicPin())
     pinMutationMocks.deletePin.mockResolvedValue(undefined)
@@ -1361,7 +1324,6 @@ describe('Topics', () => {
       'Conversation positionLeftRight',
       'Clear messages',
       '',
-      'ExportExport as ImageExport as MarkdownExport as Markdown with ReasoningExport as WordExport to NotionExport to YuqueExport to ObsidianExport to JoplinExport to Siyuan',
       'CopyCopy as ImageCopy as MarkdownCopy as Plain Text',
       '',
       'Delete'
@@ -1422,57 +1384,10 @@ describe('Topics', () => {
     expect(menuContent).toHaveTextContent('Open in New Window')
   })
 
-  it('shows loading while exporting a right-clicked topic as an image without switching topics', async () => {
-    const { getByText, setActiveTopic } = renderTopicList()
-    fireEvent.contextMenu(getByText('Gamma topic'))
-    const gammaMenu = getByText('Gamma topic').closest('[data-testid="context-menu"]')
-    const menuContent = gammaMenu?.querySelector('[data-testid="context-menu-content"]')
-    const animationFrameCallbacks: FrameRequestCallback[] = []
-    const requestAnimationFrameSpy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
-      animationFrameCallbacks.push(callback)
-      return animationFrameCallbacks.length
-    })
-
-    const exportImageItem = within(menuContent as HTMLElement).getByRole('button', { name: 'Export as Image' })
-    expect(exportImageItem).not.toBeDisabled()
-
-    fireEvent.click(exportImageItem)
-
-    expect(setActiveTopic).not.toHaveBeenCalled()
-    expect(toast.loading).not.toHaveBeenCalled()
-
-    await vi.waitFor(() => expect(animationFrameCallbacks.length).toBeGreaterThan(0))
-    act(() => {
-      for (const callback of animationFrameCallbacks.splice(0)) {
-        callback(0)
-      }
-    })
-
-    expect(toast.loading).toHaveBeenCalledWith(
-      expect.objectContaining({
-        key: expect.stringMatching(/^topic-image-export:/),
-        promise: expect.any(Promise),
-        title: 'Exporting image. Please stay on this page.'
-      })
-    )
-    expect(setActiveTopic).not.toHaveBeenCalled()
-    expect(EventEmitter.emit).not.toHaveBeenCalledWith(
-      EVENT_NAMES.EXPORT_TOPIC_IMAGE,
-      expect.objectContaining({ id: 'topic-c' })
-    )
-
-    const [request] = consumePendingTopicImageActions('topic-c', 'export')
-    settleTopicImageActionRequest(request, Promise.resolve())
-    await vi.waitFor(() => {
-      expect(toast.success).toHaveBeenCalledWith('Image saved successfully')
-    })
-    requestAnimationFrameSpy.mockRestore()
-  })
-
   it('cancels pending topic image requests when the topic list unmounts before runtime consumption', async () => {
     const { unmount } = renderTopicList()
     const request = requestTopicImageAction(
-      'export',
+      'copy',
       createRendererTopic({ assistantId: 'assistant-2', id: 'topic-c', name: 'Gamma topic' })
     )
     expect(request).toEqual(expect.objectContaining({ topic: expect.objectContaining({ id: 'topic-c' }) }))
@@ -1481,7 +1396,7 @@ describe('Topics', () => {
     unmount()
 
     expect(consumePendingTopicImageActions('topic-c')).toEqual([])
-    await expect(request.promise).rejects.toThrow('Topic image export was cancelled')
+    await expect(request.promise).rejects.toThrow('Topic image capture was cancelled')
   })
 
   it('shows an error toast when a queued topic image copy request fails', async () => {
@@ -1889,27 +1804,6 @@ describe('Topics', () => {
 
   it('rerenders only the previous and next active topic rows when selection changes', () => {
     const setPanePosition = vi.fn()
-    const exportMenuOptions = {
-      docx: true,
-      image: true,
-      joplin: true,
-      markdown: true,
-      markdown_reason: true,
-      notion: true,
-      obsidian: true,
-      plain_text: true,
-      siyuan: true,
-      yuque: true
-    }
-    let previousPreferenceKeys: unknown
-    let stableExportMenuOptions = exportMenuOptions
-    MockUsePreference.useMultiplePreferences.mockImplementation((keys) => {
-      if (keys !== previousPreferenceKeys) {
-        previousPreferenceKeys = keys
-        stableExportMenuOptions = { ...exportMenuOptions }
-      }
-      return [stableExportMenuOptions, vi.fn()] as never
-    })
     cacheHookMocks.values.set('topic.renaming', [])
     cacheHookMocks.values.set('topic.newly_renamed', [])
     const topicPinsQuery = {
@@ -1944,9 +1838,6 @@ describe('Topics', () => {
 
     rerenderTopicList(undefined, createRendererTopic({ id: 'topic-2', name: 'Topic 2' }))
 
-    expect(MockUsePreference.useMultiplePreferences.mock.calls.at(-1)?.[0]).toBe(
-      MockUsePreference.useMultiplePreferences.mock.calls[0][0]
-    )
     expect(topicRowRenderMocks.counts.get('topic-1')).toBeGreaterThan(initialRenderCounts.get('topic-1') ?? 0)
     expect(topicRowRenderMocks.counts.get('topic-2')).toBeGreaterThan(initialRenderCounts.get('topic-2') ?? 0)
     expect(topicRowRenderMocks.counts.get('topic-3')).toBe(initialRenderCounts.get('topic-3'))

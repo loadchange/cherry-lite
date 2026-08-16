@@ -22,7 +22,6 @@ const hookMocks = vi.hoisted(() => ({
   useTopics: vi.fn(),
   useAssistants: vi.fn(),
   useCache: vi.fn(),
-  useMultiplePreferences: vi.fn(),
   usePins: vi.fn(),
   useSessions: vi.fn(),
   useUpdateSession: vi.fn()
@@ -103,8 +102,7 @@ vi.mock('@renderer/data/hooks/useCache', () => ({
 }))
 
 vi.mock('@renderer/data/hooks/usePreference', () => ({
-  usePreference: () => ['cherry', () => {}],
-  useMultiplePreferences: hookMocks.useMultiplePreferences
+  usePreference: () => ['cherry', () => {}]
 }))
 
 vi.mock('@renderer/hooks/agent/useAgent', () => ({
@@ -177,16 +175,11 @@ vi.mock('@renderer/utils/aiGeneration', () => ({
 vi.mock('@renderer/services/EventService', () => ({
   EVENT_NAMES: {
     CLEAR_MESSAGES: 'CLEAR_MESSAGES',
-    COPY_TOPIC_IMAGE: 'COPY_TOPIC_IMAGE',
-    EXPORT_TOPIC_IMAGE: 'EXPORT_TOPIC_IMAGE'
+    COPY_TOPIC_IMAGE: 'COPY_TOPIC_IMAGE'
   },
   EventEmitter: {
     emit: vi.fn()
   }
-}))
-
-vi.mock('@renderer/components/ObsidianExportPopup', () => ({
-  default: { show: vi.fn() }
 }))
 
 vi.mock('@renderer/components/popups/PromptPopup', () => ({
@@ -208,15 +201,6 @@ vi.mock('@renderer/services/copy', () => ({
   copyTopicAsPlainText: vi.fn()
 }))
 
-vi.mock('@renderer/services/ExportService', () => ({
-  exportMarkdownToJoplin: vi.fn(),
-  exportMarkdownToSiyuan: vi.fn(),
-  exportMarkdownToYuque: vi.fn(),
-  exportTopicAsMarkdown: vi.fn(),
-  exportTopicToNotion: vi.fn(),
-  topicToMarkdown: vi.fn().mockResolvedValue('# topic')
-}))
-
 vi.mock('react-i18next', () => ({
   initReactI18next: {
     init: vi.fn(),
@@ -234,16 +218,6 @@ vi.mock('react-i18next', () => ({
         'chat.topics.copy.plain_text': 'Copy as Plain Text',
         'chat.topics.copy.title': 'Copy',
         'chat.topics.edit.title': 'Edit conversation name',
-        'chat.topics.export.image': 'Export as Image',
-        'chat.topics.export.joplin': 'Export to Joplin',
-        'chat.topics.export.md.label': 'Export as Markdown',
-        'chat.topics.export.md.reason': 'Export as Markdown with Reasoning',
-        'chat.topics.export.notion': 'Export to Notion',
-        'chat.topics.export.obsidian': 'Export to Obsidian',
-        'chat.topics.export.siyuan': 'Export to Siyuan',
-        'chat.topics.export.title': 'Export',
-        'chat.topics.export.word': 'Export as Word',
-        'chat.topics.export.yuque': 'Export to Yuque',
         'chat.topics.manage.delete.confirm.content': 'Delete {{count}} conversation(s)?',
         'chat.topics.manage.delete.confirm.title': 'Delete Conversations',
         'chat.topics.pin': 'Pin Conversation',
@@ -401,21 +375,6 @@ describe('HistoryRecordsView assistant mode', () => {
     hookMocks.openConversationTab.mockReturnValue('new-history-topic-tab')
     hookMocks.useCache.mockReset()
     hookMocks.useCache.mockReturnValue([[], vi.fn()])
-    hookMocks.useMultiplePreferences.mockReset()
-    hookMocks.useMultiplePreferences.mockReturnValue([
-      {
-        docx: true,
-        image: true,
-        joplin: true,
-        markdown: true,
-        markdown_reason: true,
-        notion: true,
-        obsidian: true,
-        plain_text: true,
-        siyuan: true,
-        yuque: true
-      }
-    ])
     hookMocks.deleteTopic.mockReset()
     hookMocks.deleteTopic.mockResolvedValue(undefined)
     hookMocks.deleteTopics.mockReset()
@@ -968,7 +927,6 @@ describe('HistoryRecordsView assistant mode', () => {
       'Pin Conversation',
       'Clear messages',
       '',
-      'ExportExport as ImageExport as MarkdownExport as Markdown with ReasoningExport as WordExport to NotionExport to YuqueExport to ObsidianExport to JoplinExport to Siyuan',
       'CopyCopy as ImageCopy as MarkdownCopy as Plain Text',
       '',
       'Delete'

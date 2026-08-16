@@ -1,13 +1,10 @@
 import { loggerService } from '@logger'
 import type { ResolvedAction } from '@renderer/components/chat/actions/actionTypes'
-import type {
-  TopicActionContext,
-  TopicExportMenuOptions
-} from '@renderer/components/chat/actions/topicContextMenuActions'
+import type { TopicActionContext } from '@renderer/components/chat/actions/topicContextMenuActions'
 import { renderAssistantEntityIcon } from '@renderer/components/chat/resourceList/base'
 import { AssistantSelector } from '@renderer/components/resourceCatalog/selectors'
 import { useCache } from '@renderer/data/hooks/useCache'
-import { useMultiplePreferences, usePreference } from '@renderer/data/hooks/usePreference'
+import { usePreference } from '@renderer/data/hooks/usePreference'
 import { createTopicActionContext, useTopicMenuPreset } from '@renderer/hooks/chat/useTopicMenuActions'
 import { useAssistantTopicsSource } from '@renderer/hooks/resourceViewSources'
 import { useAssistants } from '@renderer/hooks/useAssistant'
@@ -71,18 +68,6 @@ const AssistantHistoryRecords = ({
   const [defaultModelId] = usePreference('chat.default_model_id')
   const [renamingTopics] = useCache('topic.renaming')
   const { updateTopic: patchTopic, deleteTopic: deleteTopicById, deleteTopics, batchUpdateTopics } = useTopicMutations()
-  const [exportMenuOptions] = useMultiplePreferences({
-    docx: 'data.export.menus.docx',
-    image: 'data.export.menus.image',
-    joplin: 'data.export.menus.joplin',
-    markdown: 'data.export.menus.markdown',
-    markdown_reason: 'data.export.menus.markdown_reason',
-    notion: 'data.export.menus.notion',
-    obsidian: 'data.export.menus.obsidian',
-    plain_text: 'data.export.menus.plain_text',
-    siyuan: 'data.export.menus.siyuan',
-    yuque: 'data.export.menus.yuque'
-  })
   const { pinnedIds: topicPinnedIds, togglePin: toggleTopicPin } = usePins('topic')
 
   const topicPinnedIdSet = useMemo(() => new Set(topicPinnedIds), [topicPinnedIds])
@@ -308,7 +293,6 @@ const AssistantHistoryRecords = ({
       const topic = getRendererTopic(apiTopic)
 
       return createTopicActionContext({
-        exportMenuOptions: exportMenuOptions as TopicExportMenuOptions,
         isActiveInCurrentTab: false,
         isRenaming: isTopicRenaming(topic.id),
         onAutoRename: handleAutoRename,
@@ -324,7 +308,6 @@ const AssistantHistoryRecords = ({
       })
     },
     [
-      exportMenuOptions,
       getRendererTopic,
       handleAutoRename,
       handleClearMessages,

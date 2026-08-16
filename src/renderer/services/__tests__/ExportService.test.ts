@@ -1,6 +1,5 @@
 // Import Message, MessageBlock, and necessary enums
 import { getTopicMessages } from '@renderer/hooks/useTopic'
-import { toast } from '@renderer/services/toast'
 import type { MessageExportView } from '@renderer/types/messageExport'
 import type { Message, MessageBlock } from '@renderer/types/newMessage'
 import { AssistantMessageStatus, MessageBlockStatus, MessageBlockType } from '@renderer/types/newMessage'
@@ -39,6 +38,17 @@ vi.mock('@renderer/utils/message/find', async (importOriginal) => ({
   // `[cite:id]` resolution is the behaviour under test in the tool-part cases below,
   // so keep the real implementation rather than restating it as a mock.
   getToolCitationExport: (await importOriginal<typeof MessageFind>()).getToolCitationExport,
+  getNamingTextContent: vi.fn((message: Message & { _fullBlocks?: MessageBlock[]; parts?: any[] }) => {
+    if (message.parts?.length) {
+      return message.parts
+        .filter((part) => part.type === 'text')
+        .map((part) => part.text || '')
+        .filter((text) => text.trim().length > 0)
+        .join('\n\n')
+    }
+    const mainTextBlock = message._fullBlocks?.find((b) => b.type === MessageBlockType.MAIN_TEXT)
+    return mainTextBlock?.content || ''
+  }),
   // Provide type safety for mocked message
   getMainTextContent: vi.fn((message: Message & { _fullBlocks?: MessageBlock[]; parts?: any[] }) => {
     if (message.parts?.length) {
@@ -50,19 +60,6 @@ vi.mock('@renderer/utils/message/find', async (importOriginal) => ({
     }
     const mainTextBlock = message._fullBlocks?.find((b) => b.type === MessageBlockType.MAIN_TEXT)
     return mainTextBlock?.content || '' // Assuming content exists on MainTextBlock
-  }),
-  // Gated copy/naming variant — text-only here (the mock never synthesises
-  // code/error/translation), which already matches dropping error/translation.
-  getNamingTextContent: vi.fn((message: Message & { _fullBlocks?: MessageBlock[]; parts?: any[] }) => {
-    if (message.parts?.length) {
-      return message.parts
-        .filter((part) => part.type === 'text')
-        .map((part) => part.text || '')
-        .filter((text) => text.trim().length > 0)
-        .join('\n\n')
-    }
-    const mainTextBlock = message._fullBlocks?.find((b) => b.type === MessageBlockType.MAIN_TEXT)
-    return mainTextBlock?.content || ''
   }),
   getThinkingContent: vi.fn((message: Message & { _fullBlocks?: MessageBlock[]; parts?: any[] }) => {
     if (message.parts?.length) {
@@ -110,7 +107,6 @@ import { type Topic, TopicType } from '@renderer/types/topic'
 import { markdownToPlainText } from '@renderer/utils/markdown'
 
 import {
-  exportMarkdownToObsidian,
   messagesToMarkdown,
   messageToMarkdown,
   messageToMarkdownWithReasoning,
@@ -541,49 +537,6 @@ describe('ExportService', () => {
 
     it('should handle an empty array of messages', async () => {
       expect(await messagesToMarkdown([])).toBe('')
-    })
-  })
-
-  describe('exportMarkdownToObsidian', () => {
-    beforeEach(() => {
-      vi.clearAllMocks()
-    })
-
-    it('returns false and toasts an error when the title is empty', async () => {
-      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-
-      const result = await exportMarkdownToObsidian({ vault: 'MyVault', title: '' })
-
-      expect(result).toBe(false)
-      expect(toast.error).toHaveBeenCalledWith('chat.topics.export.obsidian_title_required')
-      expect(openSpy).not.toHaveBeenCalled()
-
-      openSpy.mockRestore()
-    })
-
-    it('returns false and toasts an error when no vault is selected', async () => {
-      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-
-      const result = await exportMarkdownToObsidian({ vault: '', title: 'Note' })
-
-      expect(result).toBe(false)
-      expect(toast.error).toHaveBeenCalledWith('chat.topics.export.obsidian_no_vault_selected')
-      expect(openSpy).not.toHaveBeenCalled()
-
-      openSpy.mockRestore()
-    })
-
-    it('returns true and opens Obsidian when the export succeeds', async () => {
-      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-
-      const result = await exportMarkdownToObsidian({ vault: 'MyVault', title: 'Note' })
-
-      expect(result).toBe(true)
-      expect(openSpy).toHaveBeenCalledTimes(1)
-      expect(openSpy.mock.calls[0][0]).toContain('obsidian://new')
-      expect(toast.success).toHaveBeenCalledWith('chat.topics.export.obsidian_export_success')
-
-      openSpy.mockRestore()
     })
   })
 

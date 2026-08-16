@@ -5,7 +5,6 @@ import { type BackupEventSchemas, backupRequestSchemas } from './backup'
 import { type BinaryEventSchemas, binaryRequestSchemas } from './binary'
 import { cherryinRequestSchemas } from './cherryin'
 import { citationRequestSchemas } from './citation'
-import { exportRequestSchemas } from './export'
 import { fileRequestSchemas } from './file'
 import { fileProcessingRequestSchemas } from './fileProcessing'
 import { type McpEventSchemas, mcpRequestSchemas } from './mcp'
@@ -39,7 +38,6 @@ export const ipcRequestSchemas = {
   ...binaryRequestSchemas,
   ...cherryinRequestSchemas,
   ...citationRequestSchemas,
-  ...exportRequestSchemas,
   ...fileRequestSchemas,
   ...fileProcessingRequestSchemas,
   ...mcpRequestSchemas,

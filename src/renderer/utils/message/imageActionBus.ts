@@ -1,4 +1,4 @@
-export type ImageActionType = 'copy' | 'export'
+export type ImageActionType = 'copy'
 
 type ImageActionSettlement = {
   reject: (reason?: unknown) => void

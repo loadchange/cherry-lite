@@ -1,4 +1,4 @@
-import { captureScrollable, captureScrollableAsDataUrl } from '@renderer/utils/image'
+import { captureScrollable } from '@renderer/utils/image'
 import { act, render, screen } from '@testing-library/react'
 import type { HTMLAttributes, ReactNode, Ref } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -66,8 +66,7 @@ vi.mock('@renderer/hooks/useTimer', () => ({
 }))
 
 vi.mock('@renderer/utils/image', () => ({
-  captureScrollable: vi.fn(),
-  captureScrollableAsDataUrl: vi.fn()
+  captureScrollable: vi.fn()
 }))
 
 vi.mock('@renderer/utils/style', () => ({
@@ -87,10 +86,6 @@ vi.mock('@renderer/utils/style', () => ({
     }
     return ''
   }
-}))
-
-vi.mock('@renderer/utils/file', () => ({
-  removeSpecialCharactersForFileName: (value: string) => value
 }))
 
 vi.mock('../layout/NarrowLayout', () => ({
@@ -292,7 +287,6 @@ describe('MessageList', () => {
     scrollToElement.mockClear()
     scrollToRange.mockClear()
     vi.mocked(captureScrollable).mockReset()
-    vi.mocked(captureScrollableAsDataUrl).mockReset()
     messageVirtualListMocks.deferScrollContainerReady = false
     messageVirtualListMocks.renderItemLimit = undefined
     messageVirtualListMocks.readyCallbacks = []
@@ -681,54 +675,6 @@ describe('MessageList', () => {
     expect(getElementByIdSpy).not.toHaveBeenCalledWith('message-assistant-unmounted-2')
   })
 
-  it('exports topic image from a complete non-virtualized capture surface', async () => {
-    messageVirtualListMocks.renderItemLimit = 1
-    const captureScrollableAsDataUrlMock = vi.mocked(captureScrollableAsDataUrl)
-    const saveImage = vi.fn().mockResolvedValue(true)
-    let runtime: MessageListRuntime | undefined
-    const actions: Partial<MessageListActions> = {
-      bindRuntime: (nextRuntime) => {
-        runtime = nextRuntime
-        return () => {
-          runtime = undefined
-        }
-      },
-      saveImage
-    }
-
-    captureScrollableAsDataUrlMock.mockImplementation(async (ref) => {
-      const capturedText = ref.current?.textContent ?? ''
-      expect(capturedText).toContain('user-1')
-      expect(capturedText).toContain('assistant-1')
-      expect(capturedText).toContain('user-2')
-      return 'data:image/png;base64,topic'
-    })
-
-    render(
-      <MessageListProvider
-        value={createValue(
-          [createMessage('user-1', 'user'), createMessage('assistant-1', 'assistant'), createMessage('user-2', 'user')],
-          undefined,
-          actions,
-          { imageExportFileName: 'Topic' }
-        )}>
-        <MessageList />
-      </MessageListProvider>
-    )
-
-    expect(screen.queryByText(/user-2/)).toBeNull()
-
-    let exportPromise: Promise<void> | undefined
-    act(() => {
-      exportPromise = runtime?.exportTopicImage()
-    })
-
-    await act(async () => {
-      await exportPromise
-    })
-    expect(saveImage).toHaveBeenCalledWith('Topic', 'data:image/png;base64,topic')
-  })
-
   it('copies topic image from a complete non-virtualized capture surface', async () => {
     messageVirtualListMocks.renderItemLimit = 1
     const captureScrollableMock = vi.mocked(captureScrollable)
@@ -779,13 +725,14 @@ describe('MessageList', () => {
     expect(copyImage).toHaveBeenCalledWith(imageBlob)
   })
 
-  it('exports a pending topic image after the loading list scroll container is ready', async () => {
+  it('copies a pending topic image after the loading list scroll container is ready', async () => {
     messageVirtualListMocks.renderItemLimit = 0
-    const captureScrollableAsDataUrlMock = vi.mocked(captureScrollableAsDataUrl)
-    const saveImage = vi.fn().mockResolvedValue(true)
+    const captureScrollableMock = vi.mocked(captureScrollable)
+    const copyImage = vi.fn().mockResolvedValue(undefined)
+    const imageBlob = new Blob(['topic'], { type: 'image/png' })
     let runtime: MessageListRuntime | undefined
-    let exportResolved = false
-    let exportPromise: Promise<void> | undefined
+    let copyResolved = false
+    let copyPromise: Promise<void> | undefined
     const actions: Partial<MessageListActions> = {
       bindRuntime: (nextRuntime) => {
         runtime = nextRuntime
@@ -793,19 +740,20 @@ describe('MessageList', () => {
           runtime = undefined
         }
       },
-      saveImage
+      copyImage
     }
 
-    captureScrollableAsDataUrlMock.mockImplementation(async (ref) => {
+    captureScrollableMock.mockImplementation(async (ref) => {
       const capturedText = ref.current?.textContent ?? ''
       expect(capturedText).toContain('user-1')
       expect(capturedText).toContain('assistant-1')
-      return 'data:image/png;base64,topic'
+      return {
+        toBlob: (callback: BlobCallback) => callback(imageBlob)
+      } as unknown as HTMLCanvasElement
     })
 
     const view = render(
-      <MessageListProvider
-        value={createValue([], { isInitialLoading: true }, actions, { imageExportFileName: 'Topic' })}>
+      <MessageListProvider value={createValue([], { isInitialLoading: true }, actions)}>
         <MessageList />
       </MessageListProvider>
     )
@@ -813,40 +761,35 @@ describe('MessageList', () => {
     expect(runtime).toBeDefined()
 
     await act(async () => {
-      exportPromise = runtime?.exportTopicImage().then(() => {
-        exportResolved = true
+      copyPromise = runtime?.copyTopicImage().then(() => {
+        copyResolved = true
       })
     })
 
-    expect(exportResolved).toBe(false)
-    expect(captureScrollableAsDataUrlMock).not.toHaveBeenCalled()
-    expect(saveImage).not.toHaveBeenCalled()
+    expect(copyResolved).toBe(false)
+    expect(captureScrollableMock).not.toHaveBeenCalled()
+    expect(copyImage).not.toHaveBeenCalled()
 
     act(() => {
       view.rerender(
         <MessageListProvider
-          value={createValue(
-            [createMessage('user-1', 'user'), createMessage('assistant-1', 'assistant')],
-            undefined,
-            actions,
-            { imageExportFileName: 'Topic' }
-          )}>
+          value={createValue([createMessage('user-1', 'user'), createMessage('assistant-1', 'assistant')], undefined, actions)}>
           <MessageList />
         </MessageListProvider>
       )
     })
 
     await act(async () => {
-      await exportPromise
+      await copyPromise
     })
-    expect(saveImage).toHaveBeenCalledWith('Topic', 'data:image/png;base64,topic')
-    expect(exportResolved).toBe(true)
+    expect(copyImage).toHaveBeenCalledWith(imageBlob)
+    expect(copyResolved).toBe(true)
   })
 
-  it('rejects a pending topic image export when the loading list unmounts before it is ready', async () => {
-    const captureScrollableAsDataUrlMock = vi.mocked(captureScrollableAsDataUrl)
-    captureScrollableAsDataUrlMock.mockClear()
-    const saveImage = vi.fn().mockResolvedValue(true)
+  it('rejects a pending topic image copy when the loading list unmounts before it is ready', async () => {
+    const captureScrollableMock = vi.mocked(captureScrollable)
+    captureScrollableMock.mockClear()
+    const copyImage = vi.fn().mockResolvedValue(undefined)
     let runtime: MessageListRuntime | undefined
     const actions: Partial<MessageListActions> = {
       bindRuntime: (nextRuntime) => {
@@ -855,46 +798,49 @@ describe('MessageList', () => {
           runtime = undefined
         }
       },
-      saveImage
+      copyImage
     }
 
-    captureScrollableAsDataUrlMock.mockImplementation(async (ref) =>
-      ref.current ? 'data:image/png;base64,topic' : undefined
+    captureScrollableMock.mockImplementation(async (ref) =>
+      ref.current
+        ? ({
+            toBlob: (callback: BlobCallback) => callback(new Blob(['topic'], { type: 'image/png' }))
+          } as unknown as HTMLCanvasElement)
+        : undefined
     )
 
     const loadingView = render(
-      <MessageListProvider
-        value={createValue([], { isInitialLoading: true }, actions, { imageExportFileName: 'Topic' })}>
+      <MessageListProvider value={createValue([], { isInitialLoading: true }, actions)}>
         <MessageList />
       </MessageListProvider>
     )
 
-    const exportPromise = runtime?.exportTopicImage()
+    const copyPromise = runtime?.copyTopicImage()
 
     loadingView.unmount()
-    expect(saveImage).not.toHaveBeenCalled()
-    await expect(exportPromise).rejects.toThrow('Topic image export was cancelled')
+    expect(copyImage).not.toHaveBeenCalled()
+    await expect(copyPromise).rejects.toThrow('Topic image capture was cancelled')
 
     render(
-      <MessageListProvider
-        value={createValue([createMessage('user-1', 'user')], undefined, actions, { imageExportFileName: 'Topic' })}>
+      <MessageListProvider value={createValue([createMessage('user-1', 'user')], undefined, actions)}>
         <MessageList />
       </MessageListProvider>
     )
 
     await vi.waitFor(() => {
-      expect(captureScrollableAsDataUrlMock).not.toHaveBeenCalled()
+      expect(captureScrollableMock).not.toHaveBeenCalled()
     })
-    expect(saveImage).not.toHaveBeenCalled()
+    expect(copyImage).not.toHaveBeenCalled()
   })
 
-  it('exports a pending topic image when the scroll container becomes ready after runtime binding', async () => {
+  it('copies a pending topic image when the scroll container becomes ready after runtime binding', async () => {
     messageVirtualListMocks.deferScrollContainerReady = true
     messageVirtualListMocks.scrollElement = null
-    const captureScrollableAsDataUrlMock = vi.mocked(captureScrollableAsDataUrl)
-    const saveImage = vi.fn().mockResolvedValue(true)
+    const captureScrollableMock = vi.mocked(captureScrollable)
+    const copyImage = vi.fn().mockResolvedValue(undefined)
+    const imageBlob = new Blob(['topic'], { type: 'image/png' })
     let runtime: MessageListRuntime | undefined
-    let exportResolved = false
+    let copyResolved = false
     const actions: Partial<MessageListActions> = {
       bindRuntime: (nextRuntime) => {
         runtime = nextRuntime
@@ -902,26 +848,29 @@ describe('MessageList', () => {
           runtime = undefined
         }
       },
-      saveImage
+      copyImage
     }
 
-    captureScrollableAsDataUrlMock.mockImplementation(async (ref) =>
-      ref.current ? 'data:image/png;base64,topic' : undefined
+    captureScrollableMock.mockImplementation(async (ref) =>
+      ref.current
+        ? ({
+            toBlob: (callback: BlobCallback) => callback(imageBlob)
+          } as unknown as HTMLCanvasElement)
+        : undefined
     )
 
     render(
-      <MessageListProvider
-        value={createValue([createMessage('user-1', 'user')], undefined, actions, { imageExportFileName: 'Topic' })}>
+      <MessageListProvider value={createValue([createMessage('user-1', 'user')], undefined, actions)}>
         <MessageList />
       </MessageListProvider>
     )
 
-    const exportPromise = runtime?.exportTopicImage().then(() => {
-      exportResolved = true
+    const copyPromise = runtime?.copyTopicImage().then(() => {
+      copyResolved = true
     })
 
-    expect(saveImage).not.toHaveBeenCalled()
-    expect(exportResolved).toBe(false)
+    expect(copyImage).not.toHaveBeenCalled()
+    expect(copyResolved).toBe(false)
 
     const scrollElement = document.createElement('div')
     messageVirtualListMocks.scrollElement = scrollElement
@@ -932,15 +881,15 @@ describe('MessageList', () => {
     })
 
     await act(async () => {
-      await exportPromise
+      await copyPromise
     })
-    expect(saveImage).toHaveBeenCalledWith('Topic', 'data:image/png;base64,topic')
-    expect(exportResolved).toBe(true)
+    expect(copyImage).toHaveBeenCalledWith(imageBlob)
+    expect(copyResolved).toBe(true)
   })
 
-  it('rejects topic image export when capture does not produce image data', async () => {
-    vi.mocked(captureScrollableAsDataUrl).mockResolvedValue(undefined)
-    const saveImage = vi.fn().mockResolvedValue(true)
+  it('rejects topic image copy when capture does not produce image data', async () => {
+    vi.mocked(captureScrollable).mockResolvedValue(undefined)
+    const copyImage = vi.fn().mockResolvedValue(undefined)
     let runtime: MessageListRuntime | undefined
     const actions: Partial<MessageListActions> = {
       bindRuntime: (nextRuntime) => {
@@ -949,24 +898,23 @@ describe('MessageList', () => {
           runtime = undefined
         }
       },
-      saveImage
+      copyImage
     }
 
     render(
-      <MessageListProvider
-        value={createValue([createMessage('user-1', 'user')], undefined, actions, { imageExportFileName: 'Topic' })}>
+      <MessageListProvider value={createValue([createMessage('user-1', 'user')], undefined, actions)}>
         <MessageList />
       </MessageListProvider>
     )
 
-    let exportPromise: Promise<void> | undefined
+    let copyPromise: Promise<void> | undefined
     act(() => {
-      exportPromise = runtime?.exportTopicImage()
+      copyPromise = runtime?.copyTopicImage()
     })
 
     await act(async () => {
-      await expect(exportPromise).rejects.toThrow('Failed to capture topic image')
+      await expect(copyPromise).rejects.toThrow('Failed to capture topic image')
     })
-    expect(saveImage).not.toHaveBeenCalled()
+    expect(copyImage).not.toHaveBeenCalled()
   })
 })

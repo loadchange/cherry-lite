@@ -4,8 +4,7 @@ import MultiSelectActionPopup from '@renderer/components/chat/messages/MultiSele
 import LoadingIcon from '@renderer/components/icons/LoadingIcon'
 import SelectionContextMenu from '@renderer/components/SelectionContextMenu'
 import { useTimer } from '@renderer/hooks/useTimer'
-import { removeSpecialCharactersForFileName } from '@renderer/utils/file'
-import { captureScrollable, captureScrollableAsDataUrl } from '@renderer/utils/image'
+import { captureScrollable } from '@renderer/utils/image'
 import { classNames } from '@renderer/utils/style'
 import type { MultiModelMessageStyle } from '@shared/data/preference/preferenceTypes'
 import type { CherryMessagePart } from '@shared/data/types/message'
@@ -63,7 +62,7 @@ interface ActiveMessageOutline {
   multiModelMessageStyle: MultiModelMessageStyle
 }
 
-type TopicImageRuntimeAction = 'copy' | 'export'
+type TopicImageRuntimeAction = 'copy'
 
 interface PendingTopicImageRuntimeAction {
   action: TopicImageRuntimeAction
@@ -245,7 +244,7 @@ const MessageList = ({ enableSearch = false }: MessageListProps) => {
     // Stream status can arrive before its placeholder joins the visible list.
     return liveIndex >= 0 ? liveIndex : groupedMessages.length
   }, [groupedMessages, liveMessageIdSet, liveMessageIds.length, streamingLayers])
-  const { bindRuntime, copyImage, loadOlder, saveImage } = actions
+  const { bindRuntime, copyImage, loadOlder } = actions
   const getMessageUiState = useCallback(
     (messageId: string) => messageUi.getMessageUiState?.(messageId) ?? {},
     [messageUi]
@@ -471,31 +470,18 @@ const MessageList = ({ enableSearch = false }: MessageListProps) => {
 
   const executeTopicImageAction = useCallback(
     async (action: TopicImageRuntimeAction, captureRef: React.RefObject<HTMLElement | null>) => {
-      if (action === 'copy') {
-        const canvas = await captureScrollable(captureRef)
-        const blob = canvas ? await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png')) : null
-        if (!blob) {
-          throw new Error('Failed to capture topic image')
-        }
-        await copyImage?.(blob)
-        return
+      if (action !== 'copy') {
+        throw new Error(`Unknown topic image action: ${action}`)
       }
 
-      if (!meta.imageExportFileName || !saveImage) {
-        throw new Error('Topic image export is unavailable')
-      }
-
-      const imageData = await captureScrollableAsDataUrl(captureRef)
-      if (!imageData) {
+      const canvas = await captureScrollable(captureRef)
+      const blob = canvas ? await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png')) : null
+      if (!blob) {
         throw new Error('Failed to capture topic image')
       }
-
-      const saved = await saveImage(removeSpecialCharactersForFileName(meta.imageExportFileName), imageData)
-      if (saved === false) {
-        throw new Error('Failed to save topic image')
-      }
+      await copyImage?.(blob)
     },
-    [copyImage, meta.imageExportFileName, saveImage]
+    [copyImage]
   )
 
   const enqueueTopicImageCaptureAction = useCallback((action: TopicImageRuntimeAction) => {
@@ -552,7 +538,7 @@ const MessageList = ({ enableSearch = false }: MessageListProps) => {
   useEffect(() => {
     const topicId = topic.id
     return () => {
-      const cancelReason = new Error('Topic image export was cancelled')
+      const cancelReason = new Error('Topic image capture was cancelled')
       rejectPendingTopicImageActions(topicId, cancelReason)
       for (const pendingAction of topicImageCaptureActionsRef.current) {
         pendingAction.reject(cancelReason)
@@ -687,8 +673,7 @@ const MessageList = ({ enableSearch = false }: MessageListProps) => {
     return bindRuntime?.({
       scrollToBottom: () => runtimeActionsRef.current.scrollToBottom(),
       locateMessage: (messageId) => runtimeActionsRef.current.scrollToMessageById(messageId),
-      copyTopicImage: () => runtimeActionsRef.current.runTopicImageAction('copy'),
-      exportTopicImage: () => runtimeActionsRef.current.runTopicImageAction('export')
+      copyTopicImage: () => runtimeActionsRef.current.runTopicImageAction('copy')
     })
   }, [bindRuntime])
 

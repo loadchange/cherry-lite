@@ -15,8 +15,7 @@ interface RequestTopicImageActionOptions {
 }
 
 const TOPIC_IMAGE_EVENT_NAMES: Record<TopicImageActionType, string> = {
-  copy: EVENT_NAMES.COPY_TOPIC_IMAGE,
-  export: EVENT_NAMES.EXPORT_TOPIC_IMAGE
+  copy: EVENT_NAMES.COPY_TOPIC_IMAGE
 }
 
 const topicImageActionBus = createImageActionBus<Topic, 'topic', RequestTopicImageActionOptions>({

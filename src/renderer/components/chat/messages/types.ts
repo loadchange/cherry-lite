@@ -2,7 +2,6 @@ import type { DeleteMessageOptions, MessageDeleteAvailability } from '@renderer/
 import type { SerializedError } from '@renderer/types/error'
 import type { FileMetadata } from '@renderer/types/file'
 import type { Citation } from '@renderer/types/message'
-import type { MessageExportView } from '@renderer/types/messageExport'
 import type { McpTool } from '@renderer/types/tool'
 import type { Topic } from '@renderer/types/topic'
 import type {
@@ -43,7 +42,6 @@ export interface MessageListRuntime {
   scrollToBottom: () => void
   locateMessage: (messageId: string) => void
   copyTopicImage: () => Promise<void>
-  exportTopicImage: () => Promise<void>
 }
 
 export interface MessageRuntime {
@@ -71,42 +69,14 @@ export interface MessageFileView {
   previewUrl?: FileUrlString
 }
 
-export interface MessageMenuExportOptions {
-  image: boolean
-  markdown: boolean
-  markdown_reason: boolean
-  notion: boolean
-  yuque: boolean
-  joplin: boolean
-  obsidian: boolean
-  siyuan: boolean
-  docx: boolean
-  plain_text: boolean
-}
-
 export interface MessageMenuConfig {
   confirmDeleteMessage: boolean
   enableDeveloperMode: boolean
-  exportMenuOptions: MessageMenuExportOptions
-}
-
-export const defaultMessageMenuExportOptions: MessageMenuExportOptions = {
-  image: false,
-  markdown: false,
-  markdown_reason: false,
-  notion: false,
-  yuque: false,
-  joplin: false,
-  obsidian: false,
-  siyuan: false,
-  docx: false,
-  plain_text: false
 }
 
 export const defaultMessageMenuConfig: MessageMenuConfig = {
   confirmDeleteMessage: false,
-  enableDeveloperMode: false,
-  exportMenuOptions: defaultMessageMenuExportOptions
+  enableDeveloperMode: false
 }
 
 export interface MessageModelPickerRenderOptions {
@@ -338,14 +308,6 @@ export interface MessageListActions {
   startNewContext?: () => void
   saveCodeBlock?: (data: { msgBlockId: string; codeBlockId: string; newContent: string }) => void | Promise<void>
   saveTextFile?: (fileName: string, content: string) => string | null | void | Promise<string | null | void>
-  saveImage?: (fileName: string, dataUrl: string) => boolean | Promise<boolean>
-  exportMessageAsMarkdown?: (message: MessageExportView, includeReasoning?: boolean) => void | Promise<void>
-  exportToWord?: (markdown: string, title: string) => void | Promise<void>
-  exportToNotion?: (message: MessageExportView) => void | Promise<void>
-  exportToYuque?: (message: MessageExportView) => void | Promise<void>
-  exportToObsidian?: (message: MessageExportView) => void | Promise<void>
-  exportToJoplin?: (message: MessageExportView) => void | Promise<void>
-  exportToSiyuan?: (message: MessageExportView) => void | Promise<void>
   openArtifactFile?: (path: string) => void | Promise<void>
   openFile?: (file: FileMetadata) => void | Promise<void>
   openPath?: (path: string) => void | Promise<void>
@@ -410,7 +372,6 @@ export interface MessageListMeta {
   selectionLayer: boolean
   userProfile?: MessageUserProfile
   assistantProfile?: MessageUserProfile
-  imageExportFileName?: string
   /** Usage-record partition this surface's messages belong to. Defaults to 'chat'. */
   aiUsageMessageKind?: AiUsageRecordMessageKind
 }

@@ -8,8 +8,7 @@ function createRuntime(): MessageListRuntime {
   return {
     scrollToBottom: vi.fn(),
     locateMessage: vi.fn(),
-    copyTopicImage: vi.fn(),
-    exportTopicImage: vi.fn()
+    copyTopicImage: vi.fn()
   }
 }
 

@@ -5,19 +5,6 @@ import { executeTopicMenuAction, resolveTopicMenuActions, type TopicActionContex
 
 const t = ((key: string) => key) as TopicActionContext['t']
 
-const exportMenuOptions: TopicActionContext['exportMenuOptions'] = {
-  docx: true,
-  image: true,
-  joplin: true,
-  markdown: true,
-  markdown_reason: true,
-  notion: true,
-  obsidian: true,
-  plain_text: true,
-  siyuan: true,
-  yuque: true
-}
-
 const topic: Topic = {
   id: 'topic-a',
   assistantId: 'assistant-a',
@@ -32,7 +19,6 @@ const topic: Topic = {
 function createTopicActionFixture(overrides: Partial<TopicActionContext> = {}): TopicActionContext {
   return {
     assistantMoveTargets: [],
-    exportMenuOptions,
     isActiveInCurrentTab: false,
     isRenaming: false,
     onAutoRename: vi.fn(),
@@ -41,15 +27,6 @@ function createTopicActionFixture(overrides: Partial<TopicActionContext> = {}): 
     onCopyMarkdown: vi.fn(),
     onCopyPlainText: vi.fn(),
     onDelete: vi.fn(),
-    onExportImage: vi.fn(),
-    onExportJoplin: vi.fn(),
-    onExportMarkdown: vi.fn(),
-    onExportMarkdownReason: vi.fn(),
-    onExportNotion: vi.fn(),
-    onExportObsidian: vi.fn(),
-    onExportSiyuan: vi.fn(),
-    onExportWord: vi.fn(),
-    onExportYuque: vi.fn(),
     onPinTopic: vi.fn(),
     onStartRename: vi.fn(),
     t,
@@ -60,22 +37,15 @@ function createTopicActionFixture(overrides: Partial<TopicActionContext> = {}): 
 }
 
 describe('topic context menu actions', () => {
-  it('gates copy and export children by the export menu preferences', () => {
-    const actions = resolveTopicMenuActions(
-      createTopicActionFixture({
-        exportMenuOptions: {
-          ...exportMenuOptions,
-          image: false,
-          plain_text: false
-        }
-      })
-    )
+  it('lists every copy child whenever its handler exists', () => {
+    const actions = resolveTopicMenuActions(createTopicActionFixture())
 
     const copyAction = actions.find((action) => action.id === 'topic.copy')
-    expect(copyAction?.children.map((action) => action.id)).toEqual(['topic.copy.markdown'])
-
-    const exportAction = actions.find((action) => action.id === 'topic.export')
-    expect(exportAction?.children.map((action) => action.id)).not.toContain('topic.export.image')
+    expect(copyAction?.children.map((action) => action.id)).toEqual([
+      'topic.copy.image',
+      'topic.copy.markdown',
+      'topic.copy.plain-text'
+    ])
   })
 
   it('runs a move-to-assistant submenu action', async () => {

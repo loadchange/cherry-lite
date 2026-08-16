@@ -222,18 +222,17 @@ export function useHomeMessageListProviderValue({
 
   const {
     errorActions,
-    exportActions,
     getMessageActivityState,
     headerCapabilities,
     leafCapabilities,
     menuConfig,
     messageUiStateCache,
     renderConfig,
+    saveTextFile,
     selectionController,
     updateRenderConfig
   } = useMessageListAdapterCapabilities({
     topicId,
-    topicName: topic.name,
     messages: messageItems,
     partsByMessageId,
     streamingLayers,
@@ -349,7 +348,7 @@ export function useHomeMessageListProviderValue({
 
   useEffect(() => {
     const topicId = topic.id
-    return () => rejectPendingTopicImageActions(topicId, new Error('Topic image export was cancelled'))
+    return () => rejectPendingTopicImageActions(topicId, new Error('Topic image capture was cancelled'))
   }, [topic.id])
 
   const bindRuntime = useCallback(
@@ -361,7 +360,7 @@ export function useHomeMessageListProviderValue({
       const unbindExternalRuntime = onBindRuntime?.(runtime)
       if (imageActionConsumer === 'capture') {
         const unbindCaptureRuntime = bindCaptureMessageImageRuntime({
-          cancelMessage: 'Topic image export was cancelled',
+          cancelMessage: 'Topic image capture was cancelled',
           consumePendingActions: consumePendingTopicImageActions,
           rejectPendingActions: rejectPendingTopicImageActions,
           runtime,
@@ -382,9 +381,6 @@ export function useHomeMessageListProviderValue({
       const unsubscribes = [
         EventEmitter.on(EVENT_NAMES.COPY_TOPIC_IMAGE, (data?: TopicImageActionRequest['topic']) =>
           consumeTopicImageAction(runtime, 'copy', data)
-        ),
-        EventEmitter.on(EVENT_NAMES.EXPORT_TOPIC_IMAGE, (data?: TopicImageActionRequest['topic']) =>
-          consumeTopicImageAction(runtime, 'export', data)
         )
       ]
 
@@ -840,7 +836,7 @@ export function useHomeMessageListProviderValue({
       locateMessage,
       ...(canStartNewContext && { startNewContext }),
       saveCodeBlock,
-      ...exportActions,
+      saveTextFile,
       ...errorActions,
       ...pickMessageLeafActions(leafCapabilities),
       navigateToRoute,
@@ -881,7 +877,6 @@ export function useHomeMessageListProviderValue({
       deleteMessageGroup,
       deleteMessageGroupWithConfirm,
       editMessage,
-      exportActions,
       errorActions,
       headerCapabilities,
       leafCapabilities,
@@ -898,6 +893,7 @@ export function useHomeMessageListProviderValue({
       renderRegenerateModelPicker,
       removeMessageErrorPart,
       saveCodeBlock,
+      saveTextFile,
       setActiveBranch,
       showInFolder,
       startEditing,
@@ -914,10 +910,9 @@ export function useHomeMessageListProviderValue({
     () => ({
       selectionLayer: true,
       userProfile: headerCapabilities.userProfile,
-      assistantProfile: assistant ? { name: assistant.name, avatar: assistant.emoji } : undefined,
-      imageExportFileName: topic.name
+      assistantProfile: assistant ? { name: assistant.name, avatar: assistant.emoji } : undefined
     }),
-    [assistant, headerCapabilities.userProfile, topic.name]
+    [assistant, headerCapabilities.userProfile]
   )
 
   return useMemo(() => ({ state, actions, meta }), [actions, meta, state])

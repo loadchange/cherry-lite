@@ -1,14 +1,11 @@
 import { Tooltip } from '@cherrystudio/ui'
 import { dataApiService } from '@data/DataApiService'
 import { useCache, usePersistCache, useSharedCacheSelector } from '@data/hooks/useCache'
-import { useMultiplePreferences, usePreference } from '@data/hooks/usePreference'
+import { usePreference } from '@data/hooks/usePreference'
 import { loggerService } from '@logger'
 import { actionsToCommandMenuExtraItems } from '@renderer/components/chat/actions/actionMenuItems'
 import { ResourceListActionContextMenu } from '@renderer/components/chat/actions/ResourceListActionContextMenu'
-import type {
-  TopicExportMenuOptions,
-  TopicMoveAssistantTarget
-} from '@renderer/components/chat/actions/topicContextMenuActions'
+import type { TopicMoveAssistantTarget } from '@renderer/components/chat/actions/topicContextMenuActions'
 import { useOptionalRightPanelActions, useOptionalRightPanelState } from '@renderer/components/chat/panes/Shell'
 import {
   buildResourceListGroupDropAnchor,
@@ -85,7 +82,6 @@ import { useTranslation } from 'react-i18next'
 import {
   rejectPendingTopicImageActions,
   requestTopicImageAction,
-  type TopicImageActionRequest,
   type TopicImageActionType
 } from '../../messages/topicImageActionBus'
 import TopicImageCaptureHost from '../../messages/TopicImageCaptureHost'
@@ -110,18 +106,6 @@ const DEFAULT_TOPIC_GROUP_VISIBLE_COUNT = 5
 const LEFT_PANEL_TIME_TOPIC_GROUP_VISIBLE_COUNT = 50
 const TOPIC_ASSISTANT_GROUP_SECTION_PREFIX = 'topic:section:assistant-group:'
 const TOPIC_ASSISTANT_UNGROUPED_SECTION_ID = `${TOPIC_ASSISTANT_GROUP_SECTION_PREFIX}ungrouped`
-const TOPIC_EXPORT_MENU_PREFERENCE_KEYS = {
-  docx: 'data.export.menus.docx',
-  image: 'data.export.menus.image',
-  joplin: 'data.export.menus.joplin',
-  markdown: 'data.export.menus.markdown',
-  markdown_reason: 'data.export.menus.markdown_reason',
-  notion: 'data.export.menus.notion',
-  obsidian: 'data.export.menus.obsidian',
-  plain_text: 'data.export.menus.plain_text',
-  siyuan: 'data.export.menus.siyuan',
-  yuque: 'data.export.menus.yuque'
-} as const
 
 interface Props {
   activeTopic?: Topic
@@ -276,11 +260,10 @@ export function Topics({
   const [renamingTopics] = useCache('topic.renaming')
   const [newlyRenamedTopics] = useCache('topic.newly_renamed')
   const { queueTarget: queueImageCaptureTarget, targets: imageCaptureTargets } = useImageCaptureTargets<Topic>({
-    cancelMessage: 'Topic image export was cancelled',
+    cancelMessage: 'Topic image capture was cancelled',
     delayMs: IMAGE_CAPTURE_START_DELAY_MS,
     rejectPendingActions: rejectPendingTopicImageActions
   })
-  const [exportMenuOptions] = useMultiplePreferences(TOPIC_EXPORT_MENU_PREFERENCE_KEYS)
   const displayMode = isRightPanel ? 'time' : (topicDisplayMode ?? 'time')
   const defaultGroupVisibleCount = isRightPanel
     ? Number.POSITIVE_INFINITY
@@ -343,38 +326,14 @@ export function Topics({
   const deletingAssistantGroupIdRef = useRef<string | null>(null)
   const [editDialogTarget, setEditDialogTarget] = useState<ResourceEditDialogTarget | null>(null)
 
-  const showTopicImageExportToast = useCallback(
-    (request: TopicImageActionRequest) => {
-      const key = `topic-image-export:${request.id}`
-      const loadingPromise = request.promise.finally(() => toast.closeToast(key)).catch(() => undefined)
-
-      toast.loading({
-        key,
-        title: t('chat.topics.export.image_exporting_keep_page'),
-        promise: loadingPromise,
-        onError: () => {}
-      })
-
-      void request.promise.then(
-        () => toast.success(t('chat.topics.export.image_saved')),
-        () => toast.error(t('chat.topics.export.failed'))
-      )
-    },
-    [t]
-  )
-
   const handleTopicImageAction = useCallback(
     (type: TopicImageActionType, topic: Topic) => {
       const request = requestTopicImageAction(type, topic, { emit: false })
-      if (type === 'export') {
-        showTopicImageExportToast(request)
-      } else {
-        void request.promise.catch(() => toast.error(t('common.copy_failed')))
-      }
+      void request.promise.catch(() => toast.error(t('common.copy_failed')))
 
       queueImageCaptureTarget(request, topic)
     },
-    [queueImageCaptureTarget, showTopicImageExportToast, t]
+    [queueImageCaptureTarget, t]
   )
 
   const apiBackedTopics = useMemo(
@@ -1423,7 +1382,6 @@ export function Topics({
           assistantMoveTargets={assistantMoveTargets}
           deletingTopicId={deletingTopicId}
           displayMode={displayMode}
-          exportMenuOptions={exportMenuOptions as TopicExportMenuOptions}
           isNewlyRenamed={isNewlyRenamed}
           isRenaming={isRenaming}
           isRightPanel={isRightPanel}
@@ -1520,7 +1478,6 @@ interface TopicListBodyProps {
   assistantMoveTargets: readonly TopicMoveAssistantTarget[]
   deletingTopicId: string | null
   displayMode: TopicDisplayMode
-  exportMenuOptions: TopicExportMenuOptions
   isNewlyRenamed: (topicId: string) => boolean
   isRenaming: (topicId: string) => boolean
   isRightPanel: boolean
@@ -1551,7 +1508,6 @@ function TopicListBody(props: TopicListBodyProps) {
     assistantMoveTargets,
     deletingTopicId,
     displayMode,
-    exportMenuOptions,
     isNewlyRenamed,
     isRenaming,
     isRightPanel,
@@ -1578,7 +1534,6 @@ function TopicListBody(props: TopicListBodyProps) {
       assistantMoveTargets,
       deletingTopicId,
       displayMode,
-      exportMenuOptions,
       isNewlyRenamed,
       isRenaming,
       onAutoRename,
@@ -1600,7 +1555,6 @@ function TopicListBody(props: TopicListBodyProps) {
       assistantMoveTargets,
       deletingTopicId,
       displayMode,
-      exportMenuOptions,
       isNewlyRenamed,
       isRenaming,
       onAutoRename,
@@ -1653,7 +1607,6 @@ const TopicRow = memo(function TopicRow({
   assistantMoveTargets,
   deletingTopicId,
   displayMode,
-  exportMenuOptions,
   isActive,
   isNewlyRenamed,
   isRenaming,
@@ -1707,7 +1660,6 @@ const TopicRow = memo(function TopicRow({
   const startMenuRename = useCallback(() => setRenameDialogOpen(true), [])
   const submitRenameDialog = useCallback((name: string) => actions.commitRename(topic.id, name), [actions, topic.id])
   const { getMenuActions, handleMenuAction } = useTopicMenuActions({
-    exportMenuOptions,
     isActiveInCurrentTab: isActive,
     isRenaming: isRenaming(topic.id),
     assistantMoveTargets,
@@ -1715,7 +1667,6 @@ const TopicRow = memo(function TopicRow({
     onClearMessages,
     onCopyImage: (topic) => onRequestTopicImageAction('copy', topic),
     onDelete: onDeleteFromMenu,
-    onExportImage: (topic) => onRequestTopicImageAction('export', topic),
     onMoveToAssistant,
     onOpenInNewTab,
     onOpenInNewWindow,

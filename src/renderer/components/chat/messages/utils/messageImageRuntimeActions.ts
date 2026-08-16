@@ -21,7 +21,7 @@ export function runMessageImageAction(runtime: MessageListRuntime, type: ImageAc
     return runtime.copyTopicImage()
   }
 
-  return runtime.exportTopicImage()
+  throw new Error(`Unknown message image action: ${type}`)
 }
 
 export function flushPendingMessageImageActions<TRequest extends MessageImageActionRequest>({
