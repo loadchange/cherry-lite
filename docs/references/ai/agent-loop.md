@@ -95,10 +95,6 @@ live topic is handled one level up by the stream manager: the dispatcher
 aborts the running turn, waits for it to persist as `paused`, and starts a
 fresh one — see [Stream Manager → Steering](./stream-manager.md#steering).
 
-Agent-session runtimes are different: they queue their own follow-ups on the
-session's `pendingTurns` and interrupt between turns rather than restarting —
-see [Agent Session Runtime](./agent-session-runtime.md#live-follow-up).
-
 ## Error and abort
 
 - `signal.aborted` is honoured throughout `stream()` and `generate()`. Aborted

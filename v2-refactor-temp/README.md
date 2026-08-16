@@ -1,58 +1,23 @@
-# V2 Refactor Temp Directory
+# V2 数据分类工具
 
-Working directory for the Cherry Studio v2 data and UI refactor. Holds shared tools, working notes, and other transient artifacts used during the refactor.
-
-**Important**: This directory will be removed after the v2 refactor lands.
-
-## Layout
+本目录只保留数据层代码生成管线，不再放重构工作笔记。
 
 ```
 v2-refactor-temp/
-├── tools/                    # Refactor tooling
-│   └── data-classify/        # Data classification and code generation
-├── docs/                     # Working notes
-│   ├── v2-todo.md            # Cross-cutting global v2-refactor TODO tracker
-│   ├── breaking-changes.md   # V2 breaking changes index
-│   └── breaking-changes/     # Individual breaking change records
-└── README.md                 # This file
+└── tools/data-classify/   # 从 classification.json 生成 Preference / BootConfig schema 与迁移映射
 ```
 
-## Contents
+`classification.json` 是数据层 key 的单一来源。生成物写到正式目录，不要手改：
 
-### Tools (`tools/`)
+- `src/shared/data/preference/preferenceSchemas.ts`
+- `src/shared/data/bootConfig/bootConfigSchemas.ts`
+- `src/main/data/migration/v2/migrators/mappings/PreferencesMappings.ts`
+- `src/main/data/migration/v2/migrators/mappings/BootConfigMappings.ts`
 
-- **data-classify/** — Data classification and code generation pipeline
-  - Extracts the data inventory from source
-  - Manages classification mappings
-  - Generates TypeScript types and migration mappings
-  - See [tools/data-classify/README.md](./tools/data-classify/README.md)
+改 `tools/data-classify/data/classification.json` 或 `target-key-definitions.json` 后：
 
-### Docs (`docs/`)
+```bash
+cd v2-refactor-temp/tools/data-classify && npm run generate
+```
 
-- **v2-todo.md** — Cross-cutting global v2-refactor TODO tracker
-  - Tracks whole-refactor tasks only: v1 data-stack and UI-library teardown, migrator and schema finalization, removal-slated `@deprecated` sites, release cleanup
-  - Per-module fine-grained TODOs stay in their own docs and are not duplicated here
-  - See [docs/v2-todo.md](./docs/v2-todo.md)
-
-- **breaking-changes.md** — Index of v2 user-perceivable breaking changes
-  - Any removed capability, incompatible data shape, migration downgrade, or user-visible behavior change should add an individual document and update this index
-  - See [docs/breaking-changes.md](./docs/breaking-changes.md)
-
-- **breaking-changes/** — Log of v2 changes that affect how users use the app
-  - PR authors drop an entry alongside their PR; the release manager aggregates and translates these into the Chinese user-facing release note at v2.0.0
-  - See [docs/breaking-changes/README.md](./docs/breaking-changes/README.md)
-
-## Usage notes
-
-1. This directory contains no production code — it only supports the refactor
-2. Generated code is written to the canonical project locations, not here
-3. Do not store anything that needs to be preserved long-term
-
-## Cleanup plan
-
-After the v2 refactor lands, remove this directory entirely:
-
-1. Confirm all tooling here is no longer needed
-2. Move any documents worth keeping to their canonical locations
-3. Delete the `v2-refactor-temp/` directory
-4. Update `.gitignore` and any remaining references
+详见 [tools/data-classify/README.md](./tools/data-classify/README.md)。

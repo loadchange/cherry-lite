@@ -241,9 +241,9 @@ Standard Drizzle column addition (dev-stage migrations are throwaway per repo po
 
 Rationale: a blanket `delete_when_unreferenced` would let the **first cleanup pass mass-delete every v1 library file that happens to be unreferenced** — unacceptable data loss. Zero-ref survivors stay report-only, exactly like today.
 
-### 7.3 Breaking-changes log
+### 7.3 User-visible cleanup
 
-Entry: `v2-refactor-temp/docs/breaking-changes/2026-07-04-automatic-file-cleanup-on-deletion.md` — deleting a chat/topic/painting now silently reclaims its exclusively-owned files (the user's original is untouched — chat attachments are copies); the Files page no longer accumulates every historical upload forever. Files uploaded via the Files page (`manual`) are kept; there is no user control over retention.
+Deleting a chat or topic reclaims files exclusively owned by that conversation (attachments are copies; the user's original file is untouched). Files uploaded via the Files page (`manual`) are kept.
 
 ## 8. Contract & Documentation Updates
 

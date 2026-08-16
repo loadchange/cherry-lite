@@ -28,7 +28,6 @@ Use this checklist when migrating an existing service (KnowledgeRuntime / FilePr
 - [ ] Map existing rows → `jobTable` / `jobScheduleTable` rows
 - [ ] Run migration via `v2-refactor-temp/tools/data-classify` flow
 - [ ] Update v2 migrators in `src/main/data/migration/v2/migrators/` for clean-restart safety
-- [ ] Add a `v2-refactor-temp/docs/breaking-changes/` entry if user-visible behavior changes (e.g., agent task: per-attempt log → single row per enqueue)
 - [ ] Delete or thin-facade the legacy service (keep IPC entry points; redirect to JobManager)
 
 ## Validation per handler

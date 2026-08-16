@@ -593,13 +593,6 @@ AiStreamManager specifics:
 | Drain wait-set | Gate-admitted `dispatchStreamRequest` promises until `manager.send()` hands them off to the stream registry; this covers async `prepareDispatch` work such as agent-session `validateSession()`. Then executions of streams carrying a `persistence:*` listener — listener-derived, not lifecycle-derived: chunks-only prompt streams (API gateway, orphan translate) are excluded, while a translate-with-persist carries a `TranslationBackend` persistence listener and IS drained. Plus in-flight steer-continuation launches and `TopicNamingService.inFlightWrites()` — the summary renames are spawned detached (`void backend.afterPersist(...)`), so a loopPromise settles before their DB write lands; the registry closes that gap. The set can grow while draining (an admission opens a stream, a settling loop spawns a naming write, or a grandfathered continuation opens a stream), so the drain is a fixed point over promise identities, bounded by `timeoutMs`. |
 | Timeout | Never rejects; stragglers are not aborted (the orchestrator decides — see the job overview for why an abort would poison the snapshot). |
 
-`AgentSessionRuntimeService` gates its two autonomous turn starters (`startNextTurn` /
-`startContinuationTurn`) before they consume queue/roll state or write the assistant
-placeholder — suppressed starts stay queued (`isSessionBusy` holds) and are re-kicked on
-release; its drain awaits `inFlightTurnStarts` (a launch admitted pre-pause through its
-placeholder write + `startRuntimeTurn` handoff). See
-[agent-session-runtime.md](./agent-session-runtime.md#write-quiesce).
-
 ## Lifecycle strategy — chat vs prompt
 
 The manager stays policy-free. Behaviour that differs between chat
@@ -680,13 +673,6 @@ turn completes — chaining earlier would let the approval response be swallowed
 the inject branch. If the continuation itself fails to launch, the topic is driven
 to a terminal `error` rather than sticking at `streaming`.
 
-Agent-session topics use a parallel, queue-based mechanism — never an interrupt.
-A live follow-up is steered into the running turn via `connection.redirect()`
-(no abort); if there is no live turn, or the steer is never injected, it is
-enqueued on the session's `pendingTurns` for the next turn. `send()` only upserts
-the new subscriber. See
-[Agent Session Runtime → Live follow-up](./agent-session-runtime.md#live-follow-up).
-
 ## End-to-end flows
 
 One row per flow. The two with dedicated docs are cross-linked rather than
@@ -696,7 +682,6 @@ duplicated; the rest are stream-manager-specific.
 |---|---|---|---|
 | Submit (standard) | `Ai_Stream_Open` | `dispatchStreamRequest` → `prepareDispatch` (persist user msg, reserve placeholders, build listeners + models) → `manager.send` → N × `runExecutionLoop` | `Ai_StreamDone`; `PersistenceListener.persistAssistant`; chat lifecycle `scheduleCleanup(30 s)` |
 | Steering — chat resubmit | `Ai_Stream_Open` on a live chat topic | provider persists the steer user row + `enqueuePendingSteer` → `pendingSteers`; `steerYield` stops the running turn cleanly; `onExecutionDone` chains a `steer-continuation` | prior turn persisted as **`success`**; the continuation answers the steer — see [Steering](#steering) |
-| Agent-session follow-up | `Ai_Stream_Open` on a live `agent-session:*` topic | provider persists the user row, `enqueueUserMessage` steers via `connection.redirect()` (no abort) or queues on `pendingTurns`; `manager.send` upserts the subscriber → `{ mode: 'injected' }` | steer folds into the current turn (rolled at a `steer-boundary`), else the next turn starts from `pendingTurns` — see [Agent Session Runtime](./agent-session-runtime.md#live-follow-up) |
 | Tool-approval pause+resume | approval-request chunk → `awaiting-approval` | decision via `Ai_ToolApproval_Respond`; Claude-Agent unblocks `canUseTool`, MCP dispatches `continue-conversation` | card clears when the resumed stream broadcasts `pending` — see [Tool Approval](./tool-approval.md) |
 | Reconnect | `Ai_Stream_Attach` on mount | `manager.attach`: `not-found` / streaming (register listener + compact replay) / done-paused (`finalMessage(s)`) / error | live chunks resume, or the final row is returned; attach never changes runtime state |
 | Abort — user stop | `Ai_Stream_Abort` | per exec: `abortController.abort` → loop `signal` aborts → broadcast reader `cancel` → read loop `done` | partial persisted as **`paused`**; topic status → `aborted` (or `awaiting-approval` if an exec had it set) |

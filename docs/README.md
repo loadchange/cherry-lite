@@ -91,7 +91,6 @@
 | --- | --- |
 | [前端测试](./references/testing/frontend-testing.md) | 前端测试设计 |
 | [应用更新](./references/app-upgrade.md) | GitHub Releases 更新 |
-| [飞书通知](./references/feishu-notify.md) | 飞书通知集成 |
 | [模糊搜索](./references/fuzzy-search.md) | 模糊搜索 |
 | [局域网传输](./references/lan-transfer-protocol.md) | 局域网传文件 |
 | [远程拉取安全](./references/security/remote-fetch.md) | 主进程 URL 拉取的 SSRF 约束 |

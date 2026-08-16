@@ -1,9 +1,7 @@
 /**
  * Filename validation + sanitization — pure-string utilities usable from both
- * main and renderer. Promoted from `src/main/utils/file/legacyFile.ts` per
- * the `v2-refactor-temp/docs/file-manager/utils-file-migration.md` Phase 1b.1
- * plan: this module is the SoT; `legacyFile.ts` re-exports for back-compat
- * during the consumer-migration window.
+ * main and renderer. This module is the source of truth; `legacyFile.ts`
+ * re-exports for back-compat during the consumer-migration window.
  *
  * Platform notes:
  * - Windows: rejects `< > : " / \ | ? *` and reserved names (CON / PRN /

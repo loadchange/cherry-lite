@@ -132,13 +132,3 @@ src/main/ai/
 - [Window Manager](../window-manager/README.md) — `WebContentsListener`
   attaches to whatever windows are open
 
-## v2 refactor
-
-The AI domain is the largest single area of the v2 refactor: the v1
-renderer aiCore tree (formerly `src/renderer/src/aiCore/`, pre-v2 layout)
-is fully deleted, with logic ported into `src/main/ai/`.
-
-These reference docs are **self-contained** — they do not depend on the
-throwaway `v2-refactor-temp/` tree. (The reviewer-facing change-cluster
-narratives that live there are review logistics for the in-flight PR, and
-are removed when the v2 AI refactor merges.)

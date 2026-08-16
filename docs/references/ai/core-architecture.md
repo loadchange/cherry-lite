@@ -128,7 +128,6 @@ overlay-vs-persist conditional write.
 | Subsystem | Reference |
 |---|---|
 | Active-stream registry, listeners, persistence backends, reconnect, abort, grace-period eviction | [Stream Manager](./stream-manager.md) |
-| Claude Code agent-session long-lived runtime, SDK input queue, resume fallback | [Agent Session Runtime](./agent-session-runtime.md) |
 | `Agent.stream` single-pass loop, hooks model, error/abort | [Agent Loop](./agent-loop.md) |
 | `buildAgentParams`, `RequestFeature` composition, `INTERNAL_FEATURES` order | [Params Pipeline](./params-pipeline.md) |
 | Tool registry, MCP sync, meta-tools (`tool_search` / `tool_inspect` / `tool_invoke` / `tool_exec`), defer exposition | [Tool Registry](./tool-registry.md) |
