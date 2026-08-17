@@ -85,7 +85,6 @@ Type-checked via `satisfies` — typos and stale references fail at compile time
 | Key | Physical location | Note |
 |-----|-------------------|------|
 | `feature.mcp.oauth` | `~/.cherrystudio/config/mcp/oauth` | Under `config/`, not `mcp/` |
-| `feature.agents.skills.install.temp` | `{app.temp}/skill-install` | Sibling `feature.agents.skills` lives at `{userData}/Data/Skills` |
 
 **Never assume filesystem nesting from key nesting.** Consult `pathRegistry.ts` directly.
 

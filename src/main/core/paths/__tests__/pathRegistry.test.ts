@@ -66,14 +66,6 @@ describe('buildPathRegistry', () => {
     expect(registry['sys.downloads']).toBe('/mock/downloads')
     expect(registry['sys.desktop']).toBe('/mock/desktop')
   })
-
-  it('registers the Cherry Assistant product manifest inside bundled resources', () => {
-    const registry = buildPathRegistry()
-
-    expect(registry['feature.agents.assistant.manifest.file']).toBe(
-      '/mock/app/resources/builtin-agents/cherry-assistant/product-manifest.json'
-    )
-  })
 })
 
 describe('pathRegistry.shouldAutoEnsure', () => {
@@ -208,10 +200,6 @@ describe('pathRegistry.shouldAutoEnsure', () => {
 
     it('returns false for app.database.migrations (packaged read-only path)', () => {
       expect(shouldAutoEnsure('app.database.migrations')).toBe(false)
-    })
-
-    it('returns false for the bundled Cherry Assistant product manifest', () => {
-      expect(shouldAutoEnsure('feature.agents.assistant.manifest.file')).toBe(false)
     })
   })
 

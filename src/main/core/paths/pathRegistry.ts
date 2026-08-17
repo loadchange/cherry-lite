@@ -129,12 +129,6 @@ export function buildPathRegistry() {
 
     // Agents
     'feature.agents.claude.root': path.join(appUserDataData, 'Agents', '.claude'), // v1 userData/.claude is copied here during v2 migration
-    'feature.agents.assistant.manifest.file': path.join(
-      appRootResources,
-      'builtin-agents',
-      'cherry-assistant',
-      'product-manifest.json'
-    ),
 
     // Files / Knowledgebase
     'feature.files.data': path.join(appUserDataData, 'Files'),
@@ -222,8 +216,7 @@ const NO_ENSURE = [
   'app.root.resources.scripts',
   'app.root.resources.binaries',
   'app.database.migrations',
-  'feature.provider_registry.data',
-  'feature.agents.assistant.manifest.file'
+  'feature.provider_registry.data'
 ] as const satisfies readonly NoEnsureEntry[]
 
 /** Whether Application.getPath() should auto-create the directory for this key. */
