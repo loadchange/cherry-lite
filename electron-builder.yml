@@ -114,7 +114,8 @@ mac:
   entitlementsInherit: build/entitlements.mac.plist
   # Notarization runs in scripts/notarize.js (afterSign) so CI can fail closed.
   notarize: false
-  artifactName: ${productName}-${version}-${arch}.${ext}
+  # Keep disk filenames identical to GitHub asset and update-metadata URLs.
+  artifactName: Cherry-Lite-${version}-${arch}.${ext}
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
@@ -122,6 +123,8 @@ mac:
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
   target:
     - target: dmg
+    # Squirrel.Mac / electron-updater requires ZIP; DMG is for manual installs.
+    - target: zip
 dmg:
   writeUpdateInfo: true
 linux:
@@ -156,21 +159,25 @@ artifactBuildCompleted: scripts/artifact-build-completed.js
 releaseInfo:
   releaseNotes: |
     <!--LANG:en-->
-    Cherry Lite 2.0.0 - Chat and translate, with your own model service
+    Cherry Lite - Chat, translate, and read aloud
 
     ✨ Focused Lite
     - Keeps assistant chat and translate; you bind the model provider yourself
     - No MiniApp, image generation, agents, knowledge base, notes, or local-model stack
 
     🔄 Updates
-    - Check for Updates uses this repository's GitHub Releases
+    - Fixed macOS in-app updates: signed and notarized ZIP updates are now published for Apple Silicon and Intel
+    - DMG installers remain available for manual installation
+    - Read aloud is available in chat, the selection toolbar, and translation popups
     <!--LANG:zh-CN-->
-    Cherry Lite 2.0.0 - 聊天与翻译，使用你自己配置的模型服务
+    Cherry Lite - 聊天、翻译与朗读
 
     ✨ 精简版
     - 只保留助手聊天和翻译，模型服务由你自己绑定
     - 不含小程序、绘图、Agent、知识库、笔记和本地模型栈
 
     🔄 更新
-    - 检查更新指向本仓库的 GitHub Releases
+    - 修复 macOS 应用内更新：为 Apple Silicon 与 Intel 提供已签名、公证的 ZIP 更新包
+    - 保留 DMG 安装包，支持手动安装
+    - 支持对话消息、划词工具栏和翻译浮窗朗读
     <!--LANG:END-->

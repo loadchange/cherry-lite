@@ -32,8 +32,8 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: macOS signing regression test
-        run: pnpm exec vitest run --project scripts scripts/__tests__/mac-code-sign.test.ts
+      - name: Packaging and update regression tests
+        run: pnpm exec vitest run --project scripts
 
       - name: Unit tests
         run: |
@@ -133,12 +133,21 @@ jobs:
             xcrun stapler validate "$app"
           done
 
+      - name: Verify macOS update artifacts
+        run: |
+          node scripts/verify-mac-update.js dist "${{ steps.meta.outputs.version }}"
+          for archive in dist/*.zip; do
+            unzip -tq "$archive"
+          done
+
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: cherry-studio-lite-mac
           path: |
             dist/*.dmg
+            dist/*.zip
+            dist/*.zip.blockmap
             dist/latest-mac.yml
           if-no-files-found: error
 
@@ -156,8 +165,11 @@ jobs:
             macOS 安装包（Developer ID 签名并公证）：
             - Apple Silicon (`arm64`)
             - Intel (`x64`)
+            - DMG：手动安装；ZIP：应用内自动更新（支持旧版本直接升级）
           files: |
             dist/*.dmg
+            dist/*.zip
+            dist/*.zip.blockmap
             dist/latest-mac.yml
           fail_on_unmatched_files: true
           generate_release_notes: true
