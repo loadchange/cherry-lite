@@ -686,6 +686,48 @@ describe('edit dialogs', () => {
     expect(onOpenChange).not.toHaveBeenCalledWith(false)
   })
 
+  it('repairs invalid legacy max tokens when enabling the limit', async () => {
+    render(
+      <AssistantEditDialog
+        open
+        resource={{ ...ASSISTANT, settings: { ...ASSISTANT.settings, maxTokens: 0, enableMaxTokens: false } }}
+        onOpenChange={vi.fn()}
+      />
+    )
+
+    selectTab('Model')
+    fireEvent.click(await screen.findByRole('switch', { name: 'Max tokens' }))
+
+    await waitFor(() =>
+      expect(updateAssistantMock).toHaveBeenCalledWith({
+        body: { settings: { maxTokens: 4096, enableMaxTokens: true } }
+      })
+    )
+  })
+
+  it('clamps unsafe max tokens before saving', async () => {
+    render(
+      <AssistantEditDialog
+        open
+        resource={{ ...ASSISTANT, settings: { ...ASSISTANT.settings, maxTokens: 4096, enableMaxTokens: true } }}
+        onOpenChange={vi.fn()}
+      />
+    )
+
+    selectTab('Model')
+    const input = await screen.findByDisplayValue('4096')
+    fireEvent.focus(input)
+    fireEvent.change(input, { target: { value: String(Number.MAX_SAFE_INTEGER + 1) } })
+    fireEvent.blur(input)
+
+    expect(input).toHaveValue(Number.MAX_SAFE_INTEGER)
+    await waitFor(() =>
+      expect(updateAssistantMock).toHaveBeenCalledWith({
+        body: { settings: { maxTokens: Number.MAX_SAFE_INTEGER } }
+      })
+    )
+  })
+
   it('shows the default tool-call cap and clamps custom rounds at 100', async () => {
     render(
       <AssistantEditDialog
@@ -901,7 +943,7 @@ describe('edit dialogs', () => {
     })
   })
 
-  it('prompts without closing or retrying an unchanged failed assistant save', async () => {
+  it('allows discarding an unchanged failed assistant save without retrying it', async () => {
     updateAssistantMock.mockRejectedValueOnce(new Error('Network down'))
     const onOpenChange = vi.fn()
     render(<AssistantEditDialog open resource={ASSISTANT} onOpenChange={onOpenChange} />)
@@ -920,8 +962,7 @@ describe('edit dialogs', () => {
 
     expect(toast.error).toHaveBeenCalledTimes(2)
     expect(updateAssistantMock).toHaveBeenCalledTimes(saveAttemptsAfterFailure)
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(onOpenChange).not.toHaveBeenCalledWith(false)
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('retries saving when the form changes after a failed close', async () => {

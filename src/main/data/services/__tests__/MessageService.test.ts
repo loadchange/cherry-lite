@@ -1,6 +1,3 @@
-// Load the sibling so it self-registers in the data-service registry (prod loads it via its DataApi handler).
-import '@data/services/TopicService'
-
 import { aiUsageRecordTable } from '@data/db/schemas/aiUsageRecord'
 import { fileEntryTable } from '@data/db/schemas/file'
 import { chatMessageFileRefTable } from '@data/db/schemas/fileRelations'
@@ -9,6 +6,7 @@ import { topicTable } from '@data/db/schemas/topic'
 import { userModelTable } from '@data/db/schemas/userModel'
 import { userProviderTable } from '@data/db/schemas/userProvider'
 import { messageService } from '@data/services/MessageService'
+import { topicService } from '@data/services/TopicService'
 import { generateOrderKeySequence } from '@data/services/utils/orderKey'
 import { DataApiError, ErrorCode } from '@shared/data/api/errors'
 import { CreateMessageSchema } from '@shared/data/api/schemas/messages'
@@ -1073,6 +1071,23 @@ describe('MessageService', () => {
     })
   })
 
+  describe('update — partial data patches', () => {
+    it('preserves turnOptions when a patch sends only parts', async () => {
+      const topicId = 'topic-turn-options'
+      await seedTopicWithRoot(topicId)
+      const message = messageService.create(topicId, {
+        role: 'assistant',
+        data: { ...mainText('answer'), turnOptions: { reasoningEffort: 'high', fastMode: true } },
+        status: 'success'
+      })
+
+      const updated = messageService.update(message.id, { data: mainText('edited') })
+
+      expect(updated.data.parts).toEqual(mainText('edited').parts)
+      expect(updated.data.turnOptions).toEqual({ reasoningEffort: 'high', fastMode: true })
+    })
+  })
+
   describe('chat message file refs', () => {
     it('syncs refs when reserving a new user message with file parts', async () => {
       const topicId = 'topic-ref-reserve'
@@ -1116,6 +1131,28 @@ describe('MessageService', () => {
         .where(eq(chatMessageFileRefTable.sourceId, message.id))
 
       expect(refs.map((ref) => ref.fileEntryId)).toEqual([fileB])
+    })
+
+    it('keeps file refs when a data patch omits parts', async () => {
+      const topicId = 'topic-ref-partial-data'
+      const fileId = '019606a0-0000-7000-8000-00000000fa0a'
+      await seedTopicWithRoot(topicId)
+      await seedFileEntry(fileId)
+
+      const message = messageService.create(topicId, {
+        role: 'user',
+        data: partsWithFile(fileId),
+        status: 'success'
+      })
+      messageService.update(message.id, { data: { turnOptions: { fastMode: true } } })
+
+      const refs = await dbh.db
+        .select()
+        .from(chatMessageFileRefTable)
+        .where(eq(chatMessageFileRefTable.sourceId, message.id))
+
+      expect(refs.map((ref) => ref.fileEntryId)).toEqual([fileId])
+      expect(messageService.getById(message.id).data.parts).toEqual(partsWithFile(fileId).parts)
     })
 
     it('syncs refs for edit-and-resend sibling messages', async () => {
@@ -1662,6 +1699,61 @@ describe('MessageService', () => {
       })
 
       expect(message.parentId).toBe(rootId)
+    })
+  })
+
+  describe('delete — chain longer than the SQLite trigger-recursion limit', () => {
+    // A long chat is one parent chain, and SQLite aborts a self-FK cascade deeper than
+    // SQLITE_MAX_TRIGGER_DEPTH (1000) with "too many levels of trigger recursion".
+    const CHAIN = 1100
+
+    async function seedChain(topicId: string) {
+      await dbh.db.insert(topicTable).values({ id: topicId, orderKey: 'a0' })
+      const rows = Array.from({ length: CHAIN }, (_, i) => ({
+        id: `${topicId}-m${i}`,
+        parentId: i === 0 ? null : `${topicId}-m${i - 1}`,
+        topicId,
+        role: (i % 2 === 0 ? 'user' : 'assistant') as MessageRole,
+        data: mainText(`turn ${i}`),
+        status: 'success',
+        siblingsGroupId: 0,
+        createdAt: 100 + i,
+        updatedAt: 100 + i
+      }))
+      await dbh.db.insert(messageTable).values(withRoot(topicId, rows))
+    }
+
+    it('cascade-deletes the whole chain', async () => {
+      await seedChain('topic-deep')
+
+      const result = messageService.delete('topic-deep-m0', true)
+
+      expect(result.deletedIds).toHaveLength(CHAIN)
+      const remaining = await dbh.db
+        .select({ id: messageTable.id })
+        .from(messageTable)
+        .where(eq(messageTable.topicId, 'topic-deep'))
+      expect(remaining.map((r) => r.id)).toEqual(['vroot-topic-deep'])
+    })
+
+    it('clears the whole chain, keeping the virtual root', async () => {
+      await seedChain('topic-deep-clear')
+
+      expect(messageService.clearTopicMessages('topic-deep-clear').deletedIds).toHaveLength(CHAIN)
+
+      const remaining = await dbh.db
+        .select({ id: messageTable.id })
+        .from(messageTable)
+        .where(eq(messageTable.topicId, 'topic-deep-clear'))
+      expect(remaining.map((r) => r.id)).toEqual(['vroot-topic-deep-clear'])
+    })
+
+    it('purges the whole chain when its topic is deleted', async () => {
+      await seedChain('topic-deep-purge')
+
+      topicService.delete('topic-deep-purge')
+
+      expect(await dbh.db.select().from(messageTable)).toHaveLength(0)
     })
   })
 

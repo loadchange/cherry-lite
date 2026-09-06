@@ -1,4 +1,4 @@
-import { useInfiniteFlatItems, useInfiniteQuery } from '@data/hooks/useDataApi'
+import { useDataChange, useInfiniteFlatItems, useInfiniteQuery } from '@data/hooks/useDataApi'
 import { loggerService } from '@logger'
 import { toast } from '@renderer/services/toast'
 import { TRANSLATE_HISTORY_DEFAULT_LIMIT } from '@shared/data/api/schemas/translate'
@@ -33,7 +33,8 @@ export const useTranslateHistories = ({
     hasNext,
     loadNext,
     refresh: pageRefresh,
-    reset
+    reset,
+    mutate
   } = useInfiniteQuery('/translate/histories', {
     query,
     limit: pageSize,
@@ -74,6 +75,11 @@ export const useTranslateHistories = ({
     resetRef.current()
     await pageRefresh()
   }, [pageRefresh])
+
+  // Keep the loaded pages and reading position when another window changes history.
+  useDataChange('/translate/histories', () => {
+    void mutate()
+  })
 
   // Loading / error / ready discriminator. Empty `items` is ambiguous on its
   // own (still loading? load failed? legitimately no records?), so callers

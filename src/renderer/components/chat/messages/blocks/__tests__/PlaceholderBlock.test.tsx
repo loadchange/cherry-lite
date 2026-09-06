@@ -1,7 +1,7 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, renderHook, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import PlaceholderBlock, { formatPlaceholderElapsed } from '../PlaceholderBlock'
+import PlaceholderBlock, { formatPlaceholderElapsed, usePlaceholderElapsedMs } from '../PlaceholderBlock'
 
 const translations: Record<string, string> = {
   'message.tools.placeholder.elapsed.days': '{{days}} days {{hours}} hours {{minutes}} minutes {{seconds}} seconds',
@@ -66,6 +66,27 @@ describe('PlaceholderBlock', () => {
     expect(formatPlaceholderElapsed(65_456, t)).toBe('1 minutes 5 seconds')
     expect(formatPlaceholderElapsed(3_665_789, t)).toBe('1 hours 1 minutes 6 seconds')
     expect(formatPlaceholderElapsed(90_065_987, t)).toBe('1 days 1 hours 1 minutes 6 seconds')
+  })
+
+  it('catches up immediately when a background tab becomes visible and cleans up the listener', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible')
+    const removeListener = vi.spyOn(document, 'removeEventListener')
+    const createdAt = new Date().toISOString()
+    const { result, unmount } = renderHook(() => usePlaceholderElapsedMs(true, createdAt, 1000))
+    expect(result.current).toBe(0)
+
+    act(() => {
+      vi.setSystemTime(new Date('2026-01-01T00:00:30Z'))
+      document.dispatchEvent(new Event('visibilitychange'))
+    })
+    expect(result.current).toBe(30_000)
+
+    unmount()
+    expect(removeListener).toHaveBeenCalledWith('visibilitychange', expect.any(Function))
+    removeListener.mockRestore()
+    visibility.mockRestore()
   })
 
   it('renders nothing when the message is not processing', () => {

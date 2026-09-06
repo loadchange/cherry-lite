@@ -11,6 +11,7 @@ import type { MainWindowInitData } from '@shared/types/mainWindow'
  */
 export const ALLOWED_ROUTE_PREFIXES = [
   '/settings',
+  '/app',
   '/agents',
   '/knowledge',
   '/translate',
@@ -21,8 +22,10 @@ export const ALLOWED_ROUTE_PREFIXES = [
   '/launchpad'
 ]
 
-export const isAllowedRoute = (path: string): boolean =>
-  ALLOWED_ROUTE_PREFIXES.some((route) => path === route || path.startsWith(`${route}/`))
+export const isAllowedRoute = (path: string): boolean => {
+  const pathname = path.split('?')[0].split('#')[0]
+  return ALLOWED_ROUTE_PREFIXES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
+}
 
 let nextNavigationRequestId = 0
 

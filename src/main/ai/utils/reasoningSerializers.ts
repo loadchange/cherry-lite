@@ -47,6 +47,12 @@ const OMIT: ResolvedReasoningInvocation = {
   emissions: []
 }
 
+function declaredEfforts(model: Model): Exclude<ReasoningEffort, 'none' | 'auto'>[] {
+  return (model.reasoning?.selectableEfforts ?? []).filter(
+    (effort): effort is Exclude<ReasoningEffort, 'none' | 'auto'> => effort !== 'none' && effort !== 'auto'
+  )
+}
+
 function resolveSelection(
   selection: ResolveReasoningInvocationInput['selection'],
   model: Model
@@ -57,9 +63,7 @@ function resolveSelection(
     return selectable.includes(selection) ? selection : undefined
   }
 
-  const declared = selectable.filter(
-    (effort): effort is Exclude<ReasoningEffort, 'none' | 'auto'> => effort !== 'none' && effort !== 'auto'
-  )
+  const declared = declaredEfforts(model)
   // `selectableEfforts` is the model's UI vocabulary. A cross-dialect request can still carry
   // canonical `auto`; let the wire profile map it when the target has adjustable effort tiers.
   if (selection === 'auto') {
@@ -83,10 +87,21 @@ function resolveMode(
 
 function resolveModeEffort(
   selection: CanonicalReasoningSelection,
-  mode: ReasoningWireMode
+  mode: ReasoningWireMode,
+  model: Model
 ): ReasoningEffort | undefined {
   if (selection === 'default' || selection === 'none') return undefined
-  return mode.effortMap?.[selection] ?? selection
+  const mapped = mode.effortMap?.[selection] ?? selection
+  if (selection !== 'auto') return mapped
+
+  // Automatic provider defaults must also fit the model's declared effort tiers.
+  const tier = mapped === 'auto' ? model.reasoning?.defaultEffort : mapped
+  if (tier === undefined || tier === 'auto') return undefined
+
+  const declared = declaredEfforts(model)
+  const projected = nearestThinkingOption(tier, declared)
+  const nearest = declared.find((effort) => effort === projected)
+  return nearest ? (mode.effortMap?.[nearest] ?? nearest) : tier
 }
 
 function resolveModeBudget(
@@ -127,7 +142,7 @@ export function resolveReasoningInvocation(input: ResolveReasoningInvocationInpu
   const mode = resolveMode(selection, input.profile)
   if (!mode) return { ...OMIT, selection }
 
-  const effort = resolveModeEffort(selection, mode)
+  const effort = resolveModeEffort(selection, mode, input.model)
   const budgetTokens =
     'budget' in mode ? resolveModeBudget(selection, input.model, mode.budget, input.maxTokens) : undefined
 

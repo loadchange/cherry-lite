@@ -44,6 +44,16 @@ import type {
 
 ## Build
 
+For selective backports, set `CATALOG_BASE_DIR` to an extracted copy of the existing
+`data/` snapshot, `CATALOG_MODEL_IDS` to comma-separated model IDs, and
+`CATALOG_PROVIDER_MODELS` to comma-separated `providerId/modelId` keys. Generation
+then replaces only those rows; all other model metadata, prices, and served IDs
+stay pinned to the snapshot. `CATALOG_REASONING_PROVIDERS` can additionally refresh
+reasoning descriptors on existing rows for selected providers (for example,
+`openrouter`). The normal `MODELSDEV_CACHE`, `OPENROUTER_CACHE`, and
+`OPENROUTER_IMAGE_CACHE` inputs still allow an entirely offline run. Generated
+versions and runtime patterns are rebuilt from the merged catalog.
+
 ```bash
 pnpm build
 ```

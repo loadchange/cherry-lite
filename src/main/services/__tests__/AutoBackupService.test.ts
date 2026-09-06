@@ -4,12 +4,14 @@ import { BaseService } from '@main/core/lifecycle/BaseService'
 import { SchedulerService } from '@main/core/scheduler/SchedulerService'
 import type * as LegacyFile from '@main/utils/legacyFile'
 import { BACKUP_ACTIVE_WRITERS_ERROR_CODE } from '@shared/types/backup'
+import { MockMainCacheServiceExport, MockMainCacheServiceUtils } from '@test-mocks/main/CacheService'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AutoBackupService } from '../AutoBackupService'
-import { legacyBackupManager } from '../LegacyBackupManager'
+import { BackupOperationBusyError, legacyBackupManager } from '../LegacyBackupManager'
 
 const mocks = vi.hoisted(() => ({
+  BackupOperationBusyError: class extends Error {},
   applicationGet: vi.fn(),
   applicationGetPath: vi.fn((key: string) => (key === 'app.userdata' ? '/mock/userData' : '/mock/install')),
   broadcastToType: vi.fn(),
@@ -40,10 +42,8 @@ vi.mock('@main/utils/legacyFile', async (importOriginal) => ({
 }))
 
 vi.mock('../LegacyBackupManager', () => {
-  class BackupOperationBusyError extends Error {}
-
   return {
-    BackupOperationBusyError,
+    BackupOperationBusyError: mocks.BackupOperationBusyError,
     legacyBackupManager: {
       backupToLocalDir: mocks.backupToLocalDir
     }
@@ -67,6 +67,8 @@ describe('AutoBackupService', () => {
   beforeEach(async () => {
     vi.useFakeTimers()
     vi.clearAllMocks()
+    mocks.backupToLocalDir.mockReset().mockResolvedValue({ result: '/backups/test.zip', cleanupError: null })
+    MockMainCacheServiceUtils.resetMocks()
     BaseService.resetInstances()
     preferences = { ...enabledPreferences }
 
@@ -83,6 +85,7 @@ describe('AutoBackupService', () => {
     mocks.applicationGet.mockImplementation((name: string) => {
       if (name === 'PreferenceService') return preferenceService
       if (name === 'SchedulerService') return scheduler
+      if (name === 'CacheService') return MockMainCacheServiceExport.cacheService
       if (name === 'IpcApiService') return { broadcastToType: mocks.broadcastToType }
       throw new Error(`Unexpected service: ${name}`)
     })
@@ -105,11 +108,25 @@ describe('AutoBackupService', () => {
     preferenceListener?.(key, value, oldValue)
   }
 
-  it('restores the enabled automatic backup schedule after application startup', async () => {
-    await vi.advanceTimersByTimeAsync(3_000)
+  const recreateService = async () => {
+    await service._doStop()
+    await scheduler._doStop()
+    BaseService.resetInstances()
+
+    scheduler = new SchedulerService()
+    service = new AutoBackupService()
+    await scheduler._doInit()
+    await service._doInit()
+    await service._doAllReady()
+  }
+
+  it('waits one full interval before the first automatic backup after startup', async () => {
+    await vi.advanceTimersByTimeAsync(59_999)
+    expect(legacyBackupManager.backupToLocalDir).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1)
     expect(legacyBackupManager.backupToLocalDir).toHaveBeenCalledOnce()
 
-    await vi.advanceTimersByTimeAsync(61_000)
+    await vi.advanceTimersByTimeAsync(60_000)
     expect(legacyBackupManager.backupToLocalDir).toHaveBeenCalledTimes(2)
   })
 
@@ -124,12 +141,14 @@ describe('AutoBackupService', () => {
     setPreference('data.backup.local.auto_sync', false)
 
     service.recordManualBackupCompletion('local')
+    await vi.advanceTimersByTimeAsync(30_000)
+    await recreateService()
     setPreference('data.backup.local.auto_sync', true)
 
-    await vi.advanceTimersByTimeAsync(1_000)
+    await vi.advanceTimersByTimeAsync(29_000)
     expect(legacyBackupManager.backupToLocalDir).not.toHaveBeenCalled()
 
-    await vi.advanceTimersByTimeAsync(59_000)
+    await vi.advanceTimersByTimeAsync(1_000)
     expect(legacyBackupManager.backupToLocalDir).toHaveBeenCalledOnce()
   })
 
@@ -142,7 +161,7 @@ describe('AutoBackupService', () => {
         })
     )
 
-    await vi.advanceTimersByTimeAsync(1_000)
+    await vi.advanceTimersByTimeAsync(60_000)
     expect(mocks.backupToLocalDir).toHaveBeenCalledOnce()
 
     setPreference('data.backup.local.auto_sync', false)
@@ -169,7 +188,7 @@ describe('AutoBackupService', () => {
       cleanupError: new Error('delete denied')
     })
 
-    await vi.advanceTimersByTimeAsync(1_000)
+    await vi.advanceTimersByTimeAsync(60_000)
     await vi.advanceTimersByTimeAsync(7_000)
 
     expect(legacyBackupManager.backupToLocalDir).toHaveBeenCalledOnce()
@@ -195,7 +214,7 @@ describe('AutoBackupService', () => {
         })
     )
 
-    await vi.advanceTimersByTimeAsync(1_000)
+    await vi.advanceTimersByTimeAsync(60_000)
     await service._doStop()
 
     expect(uploadSignal?.aborted).toBe(true)
@@ -206,7 +225,7 @@ describe('AutoBackupService', () => {
       new Error(`${BACKUP_ACTIVE_WRITERS_ERROR_CODE}: A conversation is still running.`)
     )
 
-    await vi.advanceTimersByTimeAsync(1_000 + 7_000 + 17_000 + 37_000)
+    await vi.advanceTimersByTimeAsync(60_000 + 7_000 + 17_000 + 37_000)
 
     expect(mocks.backupToLocalDir).toHaveBeenCalledTimes(4)
     expect(mocks.broadcastToType).toHaveBeenCalledWith(
@@ -219,6 +238,72 @@ describe('AutoBackupService', () => {
     expect(failure).toMatchObject({ type: 'local', status: 'failed' })
     service.acknowledgeNotification(failure.type, failure.id)
     expect(service.getStateSnapshot().pendingNotifications).toEqual([])
+  })
+
+  it('applies startup grace when a completed backup has less than a minute remaining', async () => {
+    await vi.advanceTimersByTimeAsync(60_000)
+    const lastAttempt = Date.now()
+    expect(MockMainCacheServiceExport.cacheService.getPersist('backup.auto_sync.last_attempt_times')).toEqual({
+      local: lastAttempt
+    })
+    await vi.advanceTimersByTimeAsync(30_000)
+    await recreateService()
+    await vi.advanceTimersByTimeAsync(59_999)
+    expect(mocks.backupToLocalDir).toHaveBeenCalledOnce()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(mocks.backupToLocalDir).toHaveBeenCalledTimes(2)
+  })
+
+  it('waits one minute after startup even when the persisted backup is overdue', async () => {
+    MockMainCacheServiceExport.cacheService.setPersist('backup.auto_sync.last_attempt_times', {
+      local: Date.now() - 2 * 60_000
+    })
+    await recreateService()
+    await vi.advanceTimersByTimeAsync(59_999)
+    expect(mocks.backupToLocalDir).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(mocks.backupToLocalDir).toHaveBeenCalledOnce()
+  })
+
+  it('preserves the remaining interval when it exceeds the startup grace period', async () => {
+    setPreference('data.backup.local.sync_interval', 5)
+    MockMainCacheServiceExport.cacheService.setPersist('backup.auto_sync.last_attempt_times', {
+      local: Date.now() - 3.5 * 60_000
+    })
+    await recreateService()
+    await vi.advanceTimersByTimeAsync(89_999)
+    expect(mocks.backupToLocalDir).not.toHaveBeenCalled()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(mocks.backupToLocalDir).toHaveBeenCalledOnce()
+  })
+
+  it('preserves a busy-operation postponement after restarting', async () => {
+    mocks.backupToLocalDir.mockRejectedValueOnce(new BackupOperationBusyError())
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(MockMainCacheServiceExport.cacheService.getPersist('backup.auto_sync.last_attempt_times')).toEqual({
+      local: Date.now()
+    })
+    await vi.advanceTimersByTimeAsync(30_000)
+    await recreateService()
+    await vi.advanceTimersByTimeAsync(59_999)
+    expect(mocks.backupToLocalDir).toHaveBeenCalledOnce()
+    await vi.advanceTimersByTimeAsync(1)
+    expect(mocks.backupToLocalDir).toHaveBeenCalledTimes(2)
+  })
+
+  it('persists terminal failures but does not reset the baseline on intermediate retries', async () => {
+    mocks.backupToLocalDir.mockRejectedValue(new Error('write failed'))
+    await vi.advanceTimersByTimeAsync(60_000 + 7_000 + 17_000)
+    expect(MockMainCacheServiceExport.cacheService.getPersist('backup.auto_sync.last_attempt_times')).toEqual({
+      local: null
+    })
+    await vi.advanceTimersByTimeAsync(37_000)
+    expect(MockMainCacheServiceExport.cacheService.getPersist('backup.auto_sync.last_attempt_times')).toEqual({
+      local: Date.now()
+    })
+    await recreateService()
+    await vi.advanceTimersByTimeAsync(59_999)
+    expect(mocks.backupToLocalDir).toHaveBeenCalledTimes(4)
   })
 
   it('keeps the last result in snapshots while the next backup is running', () => {

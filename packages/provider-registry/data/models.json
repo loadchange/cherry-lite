@@ -7427,66 +7427,70 @@
       "pricing": {
         "cacheRead": {
           "currency": "USD",
-          "perMillionTokens": 0.0028
+          "perMillionTokens": 0.014
         },
         "input": {
           "currency": "USD",
-          "perMillionTokens": 0.14
+          "perMillionTokens": 0.44
         },
         "output": {
           "currency": "USD",
-          "perMillionTokens": 0.28
+          "perMillionTokens": 1.32
         }
       },
       "reasoning": {
         "controls": [
           {
             "kind": "effort",
-            "values": ["none", "high", "max", "low", "xhigh"]
-          },
-          {
-            "kind": "toggle"
+            "values": ["none", "low", "high", "max"]
           }
         ],
-        "supportedEfforts": ["none", "high", "max", "low", "xhigh"]
+        "supportedEfforts": ["none", "low", "high", "max"]
+      }
+    },
+    {
+      "capabilities": ["function-call", "image-recognition", "reasoning", "structured-output"],
+      "contextWindow": 1048576,
+      "family": "deepseek-flash",
+      "id": "deepseek-v4-flash-vision-exp",
+      "inputModalities": ["text", "image"],
+      "maxOutputTokens": 393216,
+      "metadata": {},
+      "name": "DeepSeek V4 Flash Vision Exp",
+      "openWeights": true,
+      "outputModalities": ["text"],
+      "ownedBy": "deepseek",
+      "pricing": {
+        "cacheRead": {
+          "currency": "USD",
+          "perMillionTokens": 0.014
+        },
+        "input": {
+          "currency": "USD",
+          "perMillionTokens": 0.44
+        },
+        "output": {
+          "currency": "USD",
+          "perMillionTokens": 1.32
+        }
+      },
+      "reasoning": {
+        "controls": [
+          {
+            "kind": "effort",
+            "values": ["none", "low", "high", "max"]
+          }
+        ],
+        "supportedEfforts": ["none", "low", "high", "max"]
       }
     },
     {
       "capabilities": ["function-call", "reasoning", "structured-output"],
       "contextWindow": 1048576,
-      "id": "deepseek-v4-flash-latest",
-      "inputModalities": ["text"],
-      "metadata": {},
-      "name": "DeepSeek V4 Flash Latest",
-      "outputModalities": ["text"],
-      "ownedBy": "deepseek",
-      "pricing": {
-        "input": {
-          "currency": "USD",
-          "perMillionTokens": 0.09
-        },
-        "output": {
-          "currency": "USD",
-          "perMillionTokens": 0.18
-        }
-      },
-      "reasoning": {
-        "controls": [
-          {
-            "kind": "effort",
-            "values": ["none", "high", "max"]
-          }
-        ],
-        "supportedEfforts": ["none", "high", "max"]
-      }
-    },
-    {
-      "capabilities": ["function-call", "reasoning", "structured-output"],
-      "contextWindow": 1048600,
       "family": "deepseek-thinking",
       "id": "deepseek-v4-pro",
       "inputModalities": ["text"],
-      "maxOutputTokens": 1048600,
+      "maxOutputTokens": 393216,
       "metadata": {},
       "name": "DeepSeek V4 Pro",
       "openWeights": true,
@@ -7495,28 +7499,25 @@
       "pricing": {
         "cacheRead": {
           "currency": "USD",
-          "perMillionTokens": 0.003625
+          "perMillionTokens": 0.044
         },
         "input": {
           "currency": "USD",
-          "perMillionTokens": 0.435
+          "perMillionTokens": 1.32
         },
         "output": {
           "currency": "USD",
-          "perMillionTokens": 0.87
+          "perMillionTokens": 3.96
         }
       },
       "reasoning": {
         "controls": [
           {
             "kind": "effort",
-            "values": ["none", "high", "max", "xhigh"]
-          },
-          {
-            "kind": "toggle"
+            "values": ["none", "low", "high", "max"]
           }
         ],
-        "supportedEfforts": ["none", "high", "max", "xhigh"]
+        "supportedEfforts": ["none", "low", "high", "max"]
       }
     },
     {
@@ -13815,11 +13816,11 @@
         },
         "input": {
           "currency": "USD",
-          "perMillionTokens": 3
+          "perMillionTokens": 0
         },
         "output": {
           "currency": "USD",
-          "perMillionTokens": 15
+          "perMillionTokens": 0
         }
       },
       "reasoning": {
@@ -13844,6 +13845,7 @@
       "maxOutputTokens": 131072,
       "metadata": {},
       "name": "Kimi K3 Fast",
+      "openWeights": true,
       "outputModalities": ["text"],
       "ownedBy": "moonshot",
       "pricing": {
@@ -20839,6 +20841,93 @@
       }
     },
     {
+      "capabilities": ["function-call", "reasoning", "structured-output"],
+      "contextWindow": 1310720,
+      "family": "glm",
+      "id": "glm-5-3",
+      "inputModalities": ["text"],
+      "maxOutputTokens": 1000000,
+      "metadata": {},
+      "name": "GLM 5.3",
+      "openWeights": true,
+      "outputModalities": ["text"],
+      "ownedBy": "zhipu",
+      "pricing": {
+        "cacheRead": {
+          "currency": "USD",
+          "perMillionTokens": 0.13
+        },
+        "cacheWrite": {
+          "currency": "USD",
+          "perMillionTokens": 0
+        },
+        "input": {
+          "currency": "USD",
+          "perMillionTokens": 0.7
+        },
+        "output": {
+          "currency": "USD",
+          "perMillionTokens": 2.2
+        }
+      },
+      "reasoning": {
+        "controls": [
+          {
+            "kind": "effort",
+            "values": ["low", "high", "max"]
+          }
+        ],
+        "supportedEfforts": ["low", "high", "max"]
+      }
+    },
+    {
+      "capabilities": [
+        "function-call",
+        "reasoning",
+        "image-recognition",
+        "video-recognition",
+        "structured-output",
+        "file-input"
+      ],
+      "contextWindow": 1000000,
+      "family": "glm",
+      "id": "glm-5-3-flash",
+      "inputModalities": ["text", "image", "video"],
+      "maxOutputTokens": 131072,
+      "metadata": {},
+      "name": "GLM-5.3-Flash",
+      "openWeights": true,
+      "outputModalities": ["text"],
+      "ownedBy": "zhipu",
+      "pricing": {
+        "cacheRead": {
+          "currency": "USD",
+          "perMillionTokens": 0.03
+        },
+        "cacheWrite": {
+          "currency": "USD",
+          "perMillionTokens": 0
+        },
+        "input": {
+          "currency": "USD",
+          "perMillionTokens": 0.15
+        },
+        "output": {
+          "currency": "USD",
+          "perMillionTokens": 0.5
+        }
+      },
+      "reasoning": {
+        "controls": [
+          {
+            "kind": "effort",
+            "values": ["low", "high", "max"]
+          }
+        ],
+        "supportedEfforts": ["low", "high", "max"]
+      }
+    },
+    {
       "capabilities": ["function-call", "reasoning"],
       "contextWindow": 202752,
       "family": "glm",
@@ -21015,5 +21104,5 @@
       "ownedBy": "zhipu"
     }
   ],
-  "version": "a5c5026cf6f7d1af"
+  "version": "51ac0cbc947990d6"
 }

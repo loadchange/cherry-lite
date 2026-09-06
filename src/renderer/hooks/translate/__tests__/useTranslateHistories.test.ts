@@ -1,4 +1,4 @@
-import { mockUseInfiniteQuery } from '@test-mocks/renderer/useDataApi'
+import { MockUseDataApiUtils, mockUseInfiniteQuery } from '@test-mocks/renderer/useDataApi'
 import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -101,6 +101,25 @@ describe('useTranslateHistories', () => {
       limit: 5,
       swrOptions: { keepPreviousData: false }
     })
+  })
+
+  it('revalidates loaded pages without resetting pagination when history changes in another window', async () => {
+    const refresh = vi.fn().mockResolvedValue(undefined)
+    const reset = vi.fn()
+    const mutate = vi.fn().mockResolvedValue(undefined)
+    mockUseInfiniteQuery.mockReturnValue(buildInfiniteState({ refresh, reset, mutate }))
+    renderHook(() => useTranslateHistories())
+    reset.mockClear()
+    refresh.mockClear()
+
+    await act(async () => {
+      MockUseDataApiUtils.emitDataChange([{ endpoint: '/translate/histories', kind: 'membership' }])
+      await Promise.resolve()
+    })
+
+    expect(mutate).toHaveBeenCalledTimes(1)
+    expect(reset).not.toHaveBeenCalled()
+    expect(refresh).not.toHaveBeenCalled()
   })
 
   it('exposes SWR errors so consumers can distinguish loading from failure', () => {

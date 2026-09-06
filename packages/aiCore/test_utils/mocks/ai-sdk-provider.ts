@@ -3,6 +3,9 @@
  * This mock is used in tests to avoid importing the actual package
  */
 
+import type * as AiSdkProvider from '@cherrystudio/ai-sdk-provider'
+import { vi } from 'vitest'
+
 export type CherryInProviderSettings = {
   apiKey?: string
   baseURL?: string
@@ -63,3 +66,7 @@ export const createCherryIn = (_options?: CherryInProviderSettings) => ({
     modelId
   })
 })
+// Keep the pure request transform real while network-facing models remain mocked.
+export const { applyReasoningModelMaxTokensConversion } = await vi.importActual<typeof AiSdkProvider>(
+  '../../../ai-sdk-provider/src/reasoningModelTransform.ts'
+)

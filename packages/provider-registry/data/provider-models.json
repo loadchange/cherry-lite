@@ -8253,6 +8253,20 @@
     {
       "endpointTypes": ["openai-responses", "openai-chat-completions", "anthropic-messages"],
       "modelId": "deepseek-v4-flash",
+      "pricing": {
+        "cacheRead": {
+          "currency": "USD",
+          "perMillionTokens": 0.014
+        },
+        "input": {
+          "currency": "USD",
+          "perMillionTokens": 0.44
+        },
+        "output": {
+          "currency": "USD",
+          "perMillionTokens": 1.32
+        }
+      },
       "providerId": "deepseek",
       "reasoningContracts": {
         "openai-chat-completions": {
@@ -8274,7 +8288,7 @@
                   }
                 },
                 {
-                  "target": "reasoning_effort",
+                  "target": "reasoningEffort",
                   "value": {
                     "source": "effort"
                   }
@@ -8297,7 +8311,7 @@
                   }
                 },
                 {
-                  "target": "reasoning_effort",
+                  "target": "reasoningEffort",
                   "value": {
                     "source": "effort"
                   }
@@ -8368,8 +8382,22 @@
       }
     },
     {
-      "endpointTypes": ["openai-chat-completions", "anthropic-messages"],
-      "modelId": "deepseek-v4-pro",
+      "endpointTypes": ["openai-responses", "openai-chat-completions", "anthropic-messages"],
+      "modelId": "deepseek-v4-flash-vision-exp",
+      "pricing": {
+        "cacheRead": {
+          "currency": "USD",
+          "perMillionTokens": 0.014
+        },
+        "input": {
+          "currency": "USD",
+          "perMillionTokens": 0.44
+        },
+        "output": {
+          "currency": "USD",
+          "perMillionTokens": 1.32
+        }
+      },
       "providerId": "deepseek",
       "reasoningContracts": {
         "openai-chat-completions": {
@@ -8377,9 +8405,9 @@
             "auto": {
               "effortMap": {
                 "auto": "high",
-                "low": "high",
+                "low": "low",
                 "medium": "high",
-                "minimal": "high",
+                "minimal": "low",
                 "xhigh": "max"
               },
               "operations": [
@@ -8391,7 +8419,7 @@
                   }
                 },
                 {
-                  "target": "reasoning_effort",
+                  "target": "reasoningEffort",
                   "value": {
                     "source": "effort"
                   }
@@ -8400,9 +8428,9 @@
             },
             "effort": {
               "effortMap": {
-                "low": "high",
+                "low": "low",
                 "medium": "high",
-                "minimal": "high",
+                "minimal": "low",
                 "xhigh": "max"
               },
               "operations": [
@@ -8414,7 +8442,7 @@
                   }
                 },
                 {
-                  "target": "reasoning_effort",
+                  "target": "reasoningEffort",
                   "value": {
                     "source": "effort"
                   }
@@ -8428,6 +8456,185 @@
                   "value": {
                     "source": "literal",
                     "value": "disabled"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "openai-responses": {
+          "wire": {
+            "auto": {
+              "effortMap": {
+                "auto": "high",
+                "low": "low",
+                "medium": "high",
+                "minimal": "low",
+                "xhigh": "max"
+              },
+              "operations": [
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            },
+            "effort": {
+              "effortMap": {
+                "low": "low",
+                "medium": "high",
+                "minimal": "low",
+                "xhigh": "max"
+              },
+              "operations": [
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            },
+            "off": {
+              "operations": [
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "literal",
+                    "value": "none"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "endpointTypes": ["openai-responses", "openai-chat-completions", "anthropic-messages"],
+      "modelId": "deepseek-v4-pro",
+      "pricing": {
+        "cacheRead": {
+          "currency": "USD",
+          "perMillionTokens": 0.044
+        },
+        "input": {
+          "currency": "USD",
+          "perMillionTokens": 1.32
+        },
+        "output": {
+          "currency": "USD",
+          "perMillionTokens": 3.96
+        }
+      },
+      "providerId": "deepseek",
+      "reasoningContracts": {
+        "openai-chat-completions": {
+          "wire": {
+            "auto": {
+              "effortMap": {
+                "auto": "high",
+                "low": "low",
+                "medium": "high",
+                "minimal": "low",
+                "xhigh": "max"
+              },
+              "operations": [
+                {
+                  "target": "thinking.type",
+                  "value": {
+                    "source": "literal",
+                    "value": "enabled"
+                  }
+                },
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            },
+            "effort": {
+              "effortMap": {
+                "low": "low",
+                "medium": "high",
+                "minimal": "low",
+                "xhigh": "max"
+              },
+              "operations": [
+                {
+                  "target": "thinking.type",
+                  "value": {
+                    "source": "literal",
+                    "value": "enabled"
+                  }
+                },
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            },
+            "off": {
+              "operations": [
+                {
+                  "target": "thinking.type",
+                  "value": {
+                    "source": "literal",
+                    "value": "disabled"
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "openai-responses": {
+          "wire": {
+            "auto": {
+              "effortMap": {
+                "auto": "high",
+                "low": "low",
+                "medium": "high",
+                "minimal": "low",
+                "xhigh": "max"
+              },
+              "operations": [
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            },
+            "effort": {
+              "effortMap": {
+                "low": "low",
+                "medium": "high",
+                "minimal": "low",
+                "xhigh": "max"
+              },
+              "operations": [
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            },
+            "off": {
+              "operations": [
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "literal",
+                    "value": "none"
                   }
                 }
               ]
@@ -17044,12 +17251,14 @@
           },
           "wire": {
             "auto": {
+              "effortMap": {
+                "auto": "medium"
+              },
               "operations": [
                 {
                   "target": "reasoningEffort",
                   "value": {
-                    "source": "literal",
-                    "value": "medium"
+                    "source": "effort"
                   }
                 }
               ]
@@ -17141,12 +17350,14 @@
           },
           "wire": {
             "auto": {
+              "effortMap": {
+                "auto": "medium"
+              },
               "operations": [
                 {
                   "target": "reasoningEffort",
                   "value": {
-                    "source": "literal",
-                    "value": "medium"
+                    "source": "effort"
                   }
                 }
               ]
@@ -17655,8 +17866,29 @@
       "providerId": "modelscope"
     },
     {
+      "apiModelId": "kimi-k2.5",
+      "modelId": "kimi-k2-5",
+      "parameterSupport": {
+        "temperature": {
+          "supported": false
+        },
+        "topP": {
+          "supported": false
+        }
+      },
+      "providerId": "moonshot"
+    },
+    {
       "apiModelId": "kimi-k2.6",
       "modelId": "kimi-k2-6",
+      "parameterSupport": {
+        "temperature": {
+          "supported": false
+        },
+        "topP": {
+          "supported": false
+        }
+      },
       "providerId": "moonshot",
       "reasoningContracts": {
         "openai-chat-completions": {
@@ -17701,6 +17933,66 @@
     },
     {
       "modelId": "kimi-k3",
+      "parameterSupport": {
+        "temperature": {
+          "supported": false
+        },
+        "topP": {
+          "supported": false
+        }
+      },
+      "providerId": "moonshot",
+      "reasoningContracts": {
+        "openai-chat-completions": {
+          "wire": {
+            "auto": {
+              "effortMap": {
+                "auto": "medium"
+              },
+              "operations": [
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            },
+            "effort": {
+              "operations": [
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            },
+            "off": {
+              "operations": [
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "literal",
+                    "value": "none"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "modelId": "kimi-k3-fast",
+      "parameterSupport": {
+        "temperature": {
+          "supported": false
+        },
+        "topP": {
+          "supported": false
+        }
+      },
       "providerId": "moonshot",
       "reasoningContracts": {
         "openai-chat-completions": {
@@ -21226,7 +21518,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -21256,7 +21553,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -21286,7 +21588,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -21316,7 +21623,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -21346,7 +21658,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -21381,10 +21698,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["max", "high", "medium", "low"]
+              },
+              {
+                "default": false,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["max", "high", "medium", "low"]
+            "supportedEfforts": ["max", "high", "medium", "low", "none"]
           }
         }
       }
@@ -21419,10 +21740,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low"]
+              },
+              {
+                "default": false,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["max", "xhigh", "high", "medium", "low"]
+            "supportedEfforts": ["max", "xhigh", "high", "medium", "low", "none"]
           }
         }
       }
@@ -21495,10 +21820,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low"]
+              },
+              {
+                "default": false,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["max", "xhigh", "high", "medium", "low"]
+            "supportedEfforts": ["max", "xhigh", "high", "medium", "low", "none"]
           }
         }
       }
@@ -21571,10 +21900,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["max", "xhigh", "high", "medium", "low"]
+            "supportedEfforts": ["max", "xhigh", "high", "medium", "low", "none"]
           }
         }
       }
@@ -21647,10 +21980,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["max", "xhigh", "high", "medium", "low"]
+            "supportedEfforts": ["max", "xhigh", "high", "medium", "low", "none"]
           }
         }
       }
@@ -21680,7 +22017,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -21710,7 +22052,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -21745,10 +22092,13 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["max", "high", "medium", "low"]
+              },
+              {
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
-            "supportedEfforts": ["max", "high", "medium", "low"]
+            "supportedEfforts": ["max", "high", "medium", "low", "none"]
           }
         }
       }
@@ -21783,10 +22133,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["max", "xhigh", "high", "medium", "low"]
+            "supportedEfforts": ["max", "xhigh", "high", "medium", "low", "none"]
           }
         }
       }
@@ -21821,10 +22175,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["max", "xhigh", "high", "medium", "low"]
+            "supportedEfforts": ["max", "xhigh", "high", "medium", "low", "none"]
           }
         }
       }
@@ -22005,7 +22363,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -22053,7 +22416,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -22079,7 +22447,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -22110,7 +22483,8 @@
                 "default": false,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -22132,7 +22506,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -22174,20 +22553,7 @@
     {
       "apiModelId": "~deepseek/deepseek-v4-flash-latest",
       "modelId": "deepseek-v4-flash-latest",
-      "pricing": {
-        "cacheRead": {
-          "currency": "USD",
-          "perMillionTokens": 0.018
-        },
-        "input": {
-          "currency": "USD",
-          "perMillionTokens": 0.09
-        },
-        "output": {
-          "currency": "USD",
-          "perMillionTokens": 0.18
-        }
-      },
+      "name": "DeepSeek V4 Flash Latest",
       "providerId": "openrouter",
       "reasoningContracts": {
         "openai-chat-completions": {
@@ -22197,10 +22563,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["max", "high", "low"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["max", "high", "low"]
+            "supportedEfforts": ["max", "high", "low", "none"]
           }
         }
       }
@@ -22272,7 +22642,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -22584,7 +22959,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -22676,7 +23056,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -22870,10 +23255,14 @@
                 "default": "minimal",
                 "kind": "effort",
                 "values": ["high", "minimal"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "minimal",
-            "supportedEfforts": ["high", "minimal"]
+            "supportedEfforts": ["high", "minimal", "none"]
           }
         }
       }
@@ -22977,10 +23366,14 @@
                 "default": "minimal",
                 "kind": "effort",
                 "values": ["high", "minimal"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "minimal",
-            "supportedEfforts": ["high", "minimal"]
+            "supportedEfforts": ["high", "minimal", "none"]
           }
         }
       }
@@ -23015,10 +23408,14 @@
                 "default": "minimal",
                 "kind": "effort",
                 "values": ["high", "medium", "low", "minimal"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "minimal",
-            "supportedEfforts": ["high", "medium", "low", "minimal"]
+            "supportedEfforts": ["high", "medium", "low", "minimal", "none"]
           }
         }
       }
@@ -23122,10 +23519,14 @@
                 "default": "minimal",
                 "kind": "effort",
                 "values": ["high", "minimal"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "minimal",
-            "supportedEfforts": ["high", "minimal"]
+            "supportedEfforts": ["high", "minimal", "none"]
           }
         }
       }
@@ -23160,10 +23561,14 @@
                 "default": "minimal",
                 "kind": "effort",
                 "values": ["high", "medium", "low", "minimal"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "minimal",
-            "supportedEfforts": ["high", "medium", "low", "minimal"]
+            "supportedEfforts": ["high", "medium", "low", "minimal", "none"]
           }
         }
       }
@@ -23388,10 +23793,13 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["high", "medium", "low", "minimal"]
+              },
+              {
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
-            "supportedEfforts": ["high", "medium", "low", "minimal"]
+            "supportedEfforts": ["high", "medium", "low", "minimal", "none"]
           }
         }
       }
@@ -23579,11 +23987,11 @@
               {
                 "default": "medium",
                 "kind": "effort",
-                "values": ["high", "medium", "low", "minimal"]
+                "values": ["high", "medium", "low"]
               }
             ],
             "defaultEffort": "medium",
-            "supportedEfforts": ["high", "medium", "low", "minimal"]
+            "supportedEfforts": ["high", "medium", "low"]
           }
         }
       }
@@ -23727,7 +24135,8 @@
                 "default": false,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -23784,7 +24193,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -23810,7 +24224,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -23836,7 +24255,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -23862,7 +24286,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -23888,7 +24317,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -23919,7 +24353,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -23950,7 +24385,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -23981,7 +24417,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -24012,7 +24449,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -24043,10 +24481,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["xhigh", "high"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["xhigh", "high"]
+            "supportedEfforts": ["xhigh", "high", "none"]
           }
         }
       }
@@ -24077,7 +24519,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -24108,7 +24551,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -24358,6 +24802,10 @@
                 "default": "none",
                 "kind": "effort",
                 "values": ["high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "none",
@@ -24460,10 +24908,13 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["high", "medium", "low"]
+              },
+              {
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
-            "supportedEfforts": ["high", "medium", "low"]
+            "supportedEfforts": ["high", "medium", "low", "none"]
           }
         }
       }
@@ -24494,6 +24945,9 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -24630,6 +25084,9 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -24664,6 +25121,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": false,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -24745,6 +25206,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": false,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -24779,6 +25244,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": false,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -24813,6 +25282,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": false,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -24877,6 +25350,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -24945,6 +25422,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -24983,6 +25464,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -25021,6 +25506,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -25059,6 +25548,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -25097,6 +25590,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -25135,6 +25632,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -25646,6 +26147,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["max", "xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -25680,6 +26185,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["xhigh", "high", "medium", "low", "none"]
+              },
+              {
+                "default": false,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -25840,7 +26349,8 @@
                 "default": false,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -25905,6 +26415,10 @@
                 "default": "low",
                 "kind": "effort",
                 "values": ["high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "low",
@@ -26080,11 +26594,11 @@
               {
                 "default": "high",
                 "kind": "effort",
-                "values": ["high", "medium", "low"]
+                "values": ["xhigh", "high", "medium", "low"]
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["high", "medium", "low"]
+            "supportedEfforts": ["xhigh", "high", "medium", "low"]
           }
         }
       }
@@ -26137,7 +26651,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -26159,7 +26678,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -26181,7 +26705,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -26212,6 +26741,10 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["high", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
@@ -26246,6 +26779,10 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["high", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
@@ -26314,6 +26851,10 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["max", "high", "medium", "low", "minimal", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
@@ -26442,7 +26983,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -26473,7 +27015,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -26530,10 +27073,14 @@
                 "default": "max",
                 "kind": "effort",
                 "values": ["max", "high", "low"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "max",
-            "supportedEfforts": ["max", "high", "low"]
+            "supportedEfforts": ["max", "high", "low", "none"]
           }
         }
       }
@@ -26564,10 +27111,14 @@
                 "default": "max",
                 "kind": "effort",
                 "values": ["max", "high", "low"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "max",
-            "supportedEfforts": ["max", "high", "low"]
+            "supportedEfforts": ["max", "high", "low", "none"]
           }
         }
       }
@@ -26821,7 +27372,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -27036,7 +27588,13 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "default": true,
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -27201,6 +27759,10 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["high", "medium", "low", "none"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
@@ -27230,7 +27792,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -27256,7 +27823,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -27293,7 +27865,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -27438,7 +28015,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -27579,6 +28161,9 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["high", "none"]
+              },
+              {
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
@@ -27647,6 +28232,10 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["high", "none"]
+              },
+              {
+                "default": false,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
@@ -27882,7 +28471,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -27904,7 +28498,13 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "default": true,
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -27931,10 +28531,14 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["medium", "low"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
-            "supportedEfforts": ["medium", "low"]
+            "supportedEfforts": ["medium", "low", "none"]
           }
         }
       }
@@ -27961,10 +28565,14 @@
                 "default": "high",
                 "kind": "effort",
                 "values": ["high", "medium"]
+              },
+              {
+                "default": true,
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "high",
-            "supportedEfforts": ["high", "medium"]
+            "supportedEfforts": ["high", "medium", "none"]
           }
         }
       }
@@ -28035,7 +28643,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28062,7 +28675,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28084,7 +28702,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28106,7 +28729,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28196,7 +28824,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28218,7 +28851,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28244,7 +28882,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28300,7 +28943,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28394,7 +29042,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28689,7 +29342,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28770,7 +29428,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28792,7 +29455,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28814,7 +29482,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28836,7 +29509,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28858,7 +29536,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28880,7 +29563,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28902,7 +29590,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28928,7 +29621,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28950,7 +29648,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -28977,7 +29680,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -29004,7 +29708,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -29030,7 +29735,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -29061,7 +29771,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -29087,7 +29798,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -29117,7 +29833,13 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "default": true,
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -29152,7 +29874,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -29187,7 +29910,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -29252,7 +29976,8 @@
                 "default": true,
                 "kind": "toggle"
               }
-            ]
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -29358,7 +30083,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -30061,7 +30791,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -30443,7 +31178,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -30466,7 +31206,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -30494,10 +31239,13 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["high", "medium", "low", "minimal"]
+              },
+              {
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
-            "supportedEfforts": ["high", "medium", "low", "minimal"]
+            "supportedEfforts": ["high", "medium", "low", "minimal", "none"]
           }
         }
       }
@@ -30525,10 +31273,13 @@
                 "default": "medium",
                 "kind": "effort",
                 "values": ["high", "medium", "low", "minimal"]
+              },
+              {
+                "kind": "toggle"
               }
             ],
             "defaultEffort": "medium",
-            "supportedEfforts": ["high", "medium", "low", "minimal"]
+            "supportedEfforts": ["high", "medium", "low", "minimal", "none"]
           }
         }
       }
@@ -30670,7 +31421,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -30707,7 +31463,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -30751,7 +31512,12 @@
       "reasoningContracts": {
         "openai-chat-completions": {
           "support": {
-            "controls": []
+            "controls": [
+              {
+                "kind": "toggle"
+              }
+            ],
+            "supportedEfforts": ["none", "auto"]
           }
         }
       }
@@ -36396,6 +37162,68 @@
       }
     },
     {
+      "apiModelId": "glm-5.3",
+      "modelId": "glm-5-3",
+      "providerId": "zhipu",
+      "reasoningContracts": {
+        "openai-chat-completions": {
+          "support": {
+            "defaultEffort": "max"
+          },
+          "wire": {
+            "effort": {
+              "operations": [
+                {
+                  "target": "thinking.type",
+                  "value": {
+                    "source": "literal",
+                    "value": "enabled"
+                  }
+                },
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiModelId": "glm-5.3-flash",
+      "modelId": "glm-5-3-flash",
+      "providerId": "zhipu",
+      "reasoningContracts": {
+        "openai-chat-completions": {
+          "support": {
+            "defaultEffort": "max"
+          },
+          "wire": {
+            "effort": {
+              "operations": [
+                {
+                  "target": "thinking.type",
+                  "value": {
+                    "source": "literal",
+                    "value": "enabled"
+                  }
+                },
+                {
+                  "target": "reasoningEffort",
+                  "value": {
+                    "source": "effort"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
       "imageGeneration": {
         "modes": {
           "generate": {
@@ -36433,5 +37261,5 @@
       "providerId": "zhipu"
     }
   ],
-  "version": "5ab3c5c185001410"
+  "version": "b664072bc6641b0a"
 }

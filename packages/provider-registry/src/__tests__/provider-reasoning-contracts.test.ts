@@ -15,40 +15,84 @@ const override = (providerId: string, modelId: string) => {
 }
 
 describe('provider reasoning contracts', () => {
-  it('maps DeepSeek V4 Flash reasoning to the official effort vocabulary', () => {
-    const contracts = override('deepseek', 'deepseek-v4-flash').reasoningContracts
-    const responsesWire = contracts?.['openai-responses']?.wire
-    expect(responsesWire?.off?.operations).toEqual([
-      { target: 'reasoningEffort', value: { source: 'literal', value: 'none' } }
+  it.each(['kimi-k3', 'kimi-k3-fast'])('gives Moonshot %s an effort wire of its own', (modelId) => {
+    const wire = override('moonshot', modelId).reasoningContracts?.['openai-chat-completions']?.wire
+    expect(wire?.effort?.operations).toEqual([{ target: 'reasoningEffort', value: { source: 'effort' } }])
+  })
+
+  it('encodes OpenRouter Off as an explicit none effort', () => {
+    const wire = provider('openrouter').endpointConfigs?.['openai-chat-completions']?.reasoningFormat?.wire
+    expect(wire?.off?.operations).toEqual([{ target: 'reasoning.effort', value: { source: 'literal', value: 'none' } }])
+  })
+
+  it.each(['glm-5.3', 'glm-5.3-flash'])('declares always-on thinking and effort for %s', (modelId) => {
+    const contract = override('zhipu', modelId).reasoningContracts?.['openai-chat-completions']
+    expect(contract?.support?.defaultEffort).toBe('max')
+    expect(contract?.wire?.effort?.operations).toEqual([
+      { target: 'thinking.type', value: { source: 'literal', value: 'enabled' } },
+      { target: 'reasoningEffort', value: { source: 'effort' } }
     ])
-    expect(responsesWire?.auto?.effortMap).toEqual({
-      auto: 'high',
-      minimal: 'low',
-      low: 'low',
-      medium: 'high',
-      xhigh: 'max'
+  })
+
+  it('uses the documented DeepSeek V4 peak prices as the static catalog ceiling', () => {
+    expect(override('deepseek', 'deepseek-v4-flash').pricing).toEqual({
+      cacheRead: { currency: 'USD', perMillionTokens: 0.014 },
+      input: { currency: 'USD', perMillionTokens: 0.44 },
+      output: { currency: 'USD', perMillionTokens: 1.32 }
     })
-    expect(responsesWire?.effort).toMatchObject({
-      operations: [{ target: 'reasoningEffort', value: { source: 'effort' } }],
-      effortMap: { minimal: 'low', low: 'low', medium: 'high', xhigh: 'max' }
-    })
-    expect(contracts?.['openai-chat-completions']?.wire?.effort).toMatchObject({
-      operations: [
-        { target: 'thinking.type', value: { source: 'literal', value: 'enabled' } },
-        { target: 'reasoning_effort', value: { source: 'effort' } }
-      ],
-      effortMap: { minimal: 'low', low: 'low', medium: 'high', xhigh: 'max' }
+    expect(override('deepseek', 'deepseek-v4-pro').pricing).toEqual({
+      cacheRead: { currency: 'USD', perMillionTokens: 0.044 },
+      input: { currency: 'USD', perMillionTokens: 1.32 },
+      output: { currency: 'USD', perMillionTokens: 3.96 }
     })
   })
 
-  it('keeps DeepSeek V4 Pro low efforts mapped to high', () => {
-    const wire = override('deepseek', 'deepseek-v4-pro').reasoningContracts?.['openai-chat-completions']?.wire
-    expect(wire?.effort?.effortMap).toEqual({
-      minimal: 'high',
-      low: 'high',
-      medium: 'high',
-      xhigh: 'max'
-    })
+  // DeepSeek publishes one effort table for every V4 SKU (thinking_mode guide), so the Flash, Vision
+  // and Pro contracts must not drift apart — and none may send `xhigh` verbatim, which DeepSeek
+  // degrades to `high`.
+  it.each(['deepseek-v4-flash', 'deepseek-v4-flash-vision-exp', 'deepseek-v4-pro'])(
+    'maps %s reasoning to the official effort vocabulary',
+    (modelId) => {
+      const contracts = override('deepseek', modelId).reasoningContracts
+      const responsesWire = contracts?.['openai-responses']?.wire
+      expect(responsesWire?.off?.operations).toEqual([
+        { target: 'reasoningEffort', value: { source: 'literal', value: 'none' } }
+      ])
+      expect(responsesWire?.auto?.effortMap).toEqual({
+        auto: 'high',
+        minimal: 'low',
+        low: 'low',
+        medium: 'high',
+        xhigh: 'max'
+      })
+      expect(responsesWire?.effort).toMatchObject({
+        operations: [{ target: 'reasoningEffort', value: { source: 'effort' } }],
+        effortMap: { minimal: 'low', low: 'low', medium: 'high', xhigh: 'max' }
+      })
+      expect(contracts?.['openai-chat-completions']?.wire?.effort).toMatchObject({
+        operations: [
+          { target: 'thinking.type', value: { source: 'literal', value: 'enabled' } },
+          { target: 'reasoningEffort', value: { source: 'effort' } }
+        ],
+        effortMap: { minimal: 'low', low: 'low', medium: 'high', xhigh: 'max' }
+      })
+    }
+  )
+
+  // The generic deepseek wire serves deepseek-chat / deepseek-reasoner (reasoningFamilies toggle
+  // models with no per-model override). The @ai-sdk/deepseek schema only accepts thinking.type
+  // 'enabled' | 'disabled', so auto must never serialize the literal 'auto' (issue #18270).
+  it('maps the generic DeepSeek auto mode to thinking.type enabled', () => {
+    const wire = provider('deepseek').endpointConfigs?.['openai-chat-completions']?.reasoningFormat?.wire
+    expect(wire?.auto?.operations).toEqual([
+      { target: 'thinking.type', value: { source: 'literal', value: 'enabled' } }
+    ])
+    expect(wire?.off?.operations).toEqual([
+      { target: 'thinking.type', value: { source: 'literal', value: 'disabled' } }
+    ])
+    expect(wire?.effort?.operations).toEqual([
+      { target: 'thinking.type', value: { source: 'literal', value: 'enabled' } }
+    ])
   })
 
   // Bedrock keeps a hand-pinned contract: its budget wire is in bedrock's own

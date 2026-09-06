@@ -194,7 +194,7 @@ export default function ProviderConnectionCheckDrawer({
               <div className="pr-5 text-[13px] leading-[1.4]">{t('message.api.connection.failed')}</div>
             </div>
             <div
-              className="wrap-break-word ml-5.75 line-clamp-3 text-xs leading-normal"
+              className="ml-5.75 line-clamp-3 text-xs leading-normal [overflow-wrap:anywhere]"
               style={{ color: CONNECTION_ERROR_DESCRIPTION_COLOR }}>
               {connectionErrorText}
             </div>

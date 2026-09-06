@@ -291,12 +291,14 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
         'glm-5-1',
         'glm-5-2',
         'glm-5-2-fast',
+        'glm-5-3',
+        'glm-5-3-flash',
         'glm-5-maas',
         'glm-5-turbo'
       ]
     },
     deepseek: {
-      'web-search': ['deepseek-v4-flash', 'deepseek-v4-flash-latest']
+      'web-search': ['deepseek-v4-flash', 'deepseek-v4-flash-vision-exp', 'deepseek-v4-pro']
     },
     'new-api': {
       'web-search': [
@@ -766,7 +768,7 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
         'deepseek-v3-2-exp',
         'deepseek-v3-2-maas',
         'deepseek-v4-flash',
-        'deepseek-v4-flash-latest',
+        'deepseek-v4-flash-vision-exp',
         'deepseek-v4-pro',
         'glm-4',
         'glm-4-1v',
@@ -791,6 +793,8 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
         'glm-5-1',
         'glm-5-2',
         'glm-5-2-fast',
+        'glm-5-3',
+        'glm-5-3-flash',
         'glm-5-maas',
         'glm-5-turbo',
         'kimi-k2',
@@ -945,7 +949,7 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
         'deepseek-v3-2-exp',
         'deepseek-v3-2-maas',
         'deepseek-v4-flash',
-        'deepseek-v4-flash-latest',
+        'deepseek-v4-flash-vision-exp',
         'deepseek-v4-pro',
         'doubao-seed-1-6',
         'doubao-seed-1-8',
@@ -1004,6 +1008,8 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
         'glm-5-1',
         'glm-5-2',
         'glm-5-2-fast',
+        'glm-5-3',
+        'glm-5-3-flash',
         'glm-5-maas',
         'glm-5-turbo',
         'gpt-4-1',

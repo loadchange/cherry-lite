@@ -133,7 +133,7 @@ export const REASONING_FAMILY_RULES: readonly ReasoningFamilyRule[] = [
   { pattern: '^command-a-plus' },
   { pattern: '^north-mini-code' },
   // deepseek
-  { pattern: '^deepseek-v(?:[4-9]\\d*|[1-9]\\d{1,})(?:\\.\\d+)?', effort: ['none', 'high', 'max'] },
+  { pattern: '^deepseek-v(?:[4-9]\\d*|[1-9]\\d{1,})(?:\\.\\d+)?', effort: ['none', 'low', 'high', 'max'] },
   { pattern: 'deepseek-(?:chat|v3(?:\\.\\d|-\\d))', toggle: true, template: true },
   { pattern: '(\\w+-)?deepseek-v3(?:\\.\\d|-\\d)(?:(\\.|-)(?!speciale$)\\w+)?$' },
   { pattern: 'deepseek-chat' },
@@ -182,7 +182,9 @@ export const REASONING_FAMILY_RULES: readonly ReasoningFamilyRule[] = [
   { pattern: '^mistral-(?:small|medium)(?!.*instruct)' },
   // moonshot
   { pattern: '^kimi-k2[.-]7-code', toggle: false },
-  { pattern: '^kimi-k(?:2[.-][5-9]\\d*|[3-9]\\d*(?:[.-]\\d+)?)', toggle: true },
+  { pattern: '^kimi-k3$', effort: ['low', 'high', 'max'], toggle: true },
+  { pattern: '^kimi-k3-fast$', effort: ['low', 'high', 'max'] },
+  { pattern: '^kimi-k2[.-][5-9]\\d*', toggle: true },
   { pattern: 'kimi-k2[.-][5-9]\\d*', budget: { min: 0, max: 30720 }, template: true },
   { pattern: '^kimi-k2-thinking(?:-turbo)?$|^kimi-k(?:2[.-][5-9]\\d*|[3-9]\\d*(?:[.-]\\d+)?)(?:-[\\w-]+)?$' },
   // nvidia
@@ -233,6 +235,7 @@ export const REASONING_FAMILY_RULES: readonly ReasoningFamilyRule[] = [
   { pattern: 'mimo-v2[.-]5(?:-pro)?(?!-)|mimo-v2-(?:flash|pro|omni)', toggle: true },
   { pattern: 'mimo-v2[.-]5-pro-ultraspeed' },
   // zhipu
+  { pattern: 'glm-5[.-]3(?:-|$)', effort: ['low', 'high', 'max'], toggle: false },
   { pattern: 'glm-?5|glm-4[.-][567]', toggle: true },
   { pattern: 'glm-zero-preview' },
   { pattern: 'glm-z1' }

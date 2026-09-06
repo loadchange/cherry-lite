@@ -60,6 +60,35 @@ describe('MessageProcessGroup', () => {
     expect(renderHistory).toHaveBeenCalledOnce()
   })
 
+  it('preserves the runtime start when switching tabs changes the message snapshot', () => {
+    const message = {
+      id: 'message-1',
+      role: 'assistant',
+      assistantId: 'assistant-1',
+      topicId: 'topic-1',
+      createdAt: '2026-01-01T00:00:00Z',
+      status: 'pending',
+      stats: { runtimeTiming: { startedAt: Date.now() - 10_000, spans: [] } }
+    } as MessageListItem
+
+    const { rerender } = render(
+      <MessageProcessGroup phase="active" message={message} toolItems={[]}>
+        {() => <div>Process history</div>}
+      </MessageProcessGroup>
+    )
+    expect(screen.getByTestId('process-header')).toHaveTextContent('10 seconds')
+
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+    rerender(
+      <MessageProcessGroup phase="active" message={{ ...message, createdAt: new Date().toISOString() }} toolItems={[]}>
+        {() => <div>Process history</div>}
+      </MessageProcessGroup>
+    )
+    expect(screen.getByTestId('process-header')).toHaveTextContent('13 seconds')
+  })
+
   it('excludes overlapping approval waits from the completed processing time', () => {
     const message = {
       id: 'message-1',

@@ -33,6 +33,7 @@ import { ReasoningFamilyRuleSchema } from '../src/schemas/model'
 import { stripHostReprefix } from '../src/utils/normalize'
 import { deriveLegacyReasoningFields } from '../src/utils/reasoningControls'
 import { canonOf, prefixHit, splitOverrideWireId } from './canonicalize'
+import { mergeSelectedRows, refreshSnapshotReasoning } from './catalogSnapshot'
 import {
   type CherryMeta,
   finalizeMeta,
@@ -304,7 +305,16 @@ function buildIndex(md: ModelsDevApi, or: OpenRouterApi): Index {
       consider(id, parseMdEntry(m), p)
     }
   }
-  for (const m of or.data ?? []) consider(m.id, parseOrEntry(m), 'openrouter')
+  const openRouterStandalones = new Set(
+    PROVIDERS.find((provider) => provider.id === 'openrouter')?.overrides?.flatMap((override) =>
+      override.name && override.modelId ? [override.modelId] : []
+    )
+  )
+  for (const m of or.data ?? []) {
+    // A named `~vendor/*` override is an OpenRouter-owned moving alias, not a creator model.
+    if (m.id.startsWith('~') && openRouterStandalones.has(canonOf(m.id))) continue
+    consider(m.id, parseOrEntry(m), 'openrouter')
+  }
 
   // Fold host/org re-prefixes WITHOUT a hand-list (stripHostReprefix uses the index as the oracle):
   // databricks-gemini-3-flash → gemini-3-flash, cerebras-llama-4-scout → llama-4-scout, etc. Brands like
@@ -529,7 +539,13 @@ function buildProviderModels(
   }
   for (const p of PROVIDERS) {
     const reasoningTemplates = (p.overrides ?? []).filter(
-      (override) => p.modelsDevProvider && !override.apiModelId && override.reasoningContracts
+      (override) =>
+        p.modelsDevProvider &&
+        !override.apiModelId &&
+        (override.endpointTypes ||
+          override.reasoningContracts ||
+          override.parameterSupport ||
+          Object.hasOwn(override, 'pricing'))
     )
     const matchedTemplates = new Set<(typeof reasoningTemplates)[number]>()
     for (const override of p.overrides ?? []) {
@@ -621,7 +637,23 @@ void (async () => {
 
   const index = buildIndex(md, or)
   const claimed = await assignCreators(index, md)
-  const models = buildModels(index, claimed)
+  let models = buildModels(index, claimed)
+  const snapshotDirectory = process.env.CATALOG_BASE_DIR
+  const selectedIds = (name: string) => new Set((process.env[name] ?? '').split(',').filter(Boolean))
+  if (snapshotDirectory) {
+    const selected = selectedIds('CATALOG_MODEL_IDS')
+    if (!selected.size) throw new Error('CATALOG_BASE_DIR requires explicit CATALOG_MODEL_IDS')
+    if (!selectedIds('CATALOG_PROVIDER_MODELS').size) {
+      throw new Error('CATALOG_BASE_DIR requires explicit CATALOG_PROVIDER_MODELS')
+    }
+    const previous = JSON.parse(fs.readFileSync(path.join(snapshotDirectory, 'models.json'), 'utf8')).models
+    models = new Map(
+      mergeSelectedRows<any>(previous, [...models.values()], selected, (model) => model.id).map((model) => [
+        model.id,
+        model
+      ])
+    )
+  }
 
   const unassigned = [...index.keys()].filter((k) => !claimed.has(k))
   console.log(`creators: ${CREATORS.length}`)
@@ -670,6 +702,15 @@ void (async () => {
   console.log(`WROTE ${PROVIDERS_PATH} (${providers.length} providers).`)
 
   const pm = buildProviderModels(md, orModels, orImageModels, new Set(models.keys()))
+  if (snapshotDirectory) {
+    const selected = selectedIds('CATALOG_PROVIDER_MODELS')
+    const previous = JSON.parse(fs.readFileSync(path.join(snapshotDirectory, 'provider-models.json'), 'utf8')).overrides
+    const generated = pm.overrides
+    pm.overrides = mergeSelectedRows<any>(previous, generated, selected, (row) => `${row.providerId}/${row.modelId}`)
+    // Use the newly ingested descriptors, but retain every other field from the pinned catalog.
+    pm.overrides = refreshSnapshotReasoning(pm.overrides, generated, selectedIds('CATALOG_REASONING_PROVIDERS'))
+    pm.overrides.sort((a, b) => `${a.providerId} ${a.modelId}`.localeCompare(`${b.providerId} ${b.modelId}`))
+  }
   fs.writeFileSync(PROVIDER_MODELS_PATH, stampAndSerialize(pm))
   console.log(`WROTE ${PROVIDER_MODELS_PATH} (${pm.overrides.length} rows).`)
 

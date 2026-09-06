@@ -1319,7 +1319,11 @@
     },
     "content": "Backup all data, including chat history, settings, and knowledge base. Please note that the backup process may take some time, thank you for your patience.",
     "error": {
-      "active_data_writers": "A conversation or agent is still running. Wait for it to finish, then try again."
+      "active_data_writers": "A conversation or agent is still running. Wait for it to finish, then try again.",
+      "disk_full": "There is not enough disk space. Free up space and try again.",
+      "disk_full_with_available": "There is not enough disk space ({{available}} available). Free up space and try again.",
+      "newer_version": "This backup was created by a newer version and cannot be restored here. Please update Cherry Lite and try again.",
+      "operation_busy": "Another backup or restore operation is already in progress. Wait for it to finish and try again."
     },
     "progress": {
       "completed": "Backup completed",
@@ -2472,6 +2476,7 @@
       "ocr": "OCR engine not initialized, check OCR settings",
       "parse": "AI returned an invalid response, please retry or switch model",
       "payload": "Request content too large, please reduce file or text size",
+      "permission": "The provider refused this request. Check the error details, your account plan, API key permissions, or access to this resource",
       "proxy": "Proxy or SSL certificate error, check proxy and network settings",
       "quota": "Account quota exhausted, please recharge or switch provider",
       "rate_limit": "Too many requests in a short time. Wait a moment and retry, or switch to a model with a higher rate limit",

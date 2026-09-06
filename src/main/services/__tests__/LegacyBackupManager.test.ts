@@ -1,7 +1,12 @@
 import type * as CryptoModule from 'node:crypto'
 import { Readable, Writable } from 'node:stream'
 
-import { BACKUP_ACTIVE_WRITERS_ERROR_CODE } from '@shared/types/backup'
+import {
+  BACKUP_ACTIVE_WRITERS_ERROR_CODE,
+  BACKUP_DISK_FULL_ERROR_CODE,
+  BACKUP_NEWER_VERSION_ERROR_CODE,
+  BACKUP_OPERATION_BUSY_ERROR_CODE
+} from '@shared/types/backup'
 import type * as PathModule from 'path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -57,7 +62,9 @@ const {
   mockWriteRestoreJournal,
   mockCheckpointTruncateAssert,
   mockReadAppliedChain,
+  mockReadMigrationFiles,
   mockCreateAtomicWriteStream,
+  mockStatfs,
   mockRandomUUID,
   mockZipExtract,
   mockZipClose,
@@ -94,7 +101,9 @@ const {
     mockWriteRestoreJournal: vi.fn(),
     mockCheckpointTruncateAssert: vi.fn(),
     mockReadAppliedChain: vi.fn(),
+    mockReadMigrationFiles: vi.fn(),
     mockCreateAtomicWriteStream: vi.fn(),
+    mockStatfs: vi.fn(),
     mockRandomUUID: vi.fn(),
     mockZipExtract,
     mockZipClose,
@@ -124,6 +133,10 @@ vi.mock('@main/data/db/restore/checkpoint', () => ({
 
 vi.mock('@main/data/db/restore/appliedChain', () => ({
   readAppliedChain: mockReadAppliedChain
+}))
+
+vi.mock('drizzle-orm/migrator', () => ({
+  readMigrationFiles: mockReadMigrationFiles
 }))
 
 vi.mock('@main/utils/file', () => ({
@@ -186,7 +199,8 @@ vi.mock('fs-extra', () => ({
     existsSync: vi.fn(),
     promises: {
       mkdir: vi.fn(),
-      readFile: vi.fn()
+      readFile: vi.fn(),
+      statfs: mockStatfs
     }
   },
   pathExists: vi.fn(),
@@ -214,7 +228,8 @@ vi.mock('fs-extra', () => ({
   existsSync: vi.fn(),
   promises: {
     mkdir: vi.fn(),
-    readFile: vi.fn()
+    readFile: vi.fn(),
+    statfs: mockStatfs
   }
 }))
 
@@ -246,6 +261,7 @@ vi.mock('@application', () => ({
         'app.userdata': '/mock/userData',
         'app.userdata.data': '/mock/userData/Data',
         'app.database.file': '/mock/userData/Data/cherrystudio.sqlite',
+        'app.database.migrations': '/mock/migrations',
         'feature.backup.temp': '/mock/temp/backup',
         'feature.backup.restore.file': '/mock/userData/Data/restore-journal.json',
         'feature.backup.restore.staging': '/mock/userData/restore-staging',
@@ -337,6 +353,7 @@ describe('BackupManager direct v2 data compatibility', () => {
     mockHashDbFile.mockResolvedValue('same-fingerprint')
     mockReadRestoreJournal.mockReturnValue({ kind: 'none' })
     mockReadAppliedChain.mockReturnValue([{ folderMillis: 1, hash: 'migration-hash' }])
+    mockReadMigrationFiles.mockReturnValue([{ folderMillis: 1, hash: 'migration-hash' }])
     mockZipExtract.mockResolvedValue(undefined)
     mockZipClose.mockResolvedValue(undefined)
     vi.mocked(fs.remove).mockResolvedValue(undefined as never)
@@ -470,6 +487,61 @@ describe('BackupManager direct v2 data compatibility', () => {
 
     expect(output.abort).toHaveBeenCalledOnce()
     expect(fs.remove).not.toHaveBeenCalledWith('/backups/backup.zip')
+  })
+
+  it('reports available space on the destination filesystem when staging runs out of space', async () => {
+    vi.mocked(fs.pathExists).mockImplementation(async (entryPath) => {
+      return ['/mock/userData/cache.json', '/mock/userData/Data'].includes(String(entryPath))
+    })
+    vi.spyOn(backupManager as any, 'copyDirectoryOrCreate').mockResolvedValue(undefined)
+    vi.spyOn(backupManager as any, 'getDirSize').mockResolvedValue(42)
+    const diskFullError = Object.assign(new Error('ENOSPC: no space left on device'), {
+      code: 'ENOSPC',
+      path: '/mock/userData/Data/source.bin',
+      dest: '/mock/temp/backup/create-operation-id/Data/source.bin'
+    })
+    vi.spyOn(backupManager as any, 'copyDirWithProgress').mockRejectedValueOnce(diskFullError)
+    mockStatfs.mockResolvedValueOnce({ bsize: 4096, bavail: 128 })
+
+    await expect(backupManager.backup({} as Electron.IpcMainInvokeEvent, 'backup.zip', '/backups')).rejects.toThrow(
+      `${BACKUP_DISK_FULL_ERROR_CODE}:524288`
+    )
+    expect(mockStatfs).toHaveBeenCalledWith('/mock/temp/backup/create-operation-id/Data')
+  })
+
+  it('reports disk-full errors while extracting a restore without relaunching', async () => {
+    mockZipExtract.mockRejectedValueOnce(Object.assign(new Error('disk full'), { code: 'ENOSPC' }))
+    mockStatfs.mockResolvedValueOnce({ bsize: 4096, bavail: 0 })
+
+    await expect(backupManager.restore({} as Electron.IpcMainInvokeEvent, '/backup/test.zip')).rejects.toThrow(
+      `${BACKUP_DISK_FULL_ERROR_CODE}:0`
+    )
+
+    expect(mockStatfs).toHaveBeenCalledWith('/mock/temp/backup/extract-operation-id')
+    expect(mockZipClose).toHaveBeenCalledOnce()
+    expect(mockRelaunch).not.toHaveBeenCalled()
+  })
+
+  it('reports disk-full errors when creating the operation directory', async () => {
+    vi.mocked(fs.ensureDir).mockRejectedValueOnce(Object.assign(new Error('disk full'), { code: 'ENOSPC' }))
+    mockStatfs.mockResolvedValueOnce({ bsize: 4096, bavail: 1 })
+
+    await expect(backupManager.restore({} as Electron.IpcMainInvokeEvent, '/backup/test.zip')).rejects.toThrow(
+      `${BACKUP_DISK_FULL_ERROR_CODE}:4096`
+    )
+
+    expect(mockStatfs).toHaveBeenCalledWith('/mock/temp/backup')
+    expect(mockZipExtract).not.toHaveBeenCalled()
+  })
+
+  it('preserves the original disk-full error if available space cannot be queried', async () => {
+    const diskFullError = Object.assign(new Error('disk full'), { code: 'ENOSPC' })
+    mockZipExtract.mockRejectedValueOnce(diskFullError)
+    mockStatfs.mockRejectedValueOnce(new Error('statfs unavailable'))
+
+    await expect(backupManager.restore({} as Electron.IpcMainInvokeEvent, '/backup/test.zip')).rejects.toBe(
+      diskFullError
+    )
   })
 
   it('copies Data while excluding transient SQLite sidecars and the restore journal', async () => {
@@ -860,6 +932,64 @@ describe('BackupManager direct v2 data compatibility', () => {
     expect(fs.remove).toHaveBeenCalledWith('/mock/userData/restore-staging/operation-id')
   })
 
+  it('classifies a newer backup format before staging any resources', async () => {
+    vi.mocked(fs.readJson).mockResolvedValue({ ...metadata, version: 8 } as never)
+
+    await expect((backupManager as any).restoreDirect('/extract')).rejects.toThrow(BACKUP_NEWER_VERSION_ERROR_CODE)
+
+    expect(fs.copy).not.toHaveBeenCalled()
+    expect(mockWriteRestoreJournal).not.toHaveBeenCalled()
+    expect(mockRelaunch).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    {
+      chain: [
+        { folderMillis: 1, hash: 'migration-hash' },
+        { folderMillis: 2, hash: 'newer-migration' }
+      ]
+    },
+    { chain: [{ folderMillis: 1, hash: 'different-migration' }] }
+  ])('rejects a migration chain incompatible with bundled migrations: $chain', async ({ chain }) => {
+    arrangeDirectRestore()
+    vi.mocked((backupManager as any).validateStagedDatabase).mockReturnValue(chain)
+
+    await expect((backupManager as any).restoreDirect('/extract')).rejects.toThrow(BACKUP_NEWER_VERSION_ERROR_CODE)
+
+    expect(mockReadMigrationFiles).toHaveBeenCalledWith({ migrationsFolder: '/mock/migrations' })
+    expect(mockWriteRestoreJournal).not.toHaveBeenCalled()
+    expect(mockRelaunch).not.toHaveBeenCalled()
+    expect(fs.remove).toHaveBeenCalledWith('/mock/userData/restore-staging/operation-id')
+  })
+
+  it('allows a bundled migration prefix so older databases can migrate forward', async () => {
+    arrangeDirectRestore()
+    mockReadMigrationFiles.mockReturnValue([
+      { folderMillis: 1, hash: 'migration-hash' },
+      { folderMillis: 2, hash: 'next-migration' }
+    ])
+
+    await (backupManager as any).restoreDirect('/extract')
+
+    expect(mockWriteRestoreJournal).toHaveBeenCalled()
+  })
+
+  it('defers to the promotion gate when bundled migrations cannot be read', async () => {
+    arrangeDirectRestore()
+    mockReadMigrationFiles.mockImplementationOnce(() => {
+      throw new Error('migrations unavailable')
+    })
+
+    await (backupManager as any).restoreDirect('/extract')
+
+    expect(mockWriteRestoreJournal).toHaveBeenCalled()
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('promotion gate'), expect.any(Error))
+  })
+
+  it('exposes a stable code for concurrent backup operations', () => {
+    expect(new BackupOperationBusyError().message).toContain(BACKUP_OPERATION_BUSY_ERROR_CODE)
+  })
+
   it('rejects a v1 version 6 archive before staging any resources', async () => {
     vi.mocked(fs.readJson).mockResolvedValue({ version: 6, appName: 'Cherry Studio' } as never)
 
@@ -979,7 +1109,7 @@ describe('BackupManager direct v2 data compatibility', () => {
   })
 })
 
-describe('BackupManager.copyDirWithProgress - Symlink Handling', () => {
+describe('BackupManager.copyDirWithProgress', () => {
   let backupManager: BackupManager
 
   beforeEach(() => {
@@ -1140,6 +1270,166 @@ describe('BackupManager.copyDirWithProgress - Symlink Handling', () => {
     expect(fs.remove).toHaveBeenCalledWith('/dest/large.bin')
     expect(fs.chmod).not.toHaveBeenCalled()
     expect(onProgress).not.toHaveBeenCalled()
+  })
+
+  describe('LevelDB Lock Handling', () => {
+    const createBusyFileError = () =>
+      Object.assign(new Error('resource busy or locked, read'), {
+        code: 'EBUSY',
+        errno: -4082
+      })
+
+    const mockAutomaticCopyError = (error: Error) => {
+      vi.mocked(fs.createReadStream).mockReturnValue(
+        new Readable({
+          read() {
+            this.destroy(error)
+          }
+        }) as never
+      )
+      vi.mocked(fs.createWriteStream).mockReturnValue(
+        new Writable({
+          write(_chunk, _encoding, callback) {
+            callback()
+          }
+        }) as never
+      )
+    }
+
+    it.each(['leveldb', 'indexeddb.leveldb'])(
+      'should skip a locked file in %s during an automatic backup copy',
+      async (parentDirectory) => {
+        const lockedFileError = createBusyFileError()
+        const sourceDirectory = `/src/${parentDirectory}`
+        const destinationDirectory = `/dest/${parentDirectory}`
+        const onProgress = vi.fn()
+        vi.mocked(fs.readdir).mockResolvedValue([createDirent('LOCK')] as never)
+        vi.mocked(fs.lstat).mockResolvedValue(createStats('file', 0) as never)
+        mockAutomaticCopyError(lockedFileError)
+
+        await expect(
+          (backupManager as any).copyDirWithProgress(sourceDirectory, destinationDirectory, onProgress, {
+            dereferenceSymlinks: false,
+            signal: new AbortController().signal
+          })
+        ).resolves.toBeUndefined()
+
+        expect(fs.remove).toHaveBeenCalledWith(`${destinationDirectory}/LOCK`)
+        expect(onProgress).not.toHaveBeenCalled()
+        expect(mockLogger.warn).toHaveBeenCalledWith('[BackupManager] Skipping locked file', {
+          path: `${sourceDirectory}/LOCK`
+        })
+      }
+    )
+
+    it('should reject a locked file error when removing the partial automatic backup copy fails', async () => {
+      const lockedFileError = createBusyFileError()
+      vi.mocked(fs.readdir).mockResolvedValue([createDirent('LOCK')] as never)
+      vi.mocked(fs.lstat).mockResolvedValue(createStats('file', 0) as never)
+      vi.mocked(fs.remove).mockRejectedValueOnce(new Error('cleanup failed') as never)
+      mockAutomaticCopyError(lockedFileError)
+
+      await expect(
+        (backupManager as any).copyDirWithProgress('/src/leveldb', '/dest/leveldb', vi.fn(), {
+          dereferenceSymlinks: false,
+          signal: new AbortController().signal
+        })
+      ).rejects.toBe(lockedFileError)
+
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+        '[BackupManager] Skipping locked file',
+        expect.objectContaining({ path: '/src/leveldb/LOCK' })
+      )
+    })
+
+    it.each(['.claude', 'notleveldb'])(
+      'should reject EBUSY for a LOCK file in non-LevelDB directory %s during an automatic backup copy',
+      async (parentDirectory) => {
+        const busyFileError = createBusyFileError()
+        const sourceDirectory = `/src/${parentDirectory}`
+        const destinationDirectory = `/dest/${parentDirectory}`
+        vi.mocked(fs.readdir).mockResolvedValue([createDirent('LOCK')] as never)
+        vi.mocked(fs.lstat).mockResolvedValue(createStats('file', 0) as never)
+        mockAutomaticCopyError(busyFileError)
+
+        await expect(
+          (backupManager as any).copyDirWithProgress(sourceDirectory, destinationDirectory, vi.fn(), {
+            dereferenceSymlinks: false,
+            signal: new AbortController().signal
+          })
+        ).rejects.toBe(busyFileError)
+
+        expect(fs.remove).toHaveBeenCalledWith(`${destinationDirectory}/LOCK`)
+      }
+    )
+
+    it('should skip a LevelDB LOCK file during a backup copy without a signal', async () => {
+      const lockedFileError = createBusyFileError()
+      const onProgress = vi.fn()
+      vi.mocked(fs.readdir).mockResolvedValue([createDirent('LOCK')] as never)
+      vi.mocked(fs.lstat).mockResolvedValue(createStats('file', 0) as never)
+      vi.mocked(fs.copy).mockRejectedValueOnce(lockedFileError as never)
+
+      await expect(
+        (backupManager as any).copyDirWithProgress('/src/leveldb', '/dest/leveldb', onProgress, {
+          dereferenceSymlinks: false
+        })
+      ).resolves.toBeUndefined()
+
+      expect(onProgress).not.toHaveBeenCalled()
+      expect(mockLogger.warn).toHaveBeenCalledWith('[BackupManager] Skipping locked file', {
+        path: '/src/leveldb/LOCK'
+      })
+    })
+
+    it('should reject EBUSY for a non-LevelDB LOCK file during a backup copy without a signal', async () => {
+      const busyFileError = createBusyFileError()
+      vi.mocked(fs.readdir).mockResolvedValue([createDirent('LOCK')] as never)
+      vi.mocked(fs.lstat).mockResolvedValue(createStats('file', 0) as never)
+      vi.mocked(fs.copy).mockRejectedValueOnce(busyFileError as never)
+
+      await expect(
+        (backupManager as any).copyDirWithProgress('/src/.claude', '/dest/.claude', vi.fn(), {
+          dereferenceSymlinks: false
+        })
+      ).rejects.toBe(busyFileError)
+    })
+
+    it('should reject EBUSY for a case-variant LevelDB lock filename', async () => {
+      const busyFileError = createBusyFileError()
+      vi.mocked(fs.readdir).mockResolvedValue([createDirent('lock')] as never)
+      vi.mocked(fs.lstat).mockResolvedValue(createStats('file', 0) as never)
+      mockAutomaticCopyError(busyFileError)
+
+      await expect(
+        (backupManager as any).copyDirWithProgress('/src/leveldb', '/dest/leveldb', vi.fn(), {
+          dereferenceSymlinks: false,
+          signal: new AbortController().signal
+        })
+      ).rejects.toBe(busyFileError)
+
+      expect(fs.remove).toHaveBeenCalledWith('/dest/leveldb/lock')
+    })
+
+    it('should reject EBUSY for a non-lock file during an automatic backup copy', async () => {
+      const busyFileError = createBusyFileError()
+      vi.mocked(fs.readdir).mockResolvedValue([createDirent('messages.json')] as never)
+      vi.mocked(fs.lstat).mockResolvedValue(createStats('file', 42) as never)
+      mockAutomaticCopyError(busyFileError)
+
+      await expect(
+        (backupManager as any).copyDirWithProgress('/src', '/dest', vi.fn(), {
+          dereferenceSymlinks: false,
+          signal: new AbortController().signal
+        })
+      ).rejects.toBe(busyFileError)
+
+      expect(fs.remove).toHaveBeenCalledWith('/dest/messages.json')
+      expect(mockLogger.warn).not.toHaveBeenCalledWith(
+        '[BackupManager] Skipping locked file',
+        expect.objectContaining({ path: '/src/messages.json' })
+      )
+    })
   })
 
   it('should skip symlinks during restore copy', async () => {

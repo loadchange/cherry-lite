@@ -29,12 +29,19 @@ import { type AtomicWriteStream, createAtomicWriteStream } from '@main/utils/fil
 import { isPathInside, resolveAndValidatePath } from '@main/utils/legacyFile'
 import { getDeviceType, getHostname } from '@main/utils/system'
 import { IpcChannel } from '@shared/IpcChannel'
-import { BACKUP_ACTIVE_WRITERS_ERROR_CODE, type LocalBackupConfig } from '@shared/types/backup'
+import {
+  BACKUP_ACTIVE_WRITERS_ERROR_CODE,
+  BACKUP_DISK_FULL_ERROR_CODE,
+  BACKUP_NEWER_VERSION_ERROR_CODE,
+  BACKUP_OPERATION_BUSY_ERROR_CODE,
+  type LocalBackupConfig
+} from '@shared/types/backup'
 import { AbsoluteFilePathSchema } from '@shared/types/file'
 import { ZipArchive } from 'archiver'
 import { Mutex, tryAcquire } from 'async-mutex'
 import Database from 'better-sqlite3'
 import dayjs from 'dayjs'
+import { readMigrationFiles } from 'drizzle-orm/migrator'
 import { app } from 'electron'
 import * as fs from 'fs-extra'
 import StreamZip from 'node-stream-zip'
@@ -47,6 +54,15 @@ const STALE_TEMP_ARTIFACT_AGE_MS = 24 * 60 * 60 * 1000
 const BACKUP_OPERATION_DIR_PATTERN =
   /^(?:create|lan-create|extract|webdav-download|s3-download)-[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i
 const BACKUP_TEMP_ARCHIVE_PATTERN = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}-.+\.zip$/i
+const WINDOWS_UV_EBUSY_ERRNO = -4082
+
+const isSkippableLevelDbLockError = (sourcePath: string, error: unknown): error is NodeJS.ErrnoException => {
+  const parentDirectory = path.basename(path.dirname(sourcePath)).toLowerCase()
+  const isLevelDbDirectory = parentDirectory === 'leveldb' || parentDirectory.endsWith('.leveldb')
+  if (path.basename(sourcePath) !== 'LOCK' || !isLevelDbDirectory || !(error instanceof Error)) return false
+  const nodeError = error as NodeJS.ErrnoException
+  return nodeError.code === 'EBUSY' || nodeError.errno === WINDOWS_UV_EBUSY_ERRNO
+}
 
 interface DirectBackupMetadata {
   version: number
@@ -99,7 +115,7 @@ type BackupInvocationEvent = Electron.IpcMainInvokeEvent | null
 
 export class BackupOperationBusyError extends Error {
   constructor() {
-    super('Another backup operation is already in progress.')
+    super(`${BACKUP_OPERATION_BUSY_ERROR_CODE}: Another backup operation is already in progress.`)
     this.name = 'BackupOperationBusyError'
   }
 }
@@ -427,7 +443,8 @@ class BackupManager {
       if (output && !output.destroyed) {
         await output.abort()
       }
-      throw error
+      const reportedError = await this.withAvailableDiskSpace(error, output ? outputDirectory : workDir)
+      throw reportedError
     } finally {
       await fs.remove(workDir).catch(() => {})
     }
@@ -676,7 +693,8 @@ class BackupManager {
       await this.restoreDirect(extractionDir)
     } catch (error) {
       logger.error('Restore failed:', error as Error)
-      throw error
+      const reportedError = await this.withAvailableDiskSpace(error, extractionDir)
+      throw reportedError
     } finally {
       await fs.remove(extractionDir).catch(() => {})
     }
@@ -788,6 +806,11 @@ class BackupManager {
       }
 
       const chain = this.validateStagedDatabase(workDatabase)
+      if (!this.isChainBundledPrefix(chain)) {
+        throw new Error(
+          `${BACKUP_NEWER_VERSION_ERROR_CODE}: The backup database is ahead of this version. Please update Cherry Lite and try again. Backup appVersion: ${metadata.appVersion ?? 'unknown'}, current: ${app.getVersion()}.`
+        )
+      }
       onProgress({ stage: 'restoring_database', progress: 65, total: 100 })
 
       const fileResources: RestoreJournal['fileResources'] = []
@@ -885,6 +908,11 @@ class BackupManager {
     if (!raw || typeof raw !== 'object' || raw.appName !== 'Cherry Studio') {
       throw new Error('This backup file is not from Cherry Studio and cannot be restored')
     }
+    if (typeof raw.version === 'number' && raw.version > DIRECT_BACKUP_VERSION) {
+      throw new Error(
+        `${BACKUP_NEWER_VERSION_ERROR_CODE}: Backup version ${String(raw.version)} is newer than supported version ${DIRECT_BACKUP_VERSION}. Please update Cherry Lite and try again.`
+      )
+    }
     if (raw.version !== DIRECT_BACKUP_VERSION) {
       throw new Error(
         `Unsupported backup version ${String(raw.version)}. Cherry Studio v2 can only restore backup version ${DIRECT_BACKUP_VERSION}.`
@@ -966,6 +994,25 @@ class BackupManager {
       throw new Error('Backup SQLite database could not be sealed without WAL sidecars')
     }
     return chain
+  }
+
+  private isChainBundledPrefix(chain: RestoreJournal['db']['chain']): boolean {
+    let bundled: ReturnType<typeof readMigrationFiles>
+    try {
+      bundled = readMigrationFiles({ migrationsFolder: application.getPath('app.database.migrations') })
+    } catch (error) {
+      logger.warn(
+        '[restoreDirect] Failed to read bundled migrations for downgrade check, allowing promotion gate to decide',
+        error as Error
+      )
+      return true
+    }
+    if (chain.length > bundled.length) {
+      return false
+    }
+    return chain.every(
+      (item, index) => item.folderMillis === bundled[index].folderMillis && item.hash === bundled[index].hash
+    )
   }
 
   private async createJournalResource(input: {
@@ -1174,8 +1221,31 @@ class BackupManager {
 
   private async createOperationDir(prefix: string): Promise<string> {
     const operationDir = path.join(this.backupDir, `${prefix}-${randomUUID()}`)
-    await fs.ensureDir(operationDir)
+    try {
+      await fs.ensureDir(operationDir)
+    } catch (error) {
+      const reportedError = await this.withAvailableDiskSpace(error, this.backupDir)
+      throw reportedError
+    }
     return operationDir
+  }
+
+  private async withAvailableDiskSpace(error: unknown, fallbackDirectory: string): Promise<unknown> {
+    if (!(error instanceof Error) || (error as NodeJS.ErrnoException).code !== 'ENOSPC') {
+      return error
+    }
+
+    const fileError = error as NodeJS.ErrnoException & { dest?: string }
+    const failedPath = fileError.dest ?? fileError.path
+    const probePath = failedPath ? path.dirname(failedPath) : fallbackDirectory
+
+    try {
+      const stats = await fs.promises.statfs(probePath)
+      return new Error(`${BACKUP_DISK_FULL_ERROR_CODE}:${stats.bsize * stats.bavail}`)
+    } catch (statError) {
+      logger.warn('Failed to read available disk space after ENOSPC', { probePath, statError })
+      return error
+    }
   }
 
   private async assertJobsDrained(jobManager: {
@@ -1433,13 +1503,32 @@ class BackupManager {
                 })
                 await fs.chmod(destPath, entry.stats.mode)
               } catch (error) {
-                await fs.remove(destPath).catch(() => {})
+                try {
+                  await fs.remove(destPath)
+                } catch {
+                  throw error
+                }
+                if (isSkippableLevelDbLockError(sourcePath, error)) {
+                  logger.warn('[BackupManager] Skipping locked file', { path: sourcePath })
+                  continue
+                }
                 throw error
               }
             } else if (entry.isSymlink) {
               await fs.copy(sourcePath, destPath, { dereference: true })
             } else {
-              await fs.copy(sourcePath, destPath)
+              try {
+                await fs.copy(sourcePath, destPath)
+              } catch (copyError) {
+                // Skip files that are locked by another process (e.g., LevelDB LOCK file
+                // in Local Storage held by the renderer). These files are not needed for
+                // backup integrity and will be recreated on restore if needed.
+                if (isSkippableLevelDbLockError(sourcePath, copyError)) {
+                  logger.warn('[BackupManager] Skipping locked file', { path: sourcePath })
+                  continue
+                }
+                throw copyError
+              }
             }
             onProgress(entry.stats.size)
           } else if (entry.isSymlink) {
