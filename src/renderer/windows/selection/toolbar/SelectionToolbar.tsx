@@ -1,8 +1,10 @@
 import { usePreference } from '@data/hooks/usePreference'
 import { loggerService } from '@logger'
 import SelectionToolbarView from '@renderer/components/selection/SelectionToolbarView'
+import ReadAloudButton from '@renderer/components/tts/ReadAloudButton'
 import { useTimer } from '@renderer/hooks/useTimer'
 import { ipcApi, useIpcOn } from '@renderer/ipc'
+import { uuid } from '@renderer/utils/uuid'
 import type { SelectionActionItem } from '@shared/data/preference/preferenceTypes'
 import type { FC } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -55,6 +57,7 @@ const SelectionToolbar: FC = () => {
   }, [actionItems])
 
   const selectedText = useRef('')
+  const [readingSelection, setReadingSelection] = useState(() => ({ text: '', sourceId: `selection:${uuid()}` }))
   // [macOS] only macOS has the fullscreen mode
   const isFullScreen = useRef(false)
 
@@ -67,6 +70,7 @@ const SelectionToolbar: FC = () => {
   // listen to selection events pushed from main (useIpcOn self-cleans on unmount)
   useIpcOn('selection.text_selected', (selectionData) => {
     selectedText.current = selectionData.text
+    setReadingSelection({ text: selectionData.text, sourceId: `selection:${uuid()}` })
     isFullScreen.current = selectionData.isFullscreen ?? false
   })
 
@@ -81,6 +85,13 @@ const SelectionToolbar: FC = () => {
   useEffect(() => {
     updateWindowSize(toolbarRef.current)
   }, [isCompact, actionItems])
+
+  useEffect(() => {
+    if (!toolbarRef.current || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(() => updateWindowSize(toolbarRef.current))
+    observer.observe(toolbarRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   /**
    * Check if text is a valid URI or file path
@@ -191,6 +202,15 @@ const SelectionToolbar: FC = () => {
       handleAction={handleAction}
       copyIconStatus={copyIconStatus}
       copyIconAnimation={copyIconAnimation}
+      readAloud={
+        <ReadAloudButton
+          sourceId={readingSelection.sourceId}
+          text={readingSelection.text}
+          showLabel={!isCompact}
+          stopOnUnmount={false}
+          className="h-full rounded-none px-2"
+        />
+      }
       draggable
     />
   )

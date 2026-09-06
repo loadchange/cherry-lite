@@ -37,6 +37,7 @@ import { StorageMonitorService } from '@main/services/StorageMonitorService'
 import { SubWindowService } from '@main/services/SubWindowService'
 import { ThemeService } from '@main/services/ThemeService'
 import { TrayService } from '@main/services/TrayService'
+import { TtsService } from '@main/services/tts/TtsService'
 import { WebSearchService } from '@main/services/webSearch'
 import { WebviewService } from '@main/services/WebviewService'
 
@@ -90,6 +91,7 @@ export const services = {
   StorageMonitorService,
   PythonService,
   TrayService,
+  TtsService,
   WebSearchService,
   WebviewService,
   OAuthRuntimeService,

@@ -7,6 +7,7 @@ import type { BrowserWindow, BrowserWindowConstructorOptions, VisibleOnAllWorksp
  */
 export enum WindowType {
   Main = 'main',
+  AudioHost = 'audioHost',
   Print = 'print',
   QuickAssistant = 'quickAssistant',
   SubWindow = 'subWindow',

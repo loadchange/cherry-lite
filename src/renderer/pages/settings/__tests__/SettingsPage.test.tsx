@@ -55,7 +55,8 @@ vi.mock('react-i18next', () => ({
         'settings.shortcuts.title': '快捷键',
         'settings.system.title': '系统',
         'settings.tool.file_processing.features.image_to_text.title': 'OCR',
-        'settings.tool.file_processing.features.document_to_markdown.title': '文档处理'
+        'settings.tool.file_processing.features.document_to_markdown.title': '文档处理',
+        'tts.settings.title': '朗读（TTS）'
       })[key] ?? key
   })
 }))
@@ -83,21 +84,32 @@ describe('SettingsPage', () => {
     expect(navigateMock).toHaveBeenCalledWith({ to: '/settings/model' })
   })
 
-  it('keeps document processing and OCR together in tools and places dependencies below system', () => {
+  it('keeps document processing, OCR and TTS together in tools and places dependencies below system', () => {
     render(<SettingsPage />)
 
     expect(screen.getByText('工具')).toBeInTheDocument()
 
     const documentProcessingItem = screen.getByRole('button', { name: '文档处理' })
     const ocrItem = screen.getByRole('button', { name: 'OCR' })
+    const ttsItem = screen.getByRole('button', { name: '朗读（TTS）' })
     expect(documentProcessingItem.nextElementSibling).toBe(ocrItem)
-    expect(ocrItem.nextElementSibling).toHaveAttribute('data-testid', 'menu-divider')
+    expect(ocrItem.nextElementSibling).toBe(ttsItem)
+    expect(ttsItem.nextElementSibling).toHaveAttribute('data-testid', 'menu-divider')
 
     const systemItem = screen.getByRole('button', { name: '系统' })
     const dependenciesItem = screen.getByRole('button', { name: '环境依赖' })
     expect(systemItem.nextElementSibling).toBe(dependenciesItem)
     fireEvent.click(dependenciesItem)
     expect(navigateMock).toHaveBeenCalledWith({ to: '/settings/dependencies' })
+  })
+
+  it('provides a single TTS entry that navigates exactly once to read-aloud settings', () => {
+    render(<SettingsPage />)
+
+    const ttsItems = screen.getAllByRole('button', { name: '朗读（TTS）' })
+    expect(ttsItems).toHaveLength(1)
+    fireEvent.click(ttsItems[0])
+    expect(navigateMock).toHaveBeenCalledExactlyOnceWith({ to: '/settings/tts' })
   })
 
   it('places MCP first in tools and opens the MCP settings page', () => {

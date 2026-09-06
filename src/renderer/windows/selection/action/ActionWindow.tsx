@@ -277,7 +277,9 @@ const SelectionActionContent: FC<{ action: SelectionActionItem }> = ({ action })
         <div
           ref={contentElementRef}
           className="flex max-w-[1280px] flex-1 select-text flex-col overflow-auto p-4 text-sm [-webkit-app-region:no-drag]">
-          {action.id == 'translate' && <ActionTranslate action={action} scrollToBottom={handleScrollToBottom} />}
+          {action.id == 'translate' && (
+            <ActionTranslate key={sessionId} action={action} scrollToBottom={handleScrollToBottom} />
+          )}
           {action.id != 'translate' && (
             <ActionGeneral key={sessionId} action={action} scrollToBottom={handleScrollToBottom} />
           )}

@@ -34,6 +34,33 @@ export const DEFAULT_WINDOW_CONFIG: WindowOptions = {
  * ```
  */
 export const WINDOW_TYPE_REGISTRY: Partial<Record<WindowType, WindowTypeMetadata>> = {
+  [WindowType.AudioHost]: {
+    type: WindowType.AudioHost,
+    lifecycle: 'singleton',
+    htmlPath: 'windows/audioHost/index.html',
+    showMode: 'manual',
+    windowOptions: {
+      width: 360,
+      height: 84,
+      alwaysOnTop: true,
+      frame: false,
+      resizable: false,
+      minimizable: false,
+      maximizable: false,
+      fullscreenable: false,
+      skipTaskbar: true,
+      autoHideMenuBar: true,
+      webPreferences: {
+        contextIsolation: true,
+        nodeIntegration: false,
+        sandbox: false,
+        webSecurity: true,
+        backgroundThrottling: false,
+        autoplayPolicy: 'no-user-gesture-required'
+      }
+    },
+    behavior: { macShowInDock: false, alwaysOnTop: { level: 'floating' } }
+  },
   // Main application window — singleton primary surface.
   // Managed by MainWindowService: dynamic options (theme-driven backgroundColor /
   // backgroundMaterial / frame / icon / zoomFactor) are injected via wm.open({ options }).

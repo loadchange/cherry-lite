@@ -25,6 +25,7 @@
 
 import { TRANSLATE_PROMPT } from '@shared/ai/prompts'
 import * as PreferenceTypes from '@shared/data/preference/preferenceTypes'
+import { DEFAULT_TTS_SETTINGS, type TtsSettings } from '@shared/tts'
 
 /* eslint @typescript-eslint/member-ordering: ["error", {
   "interfaces": { "order": "alphabetically" },
@@ -439,6 +440,7 @@ export interface PreferenceSchemas {
     'topic.tab.position': PreferenceTypes.TopicTabPosition
     // redux/settings/showTopics
     'topic.tab.show': boolean
+    'tts.settings': TtsSettings
     // target-key-definitions/complex/complex
     'ui.custom_css': string
     // target-key-definitions/complex/complex
@@ -699,6 +701,7 @@ export const DefaultPreferences: PreferenceSchemas = {
     'topic.tab.display_mode': 'assistant',
     'topic.tab.position': 'left',
     'topic.tab.show': true,
+    'tts.settings': DEFAULT_TTS_SETTINGS,
     'ui.custom_css': '',
     'ui.launchpad.app_order': [],
     'ui.navbar.position': 'top',

@@ -9,6 +9,8 @@ import CopyIcon from '@renderer/components/icons/CopyIcon'
 import DeleteIcon from '@renderer/components/icons/DeleteIcon'
 import EditIcon from '@renderer/components/icons/EditIcon'
 import RefreshIcon from '@renderer/components/icons/RefreshIcon'
+import MessageReadAloudButton from '@renderer/components/tts/MessageReadAloudButton'
+import { getTtsMessageText } from '@renderer/hooks/useTts'
 import type { MessageExportView } from '@renderer/types/messageExport'
 import { formatErrorMessageWithPrefix } from '@renderer/utils/error'
 import { messageToPlainText } from '@renderer/utils/export'
@@ -31,7 +33,8 @@ import {
   Menu,
   Save,
   Split,
-  ThumbsUp
+  ThumbsUp,
+  Volume2
 } from 'lucide-react'
 import type { ReactNode, RefObject } from 'react'
 
@@ -243,6 +246,23 @@ registerToolbarAction({
   label: ({ t }) => t('common.copy'),
   icon: ({ copied }) => (copied ? <Check size={15} color="var(--primary)" /> : <CopyIcon size={15} />),
   availability: toolbarAvailability('copy', ({ actions }) => !!actions.copyText)
+})
+
+registerToolbarAction({
+  id: 'read-aloud',
+  label: ({ t }) => t('tts.read_aloud'),
+  icon: <Volume2 size={15} />,
+  availability: ({ message, messageParts, isProcessing }) => ({
+    visible: (message.role === 'user' || message.role === 'assistant') && !!getTtsMessageText(messageParts),
+    enabled: !isProcessing && message.status === 'success'
+  }),
+  renderToolbar: ({ actionContext, action }) => (
+    <MessageReadAloudButton
+      message={actionContext.message}
+      parts={actionContext.messageParts}
+      disabled={!action.availability.enabled}
+    />
+  )
 })
 
 registerToolbarAction({

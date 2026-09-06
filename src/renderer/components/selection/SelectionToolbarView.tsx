@@ -5,7 +5,8 @@ import ClipboardCheck from 'lucide-react/dist/esm/icons/clipboard-check'
 import ClipboardCopy from 'lucide-react/dist/esm/icons/clipboard-copy'
 import ClipboardX from 'lucide-react/dist/esm/icons/clipboard-x'
 import MessageSquareHeart from 'lucide-react/dist/esm/icons/message-square-heart'
-import type { FC, Ref } from 'react'
+import Volume2 from 'lucide-react/dist/esm/icons/volume-2'
+import type { FC, ReactNode, Ref } from 'react'
 import { memo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -126,6 +127,7 @@ interface SelectionToolbarViewProps {
    * preview must NOT be draggable, so it omits this (defaults to false).
    */
   draggable?: boolean
+  readAloud?: ReactNode
   ref?: Ref<HTMLDivElement>
 }
 
@@ -142,8 +144,10 @@ const SelectionToolbarView = ({
   copyIconStatus,
   copyIconAnimation,
   draggable = false,
+  readAloud,
   ref
 }: SelectionToolbarViewProps) => {
+  const { t } = useTranslation()
   return (
     <div
       data-ui="selection.toolbar"
@@ -165,6 +169,17 @@ const SelectionToolbarView = ({
           'flex flex-row items-center justify-center bg-transparent [-webkit-app-region:no-drag]',
           'rounded-[0_10px_10px_0] border-[var(--selection-toolbar-border)] border-solid [border-width:0.5px_0.5px_0.5px_0]'
         )}>
+        {readAloud ?? (
+          <button
+            type="button"
+            disabled
+            aria-label={t('tts.read_aloud')}
+            title={t('tts.read_aloud')}
+            className="inline-flex h-full items-center justify-center gap-1 px-2 text-card-foreground text-sm">
+            <Volume2 size={16} />
+            {!isCompact && t('tts.read_aloud')}
+          </button>
+        )}
         <ActionIcons
           actionItems={actionItems}
           isCompact={isCompact}

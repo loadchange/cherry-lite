@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import ActionWindow from '../ActionWindow'
 
-const { actionState, generalMounts, ipcRequest, opacityPreference, platform } = vi.hoisted(() => ({
+const { actionState, generalMounts, translationMounts, ipcRequest, opacityPreference, platform } = vi.hoisted(() => ({
   actionState: {
     value: {
       id: 'test-action',
@@ -17,6 +17,7 @@ const { actionState, generalMounts, ipcRequest, opacityPreference, platform } = 
     } as SelectionActionItem
   },
   generalMounts: { count: 0 },
+  translationMounts: { count: 0 },
   ipcRequest: vi.fn(),
   opacityPreference: { value: 100 },
   platform: { isMac: false }
@@ -70,7 +71,14 @@ vi.mock('../components/ActionGeneral', () => {
   }
   return { default: MockActionGeneral }
 })
-vi.mock('../components/ActionTranslate', () => ({ default: () => null }))
+vi.mock('../components/ActionTranslate', () => ({
+  default: function MockTranslation() {
+    useEffect(() => {
+      translationMounts.count += 1
+    }, [])
+    return null
+  }
+}))
 
 describe('ActionWindow surface', () => {
   beforeEach(() => {
@@ -83,6 +91,7 @@ describe('ActionWindow surface', () => {
     opacityPreference.value = 100
     platform.isMac = false
     generalMounts.count = 0
+    translationMounts.count = 0
     HTMLElement.prototype.scrollTo = vi.fn()
   })
 
@@ -94,6 +103,15 @@ describe('ActionWindow surface', () => {
     rerender(<ActionWindow />)
 
     await waitFor(() => expect(generalMounts.count).toBe(2))
+  })
+
+  it('remounts translation content on pooled reuse so its reading source is released', async () => {
+    actionState.value = { ...actionState.value, id: 'translate' }
+    const { rerender } = render(<ActionWindow />)
+    await waitFor(() => expect(translationMounts.count).toBe(1))
+    actionState.value = { ...actionState.value, selectedText: 'new selection' }
+    rerender(<ActionWindow />)
+    await waitFor(() => expect(translationMounts.count).toBe(2))
   })
 
   it('uses an opaque popover surface at 100% window opacity', () => {

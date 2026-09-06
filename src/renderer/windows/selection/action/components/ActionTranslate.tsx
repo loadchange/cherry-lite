@@ -4,9 +4,12 @@ import { loggerService } from '@logger'
 import { toMessageListItem } from '@renderer/components/chat/messages/utils/messageListItem'
 import CopyButton from '@renderer/components/CopyButton'
 import LanguageSelect from '@renderer/components/LanguageSelect'
+import ReadAloudButton from '@renderer/components/tts/ReadAloudButton'
 import { detectLanguageOrUnknown, useDetectLang, useLanguages, useTranslate } from '@renderer/hooks/translate'
+import { ttsContentVersion } from '@renderer/hooks/useTts'
 import { cn } from '@renderer/utils/style'
 import { pickBidirectionalTarget, UNKNOWN_LANG_CODE } from '@renderer/utils/translate'
+import { uuid } from '@renderer/utils/uuid'
 import type { SelectionActionItem, TranslateLangCode } from '@shared/data/preference/preferenceTypes'
 import { BUILTIN_LANGUAGE } from '@shared/data/presets/translateLanguages'
 import type { CherryMessagePart, CherryUIMessage } from '@shared/data/types/message'
@@ -61,11 +64,16 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
   )
   const [detectedLanguage, setDetectedLanguage] = useState<TranslateLanguage | null>(null)
   const [actualTargetLanguage, setActualTargetLanguage] = useState<TranslateLanguage>(targetLanguage)
+  const [contentLanguage, setContentLanguage] = useState(targetLanguage.langCode)
 
   const [showOriginal, setShowOriginal] = useState(false)
   const [initialized, setInitialized] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [content, setContent] = useState('')
+  const [ttsInstance] = useState(() => uuid())
+  const [translationVersion, setTranslationVersion] = useState(0)
+  const [translationComplete, setTranslationComplete] = useState(false)
+  const completionVersionRef = useRef(0)
 
   // Use useRef for values that shouldn't trigger re-renders
   const targetLangRef = useRef(targetLanguage)
@@ -172,6 +180,9 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
 
   const clear = useCallback(() => {
     cancelTranslate()
+    completionVersionRef.current += 1
+    setTranslationComplete(false)
+    setTranslationVersion((version) => version + 1)
     setContent('')
     setCompletionError(null)
     setIsDetecting(false)
@@ -181,6 +192,7 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
   const fetchResult = useCallback(async () => {
     if (!selectedText || !initialized) return
     clear()
+    const completionVersion = completionVersionRef.current
 
     setIsDetecting(true)
     const sourceLanguageCode = await detectLanguageOrUnknown(selectedText, detectLanguage, (error) => {
@@ -205,7 +217,12 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
     setIsPreparing(true)
 
     try {
-      await runTranslate(selectedText, translateLang)
+      const result = await runTranslate(selectedText, translateLang)
+      if (result !== undefined && completionVersionRef.current === completionVersion) {
+        // Keep the completed text tied to its language even if a selector changes later.
+        setContentLanguage(translateLang.langCode)
+        setTranslationComplete(true)
+      }
     } catch (err) {
       setContent('')
       setCompletionError(getSelectionActionErrorMessage(err, t))
@@ -301,6 +318,8 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
   )
 
   const handlePause = () => {
+    completionVersionRef.current += 1
+    setTranslationComplete(false)
     cancelTranslate()
     setIsDetecting(false)
     setIsPreparing(false)
@@ -348,6 +367,14 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
           </div>
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
+            <ReadAloudButton
+              sourceId={`translation:${ttsInstance}:${translationVersion}:${ttsContentVersion(content)}`}
+              text={content}
+              locale={contentLanguage}
+              disabled={isStreaming || !translationComplete || !!error}
+              label={t('tts.read_translation')}
+              stopWhenHidden
+            />
             <Popover open={settingsOpen} onOpenChange={setSettingsOpen}>
               <Tooltip content={t('translate.language_settings')} placement="bottom">
                 <PopoverTrigger asChild>

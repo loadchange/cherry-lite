@@ -20,6 +20,7 @@ import { type SelectionEventSchemas, selectionRequestSchemas } from './selection
 import { type SystemEventSchemas, systemRequestSchemas } from './system'
 import { type TabEventSchemas, tabRequestSchemas } from './tab'
 import { translateRequestSchemas } from './translate'
+import { type TtsEventSchemas, ttsRequestSchemas } from './tts'
 import { webSearchRequestSchemas } from './webSearch'
 import { type WebviewEventSchemas, webviewRequestSchemas } from './webview'
 import { type WindowEventSchemas, windowRequestSchemas } from './window'
@@ -53,6 +54,7 @@ export const ipcRequestSchemas = {
   ...systemRequestSchemas,
   ...tabRequestSchemas,
   ...translateRequestSchemas,
+  ...ttsRequestSchemas,
   ...webSearchRequestSchemas,
   ...webviewRequestSchemas,
   ...windowRequestSchemas
@@ -79,6 +81,7 @@ export type IpcEventSchemas = AiEventSchemas &
   SelectionEventSchemas &
   SystemEventSchemas &
   TabEventSchemas &
+  TtsEventSchemas &
   WebviewEventSchemas &
   WindowEventSchemas
 /** Union of all declared event names (`never` until a domain is migrated). */

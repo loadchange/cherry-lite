@@ -22,6 +22,7 @@ Cherry Lite 从 [Cherry Studio](https://github.com/CherryHQ/cherry-studio) 裁�
 
 - **对话**：多模型、多话题、Markdown、代码高亮、附件
 - **翻译**：独立翻译页，历史记录留在本地
+- **朗读**：划词、翻译浮窗和聊天正文一键朗读；默认免费微软 Edge，也可接 OpenAI 兼容与 Azure Speech，详见 [使用说明](./TTS_PLAN.md)
 - **自备模型**：自行绑定 OpenAI、Anthropic、Gemini、兼容接口、Ollama 等，不预置账号
 - **可选能力**：MCP、网页搜索、文档转 Markdown、OCR、划词助手、快捷助手
 - **数据**：本地备份 / 恢复 / 导入；可改数据目录

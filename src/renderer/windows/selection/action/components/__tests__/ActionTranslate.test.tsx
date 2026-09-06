@@ -21,7 +21,8 @@ const state = vi.hoisted(() => {
     detectLanguage: vi.fn(),
     translate: vi.fn(),
     cancel: vi.fn(),
-    scrollToBottom: vi.fn()
+    scrollToBottom: vi.fn(),
+    onResponse: undefined as undefined | ((text: string) => void)
   }
 })
 
@@ -66,11 +67,14 @@ vi.mock('@renderer/hooks/translate', () => ({
     }
   },
   useDetectLang: () => state.detectLanguage,
-  useTranslate: () => ({
-    translate: state.translate,
-    isTranslating: false,
-    cancel: state.cancel
-  }),
+  useTranslate: (options: { onResponse: (text: string) => void }) => {
+    state.onResponse = options.onResponse
+    return {
+      translate: state.translate,
+      isTranslating: false,
+      cancel: state.cancel
+    }
+  },
   useLanguages: () => ({
     languages: state.languages as TranslateLanguage[],
     getLanguage: state.getLanguage,
@@ -100,6 +104,30 @@ vi.mock('@renderer/components/chat/messages/utils/messageListItem', () => ({
 
 vi.mock('@renderer/components/CopyButton', () => ({
   default: () => <button type="button">copy</button>
+}))
+
+vi.mock('@renderer/components/tts/ReadAloudButton', () => ({
+  default: ({
+    text,
+    locale,
+    disabled,
+    sourceId
+  }: {
+    text: string
+    locale: string
+    disabled: boolean
+    sourceId: string
+  }) => (
+    <button
+      type="button"
+      data-testid="read-translation"
+      data-text={text}
+      data-locale={locale}
+      data-source={sourceId}
+      disabled={disabled}>
+      Read translation
+    </button>
+  )
 }))
 
 vi.mock('../WindowFooter', () => ({
@@ -152,6 +180,29 @@ describe('ActionTranslate', () => {
 
     await waitFor(() => expect(resultContentChunk.evaluated).toHaveBeenCalled())
     expect(state.translate).not.toHaveBeenCalled()
+  })
+
+  it('enables reading only the completed translation with its actual target language', async () => {
+    state.detectLanguage.mockResolvedValue('zh-cn')
+    let complete: (text: string) => void = () => undefined
+    state.translate.mockImplementation(
+      () =>
+        new Promise<string>((resolve) => {
+          complete = resolve
+        })
+    )
+    render(<ActionTranslate action={createAction()} scrollToBottom={state.scrollToBottom} />)
+    await waitFor(() => expect(state.translate).toHaveBeenCalled())
+    act(() => state.onResponse?.('Translated answer'))
+    expect(screen.getByTestId('read-translation')).toBeDisabled()
+    await act(async () => {
+      complete('Translated answer')
+    })
+    const button = screen.getByTestId('read-translation')
+    expect(button).toBeEnabled()
+    expect(button).toHaveAttribute('data-text', 'Translated answer')
+    expect(button).toHaveAttribute('data-locale', 'en-us')
+    expect(button.getAttribute('data-source')).toMatch(/^translation:/)
   })
 
   it('continues translating to the target language when source detection throws', async () => {

@@ -14,6 +14,7 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as SettingsIndexRouteImport } from './routes/settings.index'
 import { Route as SettingsWebsearchRouteImport } from './routes/settings/websearch'
 import { Route as SettingsUsageRouteImport } from './routes/settings/usage'
+import { Route as SettingsTtsRouteImport } from './routes/settings/tts'
 import { Route as SettingsSystemRouteImport } from './routes/settings/system'
 import { Route as SettingsShortcutRouteImport } from './routes/settings/shortcut'
 import { Route as SettingsSelectionAssistantRouteImport } from './routes/settings/selection-assistant'
@@ -65,6 +66,11 @@ const SettingsWebsearchRoute = SettingsWebsearchRouteImport.update({
 const SettingsUsageRoute = SettingsUsageRouteImport.update({
   id: '/usage',
   path: '/usage',
+  getParentRoute: () => SettingsRoute,
+} as any)
+const SettingsTtsRoute = SettingsTtsRouteImport.update({
+  id: '/tts',
+  path: '/tts',
   getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsSystemRoute = SettingsSystemRouteImport.update({
@@ -227,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/settings/selection-assistant': typeof SettingsSelectionAssistantRoute
   '/settings/shortcut': typeof SettingsShortcutRoute
   '/settings/system': typeof SettingsSystemRoute
+  '/settings/tts': typeof SettingsTtsRoute
   '/settings/usage': typeof SettingsUsageRoute
   '/settings/websearch': typeof SettingsWebsearchRoute
   '/settings/': typeof SettingsIndexRoute
@@ -259,6 +266,7 @@ export interface FileRoutesByTo {
   '/settings/selection-assistant': typeof SettingsSelectionAssistantRoute
   '/settings/shortcut': typeof SettingsShortcutRoute
   '/settings/system': typeof SettingsSystemRoute
+  '/settings/tts': typeof SettingsTtsRoute
   '/settings/usage': typeof SettingsUsageRoute
   '/settings/websearch': typeof SettingsWebsearchRoute
   '/settings': typeof SettingsIndexRoute
@@ -294,6 +302,7 @@ export interface FileRoutesById {
   '/settings/selection-assistant': typeof SettingsSelectionAssistantRoute
   '/settings/shortcut': typeof SettingsShortcutRoute
   '/settings/system': typeof SettingsSystemRoute
+  '/settings/tts': typeof SettingsTtsRoute
   '/settings/usage': typeof SettingsUsageRoute
   '/settings/websearch': typeof SettingsWebsearchRoute
   '/settings/': typeof SettingsIndexRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/settings/selection-assistant'
     | '/settings/shortcut'
     | '/settings/system'
+    | '/settings/tts'
     | '/settings/usage'
     | '/settings/websearch'
     | '/settings/'
@@ -362,6 +372,7 @@ export interface FileRouteTypes {
     | '/settings/selection-assistant'
     | '/settings/shortcut'
     | '/settings/system'
+    | '/settings/tts'
     | '/settings/usage'
     | '/settings/websearch'
     | '/settings'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/settings/selection-assistant'
     | '/settings/shortcut'
     | '/settings/system'
+    | '/settings/tts'
     | '/settings/usage'
     | '/settings/websearch'
     | '/settings/'
@@ -449,6 +461,13 @@ declare module '@tanstack/react-router' {
       path: '/usage'
       fullPath: '/settings/usage'
       preLoaderRoute: typeof SettingsUsageRouteImport
+      parentRoute: typeof SettingsRoute
+    }
+    '/settings/tts': {
+      id: '/settings/tts'
+      path: '/tts'
+      fullPath: '/settings/tts'
+      preLoaderRoute: typeof SettingsTtsRouteImport
       parentRoute: typeof SettingsRoute
     }
     '/settings/system': {
@@ -701,6 +720,7 @@ interface SettingsRouteChildren {
   SettingsSelectionAssistantRoute: typeof SettingsSelectionAssistantRoute
   SettingsShortcutRoute: typeof SettingsShortcutRoute
   SettingsSystemRoute: typeof SettingsSystemRoute
+  SettingsTtsRoute: typeof SettingsTtsRoute
   SettingsUsageRoute: typeof SettingsUsageRoute
   SettingsWebsearchRoute: typeof SettingsWebsearchRoute
   SettingsIndexRoute: typeof SettingsIndexRoute
@@ -722,6 +742,7 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsSelectionAssistantRoute: SettingsSelectionAssistantRoute,
   SettingsShortcutRoute: SettingsShortcutRoute,
   SettingsSystemRoute: SettingsSystemRoute,
+  SettingsTtsRoute: SettingsTtsRoute,
   SettingsUsageRoute: SettingsUsageRoute,
   SettingsWebsearchRoute: SettingsWebsearchRoute,
   SettingsIndexRoute: SettingsIndexRoute,

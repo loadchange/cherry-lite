@@ -178,6 +178,23 @@ function createActionContext(overrides: Partial<MessageMenuBarActionContext> = {
 }
 
 describe('messageMenuBarActions', () => {
+  it.each(['user', 'assistant'] as const)('offers read aloud for completed %s message text', (role) => {
+    const context = createActionContext({ messageParts: [{ type: 'text', text: 'Read this' }] })
+    context.message = { ...context.message, role }
+    const action = resolveMessageMenuBarToolbarActions(context).find((item) => item.id === 'read-aloud')
+    expect(action?.availability.enabled).toBe(true)
+    expect(typeof action?.renderToolbar).toBe('function')
+  })
+
+  it('disables read aloud while a message streams and excludes reasoning-only content', () => {
+    const context = createActionContext({ messageParts: [{ type: 'text', text: 'Partial' }], isProcessing: true })
+    expect(
+      resolveMessageMenuBarToolbarActions(context).find((item) => item.id === 'read-aloud')?.availability.enabled
+    ).toBe(false)
+    context.messageParts = [{ type: 'reasoning', text: 'Private thought' }]
+    expect(resolveMessageMenuBarToolbarActions(context).find((item) => item.id === 'read-aloud')).toBeUndefined()
+  })
+
   it('keeps write actions hidden when capabilities are absent', () => {
     const toolbarActions = resolveMessageMenuBarToolbarActions(
       createActionContext({

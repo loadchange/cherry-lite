@@ -22,6 +22,7 @@ import { selectionHandlers } from './selection'
 import { systemHandlers } from './system'
 import { tabHandlers } from './tab'
 import { translateHandlers } from './translate'
+import { ttsHandlers } from './tts'
 import { webSearchHandlers } from './webSearch'
 import { webviewHandlers } from './webview'
 import { windowHandlers } from './window'
@@ -57,6 +58,7 @@ export const ipcHandlers: IpcHandlersFor<IpcRequestSchemas> = {
   ...systemHandlers,
   ...tabHandlers,
   ...translateHandlers,
+  ...ttsHandlers,
   ...webSearchHandlers,
   ...webviewHandlers,
   ...windowHandlers
