@@ -61,6 +61,10 @@ overrides:
   '@ai-sdk/anthropic': '3.0.103'
 
 patchedDependencies:
+  # Backport electron-builder PR #10101: macOS 26.6 requires the generated
+  # keychain password for set-key-partition-list, not the P12 import password.
+  # Remove once our builder version includes the upstream fix (#10167).
+  'app-builder-lib@26.15.6': patches/app-builder-lib@26.15.6.patch
   '@napi-rs/system-ocr@1.1.0': patches/@napi-rs-system-ocr-npm-1.1.0-59e7a78e8b.patch
   'tesseract.js@6.0.1': patches/tesseract.js-npm-6.0.1-2562a7e46d.patch
   'electron-updater@6.7.0': patches/electron-updater-npm-6.7.0-47b11bb0d4.patch

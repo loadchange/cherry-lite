@@ -32,6 +32,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: macOS signing regression test
+        run: pnpm exec vitest run --project scripts scripts/__tests__/mac-code-sign.test.ts
+
       - name: Unit tests
         run: |
           pnpm test:main
