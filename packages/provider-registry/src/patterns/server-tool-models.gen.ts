@@ -139,6 +139,8 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
     },
     aihubmix: {
       'web-search': [
+        'claude-fable-5',
+        'claude-fable-5-1',
         'claude-haiku-4-5',
         'claude-opus-4',
         'claude-opus-4-1',
@@ -149,6 +151,8 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
         'claude-opus-4-7-fast',
         'claude-opus-4-8',
         'claude-opus-4-8-fast',
+        'claude-opus-5',
+        'claude-opus-5-fast',
         'claude-sonnet-4',
         'claude-sonnet-4-5',
         'claude-sonnet-4-6',
@@ -215,6 +219,8 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
         'gpt-5-mini',
         'gpt-5-nano',
         'gpt-5-pro',
+        'gpt-6-astra',
+        'gpt-6-astra-pro',
         'o3',
         'o3-deep-research',
         'o3-mini',
@@ -222,6 +228,8 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
         'o4-mini'
       ],
       'url-context': [
+        'claude-fable-5',
+        'claude-fable-5-1',
         'claude-haiku-4-5',
         'claude-opus-4',
         'claude-opus-4-1',
@@ -232,6 +240,8 @@ export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<Record<string, Partial<Rec
         'claude-opus-4-7-fast',
         'claude-opus-4-8',
         'claude-opus-4-8-fast',
+        'claude-opus-5',
+        'claude-opus-5-fast',
         'claude-sonnet-4',
         'claude-sonnet-4-5',
         'claude-sonnet-4-6',
