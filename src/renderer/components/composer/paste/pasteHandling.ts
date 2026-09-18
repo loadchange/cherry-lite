@@ -90,7 +90,6 @@ export const handlePaste = async (
                     origin_name: removeFileExtension(file.name)
                   })
                 ])
-                break
               }
             } else {
               if (t) {
