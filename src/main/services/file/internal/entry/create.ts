@@ -104,7 +104,7 @@ function normaliseSource(params: CreateInternalEntryParams): NormalisedSource {
   const url = params.url
   return {
     name: urlTail(url),
-    ext: extWithoutDot(url),
+    ext: extWithoutDot(new URL(url).pathname),
     prepare: (target) => prepareAtomicDownload(url, target)
   }
 }
