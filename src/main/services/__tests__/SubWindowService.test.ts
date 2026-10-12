@@ -97,6 +97,7 @@ interface MockBrowserWindow extends EventEmitter {
   setAlwaysOnTop: ReturnType<typeof vi.fn>
   webContents: {
     isLoadingMainFrame: ReturnType<typeof vi.fn>
+    setZoomFactor: ReturnType<typeof vi.fn>
   }
 }
 
