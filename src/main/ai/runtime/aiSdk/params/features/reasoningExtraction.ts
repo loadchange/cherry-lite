@@ -23,7 +23,7 @@ const createReasoningExtractionPlugin = (options: { tagName?: string } = {}) =>
 
 /**
  * Must run BEFORE simulateStreaming so that after `wrapLanguageModel`
-* reverses the middleware chain, reasoning extraction wraps simulateStreaming
+ * reverses the middleware chain, reasoning extraction wraps simulateStreaming
  * and resolves unclosed ` thinking` tags produced by the simulated stream.
  *
  * The extraction itself is anchored (see `reasoningExtractionMiddleware`): a tag that is not the

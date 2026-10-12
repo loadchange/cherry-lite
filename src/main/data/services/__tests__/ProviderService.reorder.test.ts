@@ -74,7 +74,6 @@ describe('ProviderService reorder', () => {
     expect(row.name).toBe('Gemini OAuth')
   })
 
-
   it('preserves user order when update receives a redundant enabled state', async () => {
     await seedProviders()
     await dbh.db.update(userProviderTable).set({ isEnabled: true }).where(eq(userProviderTable.providerId, 'gemini'))
