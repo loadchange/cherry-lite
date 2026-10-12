@@ -1291,7 +1291,7 @@ export function Topics({
         collapsedState={collapsedTopicState}
         revealRequest={revealRequest}
         defaultGroupVisibleCount={defaultGroupVisibleCount}
-        groupLoadStep={isRightPanel ? Number.POSITIVE_INFINITY : DEFAULT_TOPIC_GROUP_VISIBLE_COUNT}
+        groupLoadStep={Number.POSITIVE_INFINITY}
         getGroupHeaderAction={getGroupHeaderAction}
         getGroupHeaderContextMenu={getGroupHeaderContextMenu}
         getGroupHeaderIcon={getGroupHeaderIcon}
