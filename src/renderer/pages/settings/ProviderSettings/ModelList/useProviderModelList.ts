@@ -8,8 +8,7 @@ import { PROVIDER_SETTINGS_MODEL_SWR_OPTIONS } from '../hooks/providerSetting/co
 import {
   calculateModelListDerivedState,
   countModelsInGroups,
-  groupModels,
-  type ModelGroups,
+  groupModelEntries,
   type ModelListCapabilityCounts,
   type ModelListCapabilityFilter
 } from './modelListDerivedState'
@@ -55,12 +54,13 @@ interface UseProviderModelListArgs {
 }
 
 type DisplayedSectionState = {
-  groups: ModelGroups
+  /** Ordered pairs rather than a record: see `groupModelEntries`. */
+  groupEntries: ReadonlyArray<readonly [string, Model[]]>
   displayEnabledModelCount: number
 }
 
-const toGroupSections = (groups: ModelGroups): ModelListGroupSection[] => {
-  return Object.entries(groups).map(([groupName, models]) => ({
+const toGroupSections = (groupEntries: ReadonlyArray<readonly [string, Model[]]>): ModelListGroupSection[] => {
+  return groupEntries.map(([groupName, models]) => ({
     groupName,
     items: models.map((model) => ({ model }))
   }))
@@ -132,11 +132,16 @@ export function useProviderModelList({ providerId, disabled = false }: UseProvid
 
   const displayState = useMemo<DisplayedSectionState>(() => {
     const preserveGroupOrder = Boolean(searchText.trim())
-    const groups = groupModels(derivedState.filteredModels, preserveGroupOrder, { preferModelGroup: true })
+    // The order lives in the entries, not a record: a group named like a number
+    // (`10`, `2`) is reordered by JavaScript's integer-key rule the moment it
+    // becomes an object key, which would discard the order the models arrived in.
+    const groupEntries = groupModelEntries(derivedState.filteredModels, preserveGroupOrder, {
+      preferModelGroup: true
+    })
 
     return {
-      groups,
-      displayEnabledModelCount: countModelsInGroups(groups)
+      groupEntries,
+      displayEnabledModelCount: countModelsInGroups(groupEntries)
     }
   }, [derivedState.filteredModels, searchText])
 
@@ -235,7 +240,7 @@ export function useProviderModelList({ providerId, disabled = false }: UseProvid
     [defaultModelIds, deleteModels]
   )
 
-  const enabledSections = useMemo(() => toGroupSections(displayState.groups), [displayState.groups])
+  const enabledSections = useMemo(() => toGroupSections(displayState.groupEntries), [displayState.groupEntries])
   const pendingModelIds = useMemo(() => new Set(Object.keys(pendingModelIdMap)), [pendingModelIdMap])
 
   const header: ProviderModelListHeaderSurface = {
