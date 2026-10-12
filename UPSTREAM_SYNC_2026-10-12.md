@@ -16,6 +16,7 @@
 - 冲突自动解析规则：i18n locale JSON 做键级合并（只增改、不删 Lite 自有键）；Lite 已删除的文件维持删除；测试、lockfile、文档冲突保留 Lite 版本；pnpm 变更除补丁哈希外不引入。
 - 手工移植：文件偏离度小但 git 无法合并的提交，按上游 diff 在 Lite 代码上重新实现（保留来源 SHA）。
 - 依赖边界：保持 Lite 现有依赖集合，未跟随上游的 Electron / Vite / SDK 等整链升级。
+- 署名：移植提交保留上游作者，committer 统一为 `LoadChange <soocto@gmail.com>`；Lite 自建提交的作者同为 LoadChange；全部提交带 `Signed-off-by`。
 
 ## 本轮已回移（69 个上游提交）
 
@@ -143,11 +144,11 @@
 
 | 提交 | 说明 |
 | --- | --- |
-| `bae90ac07` | 回退 `4470cefb62`（system-ocr 1.2.0 升级）：自动回移只改了 package.json 与补丁文件，lock/workspace 仍指向 1.1.0，保持 Lite 依赖集合并归入依赖批次 |
-| `871d2d8d8` | 删除 `9f912976e` 留下的未引用 motion-dom 补丁文件 |
-| `55402930f` | 修复落地提交引入的类型错误（electron `net` 导入、`isDestroyed` mock、user-event 导入、三条孤儿测试）并更新 copilot 补丁哈希 |
-| `24728a473`、`1671f0a64`、后续两条 | 适配 SubWindowService / GlobalSearch（新的 IME 防抖）/ MainWindowService / ProviderService.reorder / keybindings 测试，并收紧 base64 图片正则 |
-| `ba3e09aec` | 对回移文件跑 biome format |
+| `25f726bfb` | 回退 `4470cefb62`（system-ocr 1.2.0 升级）：自动回移只改了 package.json 与补丁文件，lock/workspace 仍指向 1.1.0，保持 Lite 依赖集合并归入依赖批次 |
+| `61b10f383` | 删除 `9f912976e` 留下的未引用 motion-dom 补丁文件 |
+| `c3e706661` | 修复落地提交引入的类型错误（electron `net` 导入、`isDestroyed` mock、user-event 导入、三条孤儿测试）并更新 copilot 补丁哈希 |
+| `9feb5ee3d`、`3132e4c60`、后续两条 | 适配 SubWindowService / GlobalSearch（新的 IME 防抖）/ MainWindowService / ProviderService.reorder / keybindings 测试，并收紧 base64 图片正则 |
+| `ed7e9a9ca` | 对回移文件跑 biome format |
 
 ## 验证
 
@@ -361,7 +362,7 @@
 
 - 已移除模块（Agent/会话、浏览器与 WebMCP、Skills、Claude Code/Pi/DSH、知识库、笔记、绘图/ComfyUI、MiniApp、云备份、导出、遥测/诊断、渠道、远程访问、回收站/归档/定时任务、截图 OCR、设置搜索、多语言、上游 CI/发布体系）— 共约 380 个提交。
 - `e2cde8ff22`（macOS 签名 keychain 修复）Lite 已在 `6c269c81d` 回移。
-- `4470cefb62`（system-ocr 1.2.0 升级）本轮尝试后已回退（见 `bae90ac07`），归入依赖批次。
+- `4470cefb62`（system-ocr 1.2.0 升级）本轮尝试后已回退（见 `25f726bfb`），归入依赖批次。
 - `1b6fb825d7`（Perplexity 归属标识）等纯文案/品牌调整未纳入。
 - 目录树 `fix(directory-tree)` 系列（`db09dcc7bd` 等）：Lite 的文件树实现缺少上游的 builder 模块，本轮只落地了源码可对齐的部分。
 - SVG 渲染测量修复 `a803724eb1`：Lite 的 markdown 管线已不再产生 `data-needs-measurement`，不适用。
