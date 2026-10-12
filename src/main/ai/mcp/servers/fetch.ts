@@ -1,6 +1,7 @@
 // port https://github.com/zcaceres/fetch-mcp/blob/main/src/index.ts
 
 import { fetchRemoteText } from '@main/utils/remoteFetch'
+import { applyTableRules } from '@main/utils/htmlToMarkdown'
 import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 import { JSDOM } from 'jsdom'
@@ -101,7 +102,7 @@ export class Fetcher {
   static async markdown(requestPayload: RequestPayload) {
     try {
       const html = await this._fetchText(requestPayload)
-      const turndownService = new TurndownService()
+      const turndownService = applyTableRules(new TurndownService())
       const markdown = turndownService.turndown(html)
       return { content: [{ type: 'text', text: markdown }], isError: false }
     } catch (error) {
