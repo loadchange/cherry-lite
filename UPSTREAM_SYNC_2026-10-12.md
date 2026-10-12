@@ -144,11 +144,11 @@
 
 | 提交 | 说明 |
 | --- | --- |
-| `25f726bfb` | 回退 `4470cefb62`（system-ocr 1.2.0 升级）：自动回移只改了 package.json 与补丁文件，lock/workspace 仍指向 1.1.0，保持 Lite 依赖集合并归入依赖批次 |
-| `61b10f383` | 删除 `9f912976e` 留下的未引用 motion-dom 补丁文件 |
-| `c3e706661` | 修复落地提交引入的类型错误（electron `net` 导入、`isDestroyed` mock、user-event 导入、三条孤儿测试）并更新 copilot 补丁哈希 |
-| `9feb5ee3d`、`3132e4c60`、后续两条 | 适配 SubWindowService / GlobalSearch（新的 IME 防抖）/ MainWindowService / ProviderService.reorder / keybindings 测试，并收紧 base64 图片正则 |
-| `ed7e9a9ca` | 对回移文件跑 biome format |
+| `ab7579ca0` | 回退 `4470cefb62`（system-ocr 1.2.0 升级）：自动回移只改了 package.json 与补丁文件，lock/workspace 仍指向 1.1.0，保持 Lite 依赖集合并归入依赖批次 |
+| `352f647dd` | 删除 `9f912976e` 留下的未引用 motion-dom 补丁文件 |
+| `79e158750` | 修复落地提交引入的类型错误（electron `net` 导入、`isDestroyed` mock、user-event 导入、三条孤儿测试）并更新 copilot 补丁哈希 |
+| `ae38b4a96`、`aa0e222ef`、`157ed4843`、`b66dc2a38` | 适配 SubWindowService / GlobalSearch（新的 IME 防抖）/ MainWindowService / ProviderService.reorder / keybindings 测试，并收紧 base64 图片正则 |
+| `b66dc2a38` | 对回移文件跑 biome format |
 
 ## 验证
 
@@ -362,7 +362,7 @@
 
 - 已移除模块（Agent/会话、浏览器与 WebMCP、Skills、Claude Code/Pi/DSH、知识库、笔记、绘图/ComfyUI、MiniApp、云备份、导出、遥测/诊断、渠道、远程访问、回收站/归档/定时任务、截图 OCR、设置搜索、多语言、上游 CI/发布体系）— 共约 380 个提交。
 - `e2cde8ff22`（macOS 签名 keychain 修复）Lite 已在 `6c269c81d` 回移。
-- `4470cefb62`（system-ocr 1.2.0 升级）本轮尝试后已回退（见 `25f726bfb`），归入依赖批次。
+- `4470cefb62`（system-ocr 1.2.0 升级）本轮尝试后已回退（见 `ab7579ca0`），归入依赖批次。
 - `1b6fb825d7`（Perplexity 归属标识）等纯文案/品牌调整未纳入。
 - 目录树 `fix(directory-tree)` 系列（`db09dcc7bd` 等）：Lite 的文件树实现缺少上游的 builder 模块，本轮只落地了源码可对齐的部分。
 - SVG 渲染测量修复 `a803724eb1`：Lite 的 markdown 管线已不再产生 `data-needs-measurement`，不适用。
