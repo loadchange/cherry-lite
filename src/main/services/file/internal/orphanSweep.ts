@@ -45,6 +45,8 @@ import type { FileRefService } from '@data/services/FileRefService'
 import { loggerService } from '@logger'
 import type { FileEntryId, FileEntryOrigin, FileRefSourceType } from '@shared/data/types/file'
 
+import { resolvePhysicalPath } from '../utils/pathResolver'
+
 const logger = loggerService.withContext('FileManager:orphanSweep')
 
 function assertNever(x: never): never {
@@ -214,9 +216,23 @@ const ABORT_FRACTION = 0.5
 const MAX_FAILED_SAMPLES = 5
 
 export interface RunFileSweepDeps {
-  readonly fileEntryService: Pick<FileEntryService, 'listAllIds'>
+  readonly fileEntryService: Pick<FileEntryService, 'listAllIds' | 'findById'>
   /** Test seam — defaults to `Date.now`. */
   readonly now?: () => number
+}
+
+function isRetainedFile(
+  name: string,
+  id: FileEntryId,
+  ids: ReadonlySet<FileEntryId>,
+  fileEntryService: RunFileSweepDeps['fileEntryService']
+): boolean {
+  if (!ids.has(id)) return false
+  if (!isTmpResidueName(name)) return true
+  const entry = fileEntryService.findById(id)
+  // A vanished snapshot row cannot establish that this ambiguous name is residue.
+  if (!entry) return true
+  return entry.origin === 'internal' && path.basename(resolvePhysicalPath(entry)) === name
 }
 
 interface FileSweepStats {
@@ -361,16 +377,14 @@ async function runFileSweepInner(deps: RunFileSweepDeps): Promise<FileSweepRepor
       // forever; explicit guard makes the contract clear.
       if (!st.isFile()) continue
 
-      // Tmp residue MUST be checked first: atomicWriteFile produces names of
-      // the form `<entryUUID>.<ext>.tmp-<randomUUID>` whose leading stem is
-      // a live entry's UUID. `isUuidFileName` also matches the same stem, so
-      // checking it first would mask the residue when the entry is in DB.
-      const isCandidate =
-        isTmpResidueName(name) ||
-        (() => {
-          const uuid = isUuidFileName(name)
-          return Boolean(uuid && !idSnapshot.has(uuid.id))
-        })()
+      // A retained blob whose extension merely looks tmp-shaped must survive:
+      // atomicWriteFile residue shares the `<entryUUID>...` stem, so the exact
+      // retained name is excluded before residue classification.
+      const identity = isUuidFileName(name)
+      if (identity && isRetainedFile(name, identity.id, idSnapshot, deps.fileEntryService)) continue
+
+      // A tmp-shaped name is residue only after excluding the exact retained blob.
+      const isCandidate = isTmpResidueName(name) || Boolean(identity && !idSnapshot.has(identity.id))
       if (!isCandidate) continue
       candidatesCount++
       candidatesBytes += st.size
@@ -434,6 +448,10 @@ async function runFileSweepInner(deps: RunFileSweepDeps): Promise<FileSweepRepor
     const failedSamples: string[] = []
     for (const target of planned) {
       try {
+        const name = path.basename(target.path)
+        const identity = isUuidFileName(name)
+        if (identity && isRetainedFile(name, identity.id, deps.fileEntryService.listAllIds(), deps.fileEntryService))
+          continue
         await unlink(target.path)
         actualDeleted++
         actualBytes += target.bytes
