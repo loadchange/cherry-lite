@@ -27,7 +27,7 @@ describe('ProviderService reorder', () => {
     return rows.map((row) => row.providerId)
   }
 
-  it('creates new providers at the end of the list', async () => {
+  it('creates new providers at the top of the list', async () => {
     await seedProviders()
 
     const created = providerService.create({ providerId: 'grok', name: 'Grok' })
@@ -38,7 +38,7 @@ describe('ProviderService reorder', () => {
     // New providers are created disabled; the auto-enable flow turns them on once models exist.
     expect(created.isEnabled).toBe(false)
     expect(rows[0]?.isEnabled).toBe(false)
-    expect(await readOrder()).toEqual(['openai', 'anthropic', 'gemini', 'grok'])
+    expect(await readOrder()).toEqual(['grok', 'openai', 'anthropic', 'gemini'])
   })
 
   it('batchUpsert appends only missing providers in input order', async () => {
@@ -61,48 +61,20 @@ describe('ProviderService reorder', () => {
     expect(await readOrder()).toEqual(['gemini', 'openai', 'anthropic'])
   })
 
-  it('moves a provider to the first position when update enables it', async () => {
+  it('preserves user order when update enables a provider', async () => {
     await seedProviders()
 
     const updated = providerService.update('gemini', { isEnabled: true, name: 'Gemini OAuth' })
 
     expect(updated.isEnabled).toBe(true)
     expect(updated.name).toBe('Gemini OAuth')
-    expect(await readOrder()).toEqual(['gemini', 'openai', 'anthropic'])
+    expect(await readOrder()).toEqual(['openai', 'anthropic', 'gemini'])
 
     const [row] = await dbh.db.select().from(userProviderTable).where(eq(userProviderTable.providerId, 'gemini'))
     expect(row.isEnabled).toBe(true)
     expect(row.name).toBe('Gemini OAuth')
   })
 
-  it('rolls back the order move when the enable update fails', async () => {
-    await seedProviders()
-
-    const withWriteTx = application.get('DbService').withWriteTx as Mock
-    withWriteTx.mockImplementationOnce((fn: (tx: unknown) => unknown) => dbh.db.transaction(fn as never))
-    dbh.db.run(
-      sql.raw(`
-      CREATE TRIGGER fail_provider_enable_update
-      BEFORE UPDATE OF is_enabled ON user_provider
-      WHEN NEW.provider_id = 'gemini'
-      BEGIN
-        SELECT RAISE(ABORT, 'forced provider enable update failure');
-      END;
-    `)
-    )
-
-    try {
-      expect(() => providerService.update('gemini', { isEnabled: true })).toThrow(
-        'forced provider enable update failure'
-      )
-    } finally {
-      dbh.db.run(sql.raw('DROP TRIGGER IF EXISTS fail_provider_enable_update'))
-    }
-
-    const [row] = await dbh.db.select().from(userProviderTable).where(eq(userProviderTable.providerId, 'gemini'))
-    expect(row.isEnabled).toBe(false)
-    expect(await readOrder()).toEqual(['openai', 'anthropic', 'gemini'])
-  })
 
   it('preserves user order when update receives a redundant enabled state', async () => {
     await seedProviders()

@@ -153,6 +153,7 @@ interface MockBrowserWindow extends EventEmitter {
   webContents: {
     isDestroyed: ReturnType<typeof vi.fn>
     reload: ReturnType<typeof vi.fn>
+    setZoomFactor: ReturnType<typeof vi.fn>
     send: ReturnType<typeof vi.fn>
     on: ReturnType<typeof vi.fn>
     setWindowOpenHandler: ReturnType<typeof vi.fn>
@@ -179,6 +180,7 @@ function createMockWindow(): MockBrowserWindow {
   win.webContents = {
     isDestroyed: vi.fn(() => false),
     reload: vi.fn(),
+    setZoomFactor: vi.fn(),
     send: vi.fn(),
     // capture render-process-gone listener for crash-recovery tests
     on: vi.fn(),

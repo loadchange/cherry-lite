@@ -313,15 +313,19 @@ describe('findKeybindingConflicts', () => {
   })
 
   it('reports main-process shortcuts that shadow a renderer binding', () => {
+    // Lite's registry has no zoom bindings, so the pair is supplied explicitly;
+    // the main-scope rule must no longer be filtered out as non-overlapping.
     expect(
       findKeybindingConflicts({
         command: 'topic.create',
-        preference: { binding: ['CommandOrControl', '='], enabled: true }
+        preference: { binding: ['CommandOrControl', '='], enabled: true },
+        preferences: { 'app.search': { binding: ['CommandOrControl', '='], enabled: true } },
+        rules: [testRule('topic.create'), testRule('app.search', { scope: 'main' })]
       })
     ).toEqual([
       expect.objectContaining({
         command: 'topic.create',
-        conflictingCommand: 'app.zoom.in',
+        conflictingCommand: 'app.search',
         trigger: 'primary',
         conflictingTrigger: 'primary'
       })
@@ -330,12 +334,20 @@ describe('findKeybindingConflicts', () => {
     expect(
       findKeybindingConflicts({
         command: 'topic.create',
-        preference: { binding: ['CommandOrControl', 'Shift', '='], enabled: true }
+        preference: { binding: ['CommandOrControl', 'Shift', '='], enabled: true },
+        preferences: { 'app.search': { binding: ['CommandOrControl', '='], enabled: true } },
+        rules: [
+          testRule('topic.create', { defaultBinding: ['CommandOrControl', 'Shift', '='] }),
+          testRule('app.search', {
+            scope: 'main',
+            additionalBindings: [['CommandOrControl', 'Shift', '=']]
+          })
+        ]
       })
     ).toEqual([
       expect.objectContaining({
         command: 'topic.create',
-        conflictingCommand: 'app.zoom.in',
+        conflictingCommand: 'app.search',
         trigger: 'primary',
         conflictingTrigger: 'additional'
       })
