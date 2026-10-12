@@ -1,6 +1,7 @@
 import { application } from '@application'
 import { loggerService } from '@logger'
 import { BaseService, Injectable, Phase, ServicePhase } from '@main/core/lifecycle'
+import { assertNoFoldedPathCollisions, assertZipEntriesWithin } from '@main/utils/zipSafety'
 import * as fs from 'fs'
 import StreamZip from 'node-stream-zip'
 import * as path from 'path'
@@ -37,15 +38,11 @@ export function ensurePathWithin(basePath: string, targetPath: string): string {
  *
  * @throws Error if any entry name escapes `baseDir`
  */
-export function assertZipEntriesWithin(entryNames: string[], baseDir: string): void {
-  const root = path.resolve(baseDir)
-  for (const name of entryNames) {
-    const dest = path.resolve(baseDir, name)
-    if (dest !== root && !dest.startsWith(root + path.sep)) {
-      throw new Error(`Unsafe DXT entry path (zip-slip): ${name}`)
-    }
-  }
-}
+/**
+ * Guard against zip-slip and folded-path collisions. Kept re-exported here for callers that
+ * historically imported it from this module; the implementations live in `@main/utils/zipSafety`.
+ */
+export { assertZipEntriesWithin } from '@main/utils/zipSafety'
 
 interface BaseMcpPackageManifest {
   name: string
@@ -517,8 +514,12 @@ export class McpPackageService extends BaseService {
 
       const zip = new StreamZip.async({ file: filePath })
       try {
-        // Reject any zip-slip entry before writing anything to disk.
-        assertZipEntriesWithin(Object.keys(await zip.entries()), tempExtractDir)
+        // Reject any zip-slip entry before writing anything to disk, and any entries that
+        // collide once case and Unicode are folded (they land on one file on Windows and
+        // default macOS volumes, so the extracted package would depend on entry order).
+        const entryNames = Object.keys(await zip.entries())
+        assertZipEntriesWithin(entryNames, tempExtractDir)
+        assertNoFoldedPathCollisions(entryNames, `${packageLabel} package`)
         await zip.extract(null, tempExtractDir)
       } finally {
         await zip.close()
