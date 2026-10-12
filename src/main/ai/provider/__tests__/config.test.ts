@@ -1,5 +1,6 @@
 import { ENDPOINT_TYPE, MODEL_CAPABILITY } from '@shared/data/types/model'
 import { type AuthConfig, DEFAULT_API_FEATURES } from '@shared/data/types/provider'
+import { net } from 'electron'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { makeModel } from '../../__tests__/fixtures/model'
