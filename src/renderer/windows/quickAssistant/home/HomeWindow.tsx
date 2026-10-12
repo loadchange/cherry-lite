@@ -394,6 +394,9 @@ const HomeWindow: FC<{ draggable?: boolean }> = ({ draggable = true }) => {
   }
 
   const backgroundColor = useMemo(() => {
+    if (!isMac) {
+      return 'var(--popover)'
+    }
     if (isMac && windowStyle === 'transparent' && theme === ThemeMode.light) {
       return 'transparent'
     }

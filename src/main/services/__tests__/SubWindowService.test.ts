@@ -6,7 +6,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 const { platformState, nativeThemeState, applicationMock, windowManagerMock, ipcApiServiceMock } = vi.hoisted(() => {
   const platformState = { isMac: false, isWin: false, isLinux: false }
   const nativeThemeState = { shouldUseDarkColors: false }
+  const preferenceServiceMock = { get: vi.fn(() => 1.3) }
   const windowManagerMock = {
+    onWindowCreatedByType: vi.fn(() => vi.fn()),
     open: vi.fn<(type: string, args?: { initData?: unknown; options?: Record<string, unknown> }) => string>(
       () => 'mock-window-id'
     ),
@@ -26,6 +28,7 @@ const { platformState, nativeThemeState, applicationMock, windowManagerMock, ipc
     get: vi.fn((name: string) => {
       if (name === 'WindowManager') return windowManagerMock
       if (name === 'IpcApiService') return ipcApiServiceMock
+      if (name === 'PreferenceService') return preferenceServiceMock
       throw new Error(`unexpected service: ${name}`)
     }),
     getPath: vi.fn(() => '/mock/app/root')
@@ -94,6 +97,7 @@ interface MockBrowserWindow extends EventEmitter {
   setAlwaysOnTop: ReturnType<typeof vi.fn>
   webContents: {
     isLoadingMainFrame: ReturnType<typeof vi.fn>
+    setZoomFactor: ReturnType<typeof vi.fn>
   }
 }
 
@@ -110,7 +114,7 @@ function createMockWindow(overrides: Partial<MockBrowserWindow> = {}): MockBrows
   win.getContentBounds = vi.fn(() => ({ x: 100, y: 100, width: 800, height: 600 }))
   win.setAlwaysOnTop = vi.fn()
   // Fresh (still-loading) window by default; reused-pool tests override isLoadingMainFrame → false.
-  win.webContents = { isLoadingMainFrame: vi.fn(() => true) }
+  win.webContents = { isLoadingMainFrame: vi.fn(() => true), setZoomFactor: vi.fn() }
   Object.assign(win, overrides)
   return win
 }

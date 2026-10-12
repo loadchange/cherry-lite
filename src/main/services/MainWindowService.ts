@@ -243,6 +243,9 @@ export class MainWindowService extends BaseService {
   private setupMainWindowMonitor(mainWindow: BrowserWindow) {
     mainWindow.webContents.on('render-process-gone', (_, details) => {
       logger.error(`Renderer process crashed with: ${JSON.stringify(details)}`)
+      // A window being torn down can report its renderer gone after the webContents is
+      // destroyed, where reload() throws and hides the real crash behind a dialog.
+      if (mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) return
       const currentTime = Date.now()
       const lastCrashTime = this.lastRendererProcessCrashTime
       this.lastRendererProcessCrashTime = currentTime
@@ -350,6 +353,18 @@ export class MainWindowService extends BaseService {
     mainWindow.on('restore', () => {
       mainWindow.webContents.setZoomFactor(application.get('PreferenceService').get('app.zoom_factor'))
     })
+
+    // Windows: opacity is zeroed by minimize-to-tray; restore on show/restore for taskbar/Alt-Tab paths bypassing showMainWindow.
+    if (isWin) {
+      const restoreOpacity = () => {
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.setOpacity(1)
+          mainWindow.setSkipTaskbar(false)
+        }
+      }
+      mainWindow.on('restore', restoreOpacity)
+      mainWindow.on('show', restoreOpacity)
+    }
 
     // `will-resize` only fires on Win & Mac; Linux uses `resize` instead (which
     // can cause UI flicker but is the only available signal).
@@ -472,6 +487,12 @@ export class MainWindowService extends BaseService {
         application.get('WindowManager').behavior.setMacShowInDockByType(WindowType.Main, false)
       }
 
+      // Windows: minimize() refocuses previous window unlike hide(); opacity 0 suppresses animation.
+      if (isWin) {
+        this.minimizeToTrayOnWindows(mainWindow)
+        return
+      }
+
       mainWindow.hide()
     })
     // No 'closed' handler — WM emits onWindowDestroyedByType which clears this.mainWindow.
@@ -486,7 +507,13 @@ export class MainWindowService extends BaseService {
     const mainWindow = this.mainWindow
     if (mainWindow && !mainWindow.isDestroyed()) {
       if (mainWindow.isMinimized()) {
+        // Windows: restore opacity before restore() to avoid flash; listeners cover out-of-band restores.
+        if (isWin) {
+          mainWindow.setOpacity(1)
+          mainWindow.setSkipTaskbar(false)
+        }
         mainWindow.restore()
+        mainWindow.focus()
         this.pushMainWindowInitData(initData)
         return
       }
@@ -512,18 +539,9 @@ export class MainWindowService extends BaseService {
         return
       }
 
-      /**
-       * About setVisibleOnAllWorkspaces
-       *
-       * [macOS] Known Issue
-       *  setVisibleOnAllWorkspaces true/false will NOT bring window to current desktop in Mac (works fine with Windows)
-       *  AppleScript may be a solution, but it's not worth
-       *
-       * [Linux] Known Issue
-       *  setVisibleOnAllWorkspaces 在 Linux 环境下（特别是 KDE Wayland）会导致窗口进入"假弹出"状态
-       *  因此在 Linux 环境下不执行这两行代码
-       */
-      if (!isLinux) {
+      // Windows uses this toggle to raise covered windows. On macOS it briefly hides the window
+      // and Dock while transforming the process type; Linux compositors also handle it poorly.
+      if (isWin) {
         mainWindow.setVisibleOnAllWorkspaces(true)
       }
 
@@ -540,7 +558,7 @@ export class MainWindowService extends BaseService {
 
       mainWindow.show()
       mainWindow.focus()
-      if (!isLinux) {
+      if (isWin) {
         mainWindow.setVisibleOnAllWorkspaces(false)
       }
       this.pushMainWindowInitData(initData)
@@ -566,14 +584,21 @@ export class MainWindowService extends BaseService {
       return
     }
 
-    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible()) {
+    // isVisible() true for minimized; focus() can't restore it (opacity 0 on Windows) — treat as hidden.
+    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized()) {
       if (mainWindow.isFocused()) {
         // Same pattern as the close handler when the user opted into tray-close:
         // tell WM to stop counting Main toward Dock visibility BEFORE hiding.
         if (isMac && application.get('PreferenceService').get('app.tray.on_close')) {
           application.get('WindowManager').behavior.setMacShowInDockByType(WindowType.Main, false)
         }
-        mainWindow.hide()
+
+        // Windows: minimize() refocuses previous window; opacity 0 suppresses animation.
+        if (isWin) {
+          this.minimizeToTrayOnWindows(mainWindow)
+        } else {
+          mainWindow.hide()
+        }
       } else {
         mainWindow.focus()
       }
@@ -581,6 +606,12 @@ export class MainWindowService extends BaseService {
     }
 
     this.showMainWindow()
+  }
+
+  private minimizeToTrayOnWindows(win: BrowserWindow) {
+    win.setOpacity(0)
+    win.setSkipTaskbar(true)
+    win.minimize()
   }
 
   /**

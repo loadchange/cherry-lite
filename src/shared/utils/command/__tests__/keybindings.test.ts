@@ -312,16 +312,49 @@ describe('findKeybindingConflicts', () => {
     ])
   })
 
-  it('ignores conflicts when scope or platform cannot overlap', () => {
+  it('reports main-process shortcuts that shadow a renderer binding', () => {
+    // Lite's registry has no zoom bindings, so the pair is supplied explicitly;
+    // the main-scope rule must no longer be filtered out as non-overlapping.
     expect(
       findKeybindingConflicts({
         command: 'topic.create',
-        preference: { binding: ['CommandOrControl', 'N'], enabled: true },
-        preferences: { 'app.settings.open': { binding: ['CommandOrControl', 'N'], enabled: true } },
-        rules: [testRule('topic.create'), testRule('app.settings.open', { scope: 'main' })]
+        preference: { binding: ['CommandOrControl', '='], enabled: true },
+        preferences: { 'app.search': { binding: ['CommandOrControl', '='], enabled: true } },
+        rules: [testRule('topic.create'), testRule('app.search', { scope: 'main' })]
       })
-    ).toEqual([])
+    ).toEqual([
+      expect.objectContaining({
+        command: 'topic.create',
+        conflictingCommand: 'app.search',
+        trigger: 'primary',
+        conflictingTrigger: 'primary'
+      })
+    ])
 
+    expect(
+      findKeybindingConflicts({
+        command: 'topic.create',
+        preference: { binding: ['CommandOrControl', 'Shift', '='], enabled: true },
+        preferences: { 'app.search': { binding: ['CommandOrControl', '='], enabled: true } },
+        rules: [
+          testRule('topic.create', { defaultBinding: ['CommandOrControl', 'Shift', '='] }),
+          testRule('app.search', {
+            scope: 'main',
+            additionalBindings: [['CommandOrControl', 'Shift', '=']]
+          })
+        ]
+      })
+    ).toEqual([
+      expect.objectContaining({
+        command: 'topic.create',
+        conflictingCommand: 'app.search',
+        trigger: 'primary',
+        conflictingTrigger: 'additional'
+      })
+    ])
+  })
+
+  it('ignores conflicts when platforms cannot overlap', () => {
     expect(
       findKeybindingConflicts({
         command: 'topic.create',

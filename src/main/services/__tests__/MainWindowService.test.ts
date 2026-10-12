@@ -144,11 +144,16 @@ interface MockBrowserWindow extends EventEmitter {
   show: ReturnType<typeof vi.fn>
   focus: ReturnType<typeof vi.fn>
   restore: ReturnType<typeof vi.fn>
+  minimize: ReturnType<typeof vi.fn>
   maximize: ReturnType<typeof vi.fn>
+  setOpacity: ReturnType<typeof vi.fn>
+  setSkipTaskbar: ReturnType<typeof vi.fn>
   setVisibleOnAllWorkspaces: ReturnType<typeof vi.fn>
   setFullScreen: ReturnType<typeof vi.fn>
   webContents: {
+    isDestroyed: ReturnType<typeof vi.fn>
     reload: ReturnType<typeof vi.fn>
+    setZoomFactor: ReturnType<typeof vi.fn>
     send: ReturnType<typeof vi.fn>
     on: ReturnType<typeof vi.fn>
     setWindowOpenHandler: ReturnType<typeof vi.fn>
@@ -166,11 +171,16 @@ function createMockWindow(): MockBrowserWindow {
   win.show = vi.fn()
   win.focus = vi.fn()
   win.restore = vi.fn()
+  win.minimize = vi.fn()
   win.maximize = vi.fn()
+  win.setOpacity = vi.fn()
+  win.setSkipTaskbar = vi.fn()
   win.setVisibleOnAllWorkspaces = vi.fn()
   win.setFullScreen = vi.fn()
   win.webContents = {
+    isDestroyed: vi.fn(() => false),
     reload: vi.fn(),
+    setZoomFactor: vi.fn(),
     send: vi.fn(),
     // capture render-process-gone listener for crash-recovery tests
     on: vi.fn(),
@@ -519,7 +529,7 @@ describe('MainWindowService', () => {
       expect(win.hide).not.toHaveBeenCalled()
     })
 
-    it('preventDefaults and hides on Win when tray + on_close are both enabled', () => {
+    it('preventDefaults and minimizes on Win when tray + on_close are both enabled', () => {
       platformState.isWin = true
       prefValues['app.tray.enabled'] = true
       prefValues['app.tray.on_close'] = true
@@ -530,7 +540,12 @@ describe('MainWindowService', () => {
 
       expect(applicationMock.quit).not.toHaveBeenCalled()
       expect(event.preventDefault).toHaveBeenCalledTimes(1)
-      expect(win.hide).toHaveBeenCalledTimes(1)
+      // Windows minimize-to-tray: setOpacity(0) + minimize() so the OS refocuses
+      // the previously active window (hide() leaves nothing focused).
+      expect(win.setOpacity).toHaveBeenCalledWith(0)
+      expect(win.setSkipTaskbar).toHaveBeenCalledWith(true)
+      expect(win.minimize).toHaveBeenCalledTimes(1)
+      expect(win.hide).not.toHaveBeenCalled()
     })
 
     it('hides on macOS by default (system handles dock + relaunch)', () => {
@@ -607,6 +622,21 @@ describe('MainWindowService', () => {
       expect(windowManagerMock.behavior.setMacShowInDockByType).not.toHaveBeenCalled()
     })
 
+    it('minimizes a focused visible main window on Win (returns focus to previous window)', () => {
+      platformState.isWin = true
+      ;(svc as any).mainWindow = win
+
+      svc.toggleMainWindow()
+
+      // Same Windows minimize-to-tray trick as the close handler: minimize() so the
+      // OS refocuses the previously active window, with setOpacity(0) to hide the animation.
+      expect(win.setOpacity).toHaveBeenCalledWith(0)
+      expect(win.setSkipTaskbar).toHaveBeenCalledWith(true)
+      expect(win.minimize).toHaveBeenCalledTimes(1)
+      expect(win.hide).not.toHaveBeenCalled()
+      expect(windowManagerMock.behavior.setMacShowInDockByType).not.toHaveBeenCalled()
+    })
+
     it('focuses a visible unfocused main window instead of hiding it', () => {
       ;(svc as any).mainWindow = win
       win.isFocused.mockReturnValue(false)
@@ -615,6 +645,25 @@ describe('MainWindowService', () => {
 
       expect(win.focus).toHaveBeenCalledTimes(1)
       expect(win.hide).not.toHaveBeenCalled()
+    })
+
+    it('routes a minimized main window through showMainWindow instead of focusing it', () => {
+      // isVisible() stays true while minimized; without the isMinimized() guard the
+      // toggle would land in the focus() branch, which cannot recover a minimized
+      // window — and on Windows that window is also opacity-0 from the tray trick.
+      platformState.isWin = true
+      ;(svc as any).mainWindow = win
+      win.isMinimized.mockReturnValue(true)
+      win.isFocused.mockReturnValue(false)
+
+      svc.toggleMainWindow()
+
+      expect(win.restore).toHaveBeenCalledTimes(1)
+      expect(win.focus).toHaveBeenCalledTimes(1)
+      expect(win.setOpacity).toHaveBeenCalledWith(1)
+      expect(win.setSkipTaskbar).toHaveBeenCalledWith(false)
+      expect(win.minimize).not.toHaveBeenCalled()
+      expect(windowManagerMock.behavior.setMacShowInDockByType).toHaveBeenCalledWith('main', true)
     })
 
     it('keeps Dock suppression when hiding on macOS with tray-close enabled', () => {
@@ -629,7 +678,70 @@ describe('MainWindowService', () => {
     })
   })
 
+  // The Windows minimize-to-tray trick sets opacity to 0 right before minimize().
+  // Restoring it must live on window-level events: taskbar clicks and Alt-Tab
+  // restore the window natively without passing through showMainWindow(), which
+  // would leave a restored-but-invisible window.
+  describe('Windows minimize-to-tray opacity restore', () => {
+    it('restores opacity when the OS restores the window (taskbar click / Alt-Tab path)', () => {
+      platformState.isWin = true
+      ;(svc as any).setupWindowEvents(win)
+
+      win.emit('restore')
+
+      expect(win.setOpacity).toHaveBeenCalledWith(1)
+      expect(win.setSkipTaskbar).toHaveBeenCalledWith(false)
+    })
+
+    it('restores opacity on generic show paths (WindowManager window.show())', () => {
+      platformState.isWin = true
+      ;(svc as any).setupWindowEvents(win)
+
+      win.emit('show')
+
+      expect(win.setOpacity).toHaveBeenCalledWith(1)
+      expect(win.setSkipTaskbar).toHaveBeenCalledWith(false)
+    })
+
+    it('does not touch opacity off Windows', () => {
+      ;(svc as any).setupWindowEvents(win)
+
+      win.emit('restore')
+      win.emit('show')
+
+      expect(win.setOpacity).not.toHaveBeenCalled()
+    })
+
+    it('resets opacity before restoring from showMainWindow (no transparent flash)', () => {
+      platformState.isWin = true
+      ;(svc as any).mainWindow = win
+      win.isMinimized.mockReturnValue(true)
+
+      svc.showMainWindow()
+
+      const opacityCallOrder = win.setOpacity.mock.invocationCallOrder[0]
+      const restoreCallOrder = win.restore.mock.invocationCallOrder[0]
+      const focusCallOrder = win.focus.mock.invocationCallOrder[0]
+      expect(win.setOpacity).toHaveBeenCalledWith(1)
+      expect(win.setSkipTaskbar).toHaveBeenCalledWith(false)
+      expect(opacityCallOrder).toBeLessThan(restoreCallOrder)
+      expect(restoreCallOrder).toBeLessThan(focusCallOrder)
+    })
+  })
+
   describe('showMainWindow init data', () => {
+    it('restores a hidden macOS window without transforming the app process type', () => {
+      platformState.isMac = true
+      win.isVisible.mockReturnValue(false)
+      ;(svc as any).mainWindow = win
+
+      svc.showMainWindow()
+
+      expect(win.setVisibleOnAllWorkspaces).not.toHaveBeenCalled()
+      expect(win.show).toHaveBeenCalledOnce()
+      expect(win.focus).toHaveBeenCalledOnce()
+    })
+
     it('pushes init data to an existing main window', () => {
       const initData = { kind: 'navigation' as const, to: '/settings/about' as const, requestId: 1 }
       ;(svc as any).mainWindow = win
@@ -679,6 +791,41 @@ describe('MainWindowService', () => {
       }
 
       expect(applicationMock.forceExit).toHaveBeenCalledWith(1)
+    })
+
+    // Regression guard for the "A JavaScript error occurred in the main process" dialog:
+    // render-process-gone can arrive after the window is already destroyed.
+    it('neither reloads nor forceExits when the window is already destroyed', () => {
+      attachCrashMonitor(svc, win)
+      const listener = getCrashListener(win)
+      // Only the window is gone: the webContents arm is covered on its own below,
+      // so each half of the guard is exercised by itself.
+      win.isDestroyed.mockReturnValue(true)
+      win.webContents.reload.mockImplementation(() => {
+        throw new TypeError('Object has been destroyed')
+      })
+
+      expect(() => listener(null, { reason: 'crashed' })).not.toThrow()
+
+      expect(win.webContents.reload).not.toHaveBeenCalled()
+      expect(applicationMock.forceExit).not.toHaveBeenCalled()
+      // The crash is still reported — only the recovery attempt is skipped.
+      expect(loggerMock.error).toHaveBeenCalledWith('Renderer process crashed with: {"reason":"crashed"}')
+    })
+
+    it('neither reloads nor forceExits when only the webContents is destroyed', () => {
+      attachCrashMonitor(svc, win)
+      const listener = getCrashListener(win)
+      // Window object still alive (teardown in flight) but its renderer side is gone.
+      win.webContents.isDestroyed.mockReturnValue(true)
+      win.webContents.reload.mockImplementation(() => {
+        throw new TypeError('Object has been destroyed')
+      })
+
+      expect(() => listener(null, { reason: 'crashed' })).not.toThrow()
+
+      expect(win.webContents.reload).not.toHaveBeenCalled()
+      expect(applicationMock.forceExit).not.toHaveBeenCalled()
     })
   })
 

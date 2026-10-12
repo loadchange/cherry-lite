@@ -104,9 +104,9 @@ const ProviderMutableFieldsSchema = CreateProviderSchema.pick({
 
 export const UpdateProviderSchema = ProviderMutableFieldsSchema.partial().extend({
   /**
-   * Whether this provider is enabled. A persisted false-to-true transition also
-   * moves the provider to the first position atomically; redundant true updates
-   * preserve the existing order.
+   * Whether this provider is enabled. Enabling or disabling an existing
+   * provider preserves its current order; only creation inserts first.
+   * Explicit order endpoints remain the ordering mechanism.
    */
   isEnabled: z.boolean().optional()
   // Logo edits (preset key / image upload / clear) go through the

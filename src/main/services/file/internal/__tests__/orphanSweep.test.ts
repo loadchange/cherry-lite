@@ -51,7 +51,7 @@ describe('pending-restore guard', () => {
 
   it('runFileSweep aborts with pending-restore before touching DB snapshot or filesystem', async () => {
     hasPendingRestoreMock.mockReturnValue(true)
-    const fileEntryService = { listAllIds: vi.fn() }
+    const fileEntryService = { listAllIds: vi.fn(), findById: vi.fn() }
 
     const report = await runFileSweep({ fileEntryService })
 
