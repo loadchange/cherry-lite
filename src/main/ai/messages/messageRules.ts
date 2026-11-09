@@ -119,13 +119,70 @@ export function dropUnansweredApprovals<T extends UIMessage>(messages: T[]): T[]
   })
 }
 
+export function normalizeReplayParts(messages: UIMessage[]): UIMessage[] {
+  const selected = new Map<
+    string,
+    { messageIndex: number; partIndex: number; priority: number; providerExecuted: boolean }
+  >()
+  const filtered = messages.map((message) => {
+    if (message.role !== 'assistant') return message
+    const parts = message.parts.filter((part) => {
+      if (part.type === 'reasoning') {
+        return part.text.trim().length > 0 || typeof part.providerMetadata?.anthropic?.signature !== 'string'
+      }
+      if (part.type === 'dynamic-tool' && !part.toolName.trim()) return false
+      if (!isToolUIPart(part)) return true
+      if (!['output-error', 'output-available', 'output-denied', 'approval-responded'].includes(part.state)) return true
+      const input =
+        part.state === 'output-error' ? (part.input ?? ('rawInput' in part ? part.rawInput : undefined)) : part.input
+      return input !== null && typeof input === 'object' && !Array.isArray(input)
+    })
+    return parts.length === message.parts.length ? message : { ...message, parts }
+  })
+  filtered.forEach((message, messageIndex) => {
+    if (message.role !== 'assistant') return
+    message.parts.forEach((part, partIndex) => {
+      if (!isToolUIPart(part)) return
+      const priority =
+        part.state === 'output-error' ||
+        part.state === 'output-denied' ||
+        (part.state === 'output-available' && part.preliminary !== true)
+          ? 2
+          : part.state === 'approval-responded'
+            ? 1
+            : 0
+      const previous = selected.get(part.toolCallId)
+      if (!previous) {
+        selected.set(part.toolCallId, {
+          messageIndex,
+          partIndex,
+          priority,
+          providerExecuted: part.providerExecuted === true
+        })
+      } else {
+        previous.providerExecuted ||= part.providerExecuted === true
+        if (priority > previous.priority) Object.assign(previous, { messageIndex, partIndex, priority })
+      }
+    })
+  })
+  return filtered.map((message, messageIndex) => {
+    if (message.role !== 'assistant') return message
+    const parts = message.parts.filter((part, partIndex) => {
+      if (!isToolUIPart(part)) return true
+      const winner = selected.get(part.toolCallId)!
+      return winner.providerExecuted || (winner.messageIndex === messageIndex && winner.partIndex === partIndex)
+    })
+    return parts.length === message.parts.length ? message : { ...message, parts }
+  })
+}
+
 /** Normalize persisted tool outputs, names, media and unfinished calls before provider replay. */
 export async function toModelMessages(
   messages: UIMessage[],
   caps?: MediaCapabilities,
   tools?: ToolSet
 ): Promise<ModelMessage[]> {
-  const rendered = sanitizeDynamicToolNames(renderPersistedToolOutputs(messages), tools)
+  const rendered = sanitizeDynamicToolNames(renderPersistedToolOutputs(normalizeReplayParts(messages)), tools)
   const shaped = dropUnansweredApprovals(stripUnsupportedMedia(rendered, caps ?? ALL_MEDIA))
   const model = await convertToModelMessages(shaped, { ignoreIncompleteToolCalls: true, tools })
   return ensureNonEmptyAssistantContent(coalesceConsecutiveSameRole(model))

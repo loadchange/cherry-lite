@@ -60,6 +60,7 @@ const nanoBanana2Modes = { edit: nanoBanana2Mode, merge: nanoBanana2Mode }
 export default defineProvider({
   id: 'dmxapi',
   name: 'DMXAPI',
+  availableInEditions: ['global', 'cn'],
   defaultChatEndpoint: 'openai-chat-completions',
   endpointConfigs: {
     'anthropic-messages': {
@@ -109,13 +110,13 @@ export default defineProvider({
       imageGeneration: {
         modes: seedream4Modes
       },
-      modelId: 'doubao-seedream-4-0'
+      apiModelId: 'doubao-seedream-4-0'
     },
     {
       imageGeneration: {
         modes: seedream4Modes
       },
-      modelId: 'doubao-seedream-4-5'
+      apiModelId: 'doubao-seedream-4-5'
     },
     {
       apiModelId: 'doubao-seedream-5.0-lite',

@@ -1,5 +1,17 @@
 import type { CompoundIcon } from '@cherrystudio/ui'
-import { Bocha, Cherryin, Exa, Firecrawl, Jina, Querit, Searxng, Tavily, Zhipu } from '@cherrystudio/ui/icons'
+import {
+  Bocha,
+  Cherryin,
+  Deepseek,
+  Exa,
+  Firecrawl,
+  Jina,
+  Querit,
+  Searxng,
+  Tavily,
+  TencentCloudTi,
+  Zhipu
+} from '@cherrystudio/ui/icons'
 import type {
   WebSearchCapability,
   WebSearchProvider,
@@ -30,6 +42,52 @@ type WebSearchProviderDisplayMeta = {
 }
 
 const WEB_SEARCH_PROVIDER_DISPLAY_META: Record<WebSearchProviderId, WebSearchProviderDisplayMeta> = {
+  crawl4ai: {
+    descriptionKey: 'settings.tool.websearch.provider_description.crawl4ai',
+    officialWebsite: 'https://crawl4ai.com',
+    logo: Cherryin
+  },
+  deepseek: {
+    descriptionKey: 'settings.tool.websearch.provider_description.deepseek',
+    officialWebsite: 'https://api-docs.deepseek.com/guides/search',
+    apiKeyWebsite: 'https://platform.deepseek.com/api_keys',
+    logo: Deepseek
+  },
+  desearch: {
+    descriptionKey: 'settings.tool.websearch.provider_description.desearch',
+    officialWebsite: 'https://desearch.ai',
+    apiKeyWebsite: 'https://console.desearch.ai/api-keys',
+    logo: Cherryin
+  },
+  duckduckgo: {
+    descriptionKey: 'settings.tool.websearch.provider_description.duckduckgo',
+    officialWebsite: 'https://duckduckgo.com',
+    logo: Cherryin
+  },
+  parallel: {
+    descriptionKey: 'settings.tool.websearch.provider_description.parallel',
+    officialWebsite: 'https://parallel.ai',
+    apiKeyWebsite: 'https://platform.parallel.ai',
+    logo: Cherryin
+  },
+  searchapi: {
+    descriptionKey: 'settings.tool.websearch.provider_description.searchapi',
+    officialWebsite: 'https://www.searchapi.io',
+    apiKeyWebsite: 'https://www.searchapi.io/api_tokens',
+    logo: Cherryin
+  },
+  serply: {
+    descriptionKey: 'settings.tool.websearch.provider_description.serply',
+    officialWebsite: 'https://serply.io',
+    apiKeyWebsite: 'https://serply.io',
+    logo: Cherryin
+  },
+  yuanbao: {
+    descriptionKey: 'settings.tool.websearch.provider_description.yuanbao',
+    officialWebsite: 'https://cloud.tencent.com/document/product/1806/130615',
+    apiKeyWebsite: 'https://console.cloud.tencent.com/wsapi/index?tab=apikey',
+    logo: TencentCloudTi
+  },
   bocha: {
     descriptionKey: 'settings.tool.websearch.provider_description.bocha',
     logo: Bocha,

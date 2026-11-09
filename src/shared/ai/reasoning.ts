@@ -12,6 +12,7 @@ const EFFORT_RATIO: Record<BudgetEffort, number> = {
   medium: 0.5,
   high: 0.8,
   xhigh: 0.9,
+  ultra: 1,
   max: 1
 }
 

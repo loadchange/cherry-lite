@@ -13,6 +13,7 @@ const claudeWebToolModels = [
 const geminiWebToolModels = [
   'gemini-2',
   'gemini-3',
+  'gemini-4-argon',
   'gemini-flash-latest',
   'gemini-pro-latest',
   'gemini-flash-lite-latest'
@@ -22,6 +23,7 @@ const openAIWebSearchModels = ['gpt-4o', 'gpt-4-1', 'gpt-5', 'gpt-6', 'o3', 'o4'
 export default defineProvider({
   id: 'aihubmix',
   name: 'AiHubMix',
+  availableInEditions: ['global'],
   defaultChatEndpoint: 'openai-chat-completions',
   endpointConfigs: {
     'anthropic-messages': {

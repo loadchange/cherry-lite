@@ -13,6 +13,7 @@ import {
 } from '@cherrystudio/ui'
 import { loggerService } from '@logger'
 import Scrollbar from '@renderer/components/Scrollbar'
+import { matchesSearchText } from '@renderer/utils/pinyin'
 import { Loader2 } from 'lucide-react'
 import {
   type KeyboardEvent as ReactKeyboardEvent,
@@ -83,7 +84,7 @@ function itemMatchesQuery(item: ConversationPickerItem, query: string) {
   const keyword = query.trim().toLowerCase()
   if (!keyword) return true
 
-  return [item.name, item.searchText].filter(Boolean).some((text) => text?.toLowerCase().includes(keyword))
+  return [item.name, item.searchText].filter(Boolean).some((text) => text && matchesSearchText(text, keyword))
 }
 
 export function ConversationPickerDialog<T extends ConversationPickerItem>({

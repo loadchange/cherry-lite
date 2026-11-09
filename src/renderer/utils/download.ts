@@ -45,9 +45,11 @@ export const download = (url: string, filename?: string) => {
         // 尝试从Content-Disposition头获取文件名
         const contentDisposition = response.headers.get('Content-Disposition')
         if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i)
-          if (filenameMatch) {
-            finalFilename = filenameMatch[1]
+          const quotedName = contentDisposition.match(/filename="((?:[^"\\]|\\.)*)"/i)
+          const bareName = contentDisposition.match(/filename=([^";\r\n]+)/i)
+          const parsedName = quotedName ? quotedName[1] : bareName?.[1]
+          if (parsedName) {
+            finalFilename = parsedName.replace(/\\(.)/g, '$1')
           }
         }
 

@@ -16,7 +16,8 @@ const SLIDER_EFFORT_ORDER: readonly ThinkingOption[] = [
   'medium',
   'high',
   'xhigh',
-  'max'
+  'max',
+  'ultra'
 ]
 
 const EFFORT_LABEL_KEYS: Record<ThinkingOption, string> = {
@@ -27,6 +28,7 @@ const EFFORT_LABEL_KEYS: Record<ThinkingOption, string> = {
   medium: 'assistants.settings.reasoning_effort.medium',
   high: 'assistants.settings.reasoning_effort.high',
   xhigh: 'assistants.settings.reasoning_effort.xhigh',
+  ultra: 'assistants.settings.reasoning_effort.ultra',
   max: 'assistants.settings.reasoning_effort.max',
   auto: 'assistants.settings.reasoning_effort.auto'
 }

@@ -103,7 +103,7 @@ function createEntry(overrides: Partial<WebSearchProviderMenuEntry> = {}): WebSe
     name: 'Tavily',
     type: 'api',
     apiKeys: ['key-a'],
-    capabilities: [{ feature: 'searchKeywords' as const, apiHost: 'https://api.tavily.com' }],
+    capabilities: [{ feature: 'searchKeywords' as const, apiHost: 'https://api.tavily.com', requiresApiKey: true }],
     engines: [],
     basicAuthUsername: '',
     basicAuthPassword: ''

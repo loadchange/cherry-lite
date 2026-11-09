@@ -89,7 +89,10 @@ export const GeminiModelsResponseSchema = z.object({
       supportedGenerationMethods: z.array(z.string()).optional()
     })
   ),
-  nextPageToken: z.string().optional()
+  nextPageToken: z
+    .string()
+    .nullish()
+    .transform((token) => token ?? undefined)
 })
 
 // === Vertex AI Model Garden ===
@@ -232,6 +235,7 @@ export const AIHubMixModelsResponseSchema = z.object({
           input: z.number().optional(),
           output: z.number().optional()
         })
+        .nullable()
         .optional(),
       types: z.string().optional(),
       features: z.string().optional(),

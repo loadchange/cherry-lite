@@ -14,7 +14,7 @@ import {
   type AutoBackupType
 } from '@shared/types/backup'
 
-import { BackupOperationBusyError, legacyBackupManager } from './LegacyBackupManager'
+import { BackupActiveWritersError, BackupOperationBusyError, legacyBackupManager } from './LegacyBackupManager'
 
 const logger = loggerService.withContext('AutoBackupService')
 
@@ -254,6 +254,12 @@ export class AutoBackupService extends BaseService {
         return
       }
 
+      if (error instanceof BackupActiveWritersError) {
+        this.markStopped(type, false)
+        this.scheduleNext(type, 'immediate', generation, 30_000)
+        return
+      }
+
       state.retryCount++
       if (state.retryCount < MAX_ATTEMPTS) {
         const delay = 2 ** (state.retryCount - 1) * 10_000 - 3_000
@@ -323,9 +329,9 @@ export class AutoBackupService extends BaseService {
     return this.active && this.schedules[type].generation === generation
   }
 
-  private markStopped(type: AutoBackupType): void {
+  private markStopped(type: AutoBackupType, resetRetryCount = true): void {
     const state = this.schedules[type]
-    state.retryCount = 0
+    if (resetRetryCount) state.retryCount = 0
     if (!state.running) return
     state.running = false
     this.emit({ type, status: 'stopped' })

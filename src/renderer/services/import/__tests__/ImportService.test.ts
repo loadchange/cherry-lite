@@ -115,6 +115,28 @@ describe('importService.importConversations', () => {
     expect(vi.mocked(dataApiService.post)).not.toHaveBeenCalled()
   })
 
+  it('rejects cyclic parent chains before creating an assistant', async () => {
+    const conversations = JSON.parse(chatgptExport())
+    const conversation = conversations[0]
+    conversation.mapping[conversation.current_node].parent = conversation.current_node
+    const response = await importService.importConversations(JSON.stringify([conversation]))
+    expect(response.success).toBe(false)
+    expect(dataApiService.post).not.toHaveBeenCalled()
+  })
+
+  it('rolls back only created resources and preserves the persistence error when cleanup fails', async () => {
+    vi.mocked(dataApiService.post)
+      .mockResolvedValueOnce({ id: 'import-assistant' } as never)
+      .mockResolvedValueOnce({ id: 'import-topic' } as never)
+      .mockRejectedValueOnce(new Error('message write failed'))
+    vi.mocked(dataApiService.delete).mockRejectedValue(new Error('cleanup failed'))
+    const response = await importService.importConversations(chatgptExport())
+    expect(response.error).toBe('message write failed')
+    expect(dataApiService.delete).toHaveBeenNthCalledWith(1, '/topics/import-topic')
+    expect(dataApiService.delete).toHaveBeenNthCalledWith(2, '/assistants/import-assistant')
+    expect(dataApiService.delete).toHaveBeenCalledTimes(2)
+  })
+
   it('returns the persistence error without reporting partial counts', async () => {
     vi.mocked(dataApiService.post).mockRejectedValueOnce(new Error('database unavailable'))
 

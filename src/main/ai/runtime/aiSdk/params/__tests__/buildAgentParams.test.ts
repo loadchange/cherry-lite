@@ -171,9 +171,9 @@ describe('buildAgentParams provider resolution', () => {
       serverTools: [{ id: 'url-context', modelScope: 'model-dependent' }]
     })
     const model = makeModel({
-      id: 'gemini::gemini-3-pro-preview',
+      id: 'gemini::gemini-3.1-pro-preview',
       providerId: 'gemini',
-      apiModelId: 'gemini-3-pro-preview',
+      apiModelId: 'gemini-3.1-pro-preview',
       capabilities: [MODEL_CAPABILITY.FUNCTION_CALL]
     })
     const assistant = makeAssistant({ settings: { enableWebSearch: true } })
@@ -569,7 +569,7 @@ describe('buildAgentParams web-tool routing', () => {
     },
     { endpointType: ENDPOINT_TYPE.ANTHROPIC_MESSAGES, runtimeProviderId: 'anthropic', expectedRoute: 'client' }
   ] as const)(
-    'routes DeepSeek V4 Flash web search to $expectedRoute on $endpointType',
+    'routes DeepSeek Flash web search to $expectedRoute on $endpointType',
     async ({ endpointType, runtimeProviderId, expectedRoute }) => {
       resolveProviderAiSdkConfigMock.mockResolvedValue({
         config: { providerId: runtimeProviderId, providerSettings: {} },
@@ -593,9 +593,9 @@ describe('buildAgentParams web-tool routing', () => {
         ]
       })
       const deepseekModel = makeModel({
-        id: 'deepseek::deepseek-v4-flash',
+        id: 'deepseek::deepseek-flash',
         providerId: 'deepseek',
-        apiModelId: 'deepseek-v4-flash',
+        apiModelId: 'deepseek-flash',
         endpointTypes: [endpointType],
         capabilities: [MODEL_CAPABILITY.FUNCTION_CALL]
       })
@@ -1294,5 +1294,35 @@ describe('resolveTools citation provenance', () => {
 
     expect(result.tools?.web_search).toBe(customTool)
     expect(result.hasCitableTools).toBe(false)
+  })
+})
+
+describe('DashScope Qwen temperature normalization', () => {
+  it.each([undefined, { temperature: 2 }, { temperature: 2.5 }])(
+    'normalizes final sampling values including request overrides %j',
+    (overrides) => {
+      const result = applyCallOverrides(
+        { standardParams: { temperature: 2 }, providerOptions: {} },
+        overrides,
+        makeModel({ id: 'dashscope::qwen3.8-max', providerId: 'dashscope' })
+      )
+      expect(result.standardParams.temperature).toBe(1.9)
+    }
+  )
+  it('preserves other providers and valid Qwen temperatures', () => {
+    expect(
+      applyCallOverrides(
+        { standardParams: { temperature: 2 }, providerOptions: {} },
+        undefined,
+        makeModel({ id: 'openai::gpt-5', providerId: 'openai' })
+      ).standardParams.temperature
+    ).toBe(2)
+    expect(
+      applyCallOverrides(
+        { standardParams: { temperature: 1 }, providerOptions: {} },
+        undefined,
+        makeModel({ id: 'dashscope::qwen3.8-max', providerId: 'dashscope' })
+      ).standardParams.temperature
+    ).toBe(1)
   })
 })

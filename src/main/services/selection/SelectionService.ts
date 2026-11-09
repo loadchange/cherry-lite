@@ -697,8 +697,12 @@ export class SelectionService extends BaseService implements Activatable {
    */
   private getToolbarRealSize(): { toolbarWidth: number; toolbarHeight: number } {
     return {
-      toolbarWidth: this.TOOLBAR_WIDTH * this.zoomFactor,
-      toolbarHeight: this.TOOLBAR_HEIGHT * this.zoomFactor
+      toolbarWidth: Math.ceil(
+        this.TOOLBAR_WIDTH * (this.toolbarWindow?.webContents.getZoomFactor() ?? this.zoomFactor)
+      ),
+      toolbarHeight: Math.ceil(
+        this.TOOLBAR_HEIGHT * (this.toolbarWindow?.webContents.getZoomFactor() ?? this.zoomFactor)
+      )
     }
   }
 
@@ -1462,10 +1466,10 @@ export class SelectionService extends BaseService implements Activatable {
     }
   }
 
-  public writeToClipboard(text: string): boolean {
+  public async writeToClipboard(text: string): Promise<boolean> {
     if (isLinux) {
       try {
-        clipboard.writeText(text)
+        await clipboard.writeText(text)
         return true
       } catch (error) {
         logger.error('Failed to write to clipboard on Linux:', error as Error)

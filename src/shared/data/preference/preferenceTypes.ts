@@ -174,7 +174,15 @@ export const WEB_SEARCH_PROVIDER_IDS = [
   'querit',
   'fetch',
   'jina',
-  'firecrawl'
+  'firecrawl',
+  'crawl4ai',
+  'parallel',
+  'serply',
+  'yuanbao',
+  'deepseek',
+  'desearch',
+  'searchapi',
+  'duckduckgo'
 ] as const
 
 export type WebSearchProviderId = (typeof WEB_SEARCH_PROVIDER_IDS)[number]

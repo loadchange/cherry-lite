@@ -104,9 +104,12 @@ export const CANONICAL_PARAM_KEY = {
   BACKGROUND: 'background',
   BOTTOM_SCALE: 'bottomScale',
   CFG: 'cfg',
+  COMPLEXITY: 'complexity',
   CUSTOM_SIZE: 'customSize',
   DETAIL: 'detail',
   ENABLE_INTERLEAVE: 'enableInterleave',
+  FRAME_COUNT: 'frameCount',
+  FRAME_DURATION_MS: 'frameDurationMs',
   FUNCTION: 'function',
   GUIDANCE_SCALE: 'guidanceScale',
   IMAGE_RESOLUTION: 'imageResolution',
@@ -182,6 +185,7 @@ export const REASONING_EFFORT = {
   HIGH: 'high',
   XHIGH: 'xhigh',
   MAX: 'max',
+  ULTRA: 'ultra',
   AUTO: 'auto'
 } as const
 export type ReasoningEffort = (typeof REASONING_EFFORT)[keyof typeof REASONING_EFFORT]
@@ -199,6 +203,7 @@ export const REASONING_EFFORT_ORDER: readonly ReasoningEffort[] = [
   'high',
   'xhigh',
   'max',
+  'ultra',
   'auto'
 ]
 

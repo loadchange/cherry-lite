@@ -1,3 +1,4 @@
+import { matchesSearchText } from '@renderer/utils/pinyin'
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useRef } from 'react'
 
@@ -109,7 +110,7 @@ function deriveResourceListItems<T extends ResourceListItemBase>({
   let next = [...items]
 
   if (normalizedQuery) {
-    next = next.filter((item) => getItemLabel(item).toLowerCase().includes(normalizedQuery))
+    next = next.filter((item) => matchesSearchText(getItemLabel(item), normalizedQuery))
   }
 
   if (filters.length > 0) {

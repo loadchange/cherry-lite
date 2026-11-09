@@ -53,7 +53,8 @@ function renderActions(
   uiMessages: ReturnType<typeof uiMsg>[],
   cache = makeCache(),
   activeNodeId = uiMessages.at(-1)?.id ?? null,
-  startNewContextBlocked = false
+  startNewContextBlocked = false,
+  modelSelection: Pick<Parameters<typeof useChatWriteActions>[0], 'composerModelId' | 'assistant'> = {}
 ) {
   const scrollToBottom = vi.fn()
   const regenerate = vi.fn(async () => {})
@@ -71,7 +72,8 @@ function renderActions(
       cache,
       seedReservedMessages: vi.fn(async () => {}),
       scrollToBottom,
-      startNewContextBlocked
+      startNewContextBlocked,
+      ...modelSelection
     })
   )
   return {
@@ -394,6 +396,41 @@ describe('useChatWriteActions — edit message', () => {
 
 describe('useChatWriteActions — regenerate', () => {
   beforeEach(() => vi.clearAllMocks())
+
+  it.each([
+    { composerModelId: 'provider::selected', explicitModelId: undefined, expected: 'provider::selected' },
+    { composerModelId: 'provider::selected', explicitModelId: 'provider::explicit', expected: 'provider::explicit' },
+    { composerModelId: undefined, explicitModelId: undefined, expected: 'provider::default' }
+  ] as const)(
+    'uses the selected model with explicit override precedence: $expected',
+    async ({ composerModelId, explicitModelId, expected }) => {
+      const message = uiMsg('a1', 'assistant', 'u1')
+      message.metadata.modelId = 'provider::historical'
+      const { actions, regenerate } = renderActions('vroot', [message], makeCache(), 'a1', false, {
+        composerModelId,
+        assistant: { modelId: 'provider::default', settings: {} } as unknown as Parameters<
+          typeof useChatWriteActions
+        >[0]['assistant']
+      })
+      await actions.regenerate('a1', explicitModelId ? { modelId: explicitModelId } : undefined)
+      expect(regenerate).toHaveBeenCalledWith(
+        expect.objectContaining({ body: expect.objectContaining({ mentionedModels: [expected] }) })
+      )
+    }
+  )
+
+  it('does not override a pending regeneration with the composer model', async () => {
+    const message = uiMsg('a1', 'assistant', 'u1')
+    message.metadata.status = 'pending'
+    const { actions, regenerate } = renderActions('vroot', [message], makeCache(), 'a1', false, {
+      composerModelId: 'provider::selected'
+    })
+    await actions.regenerate('a1')
+    expect(regenerate).toHaveBeenCalledWith({
+      messageId: 'a1',
+      body: expect.not.objectContaining({ mentionedModels: expect.anything() })
+    })
+  })
 
   it('waits for regeneration to finish', async () => {
     const { actions, regenerate } = renderActions('vroot', [

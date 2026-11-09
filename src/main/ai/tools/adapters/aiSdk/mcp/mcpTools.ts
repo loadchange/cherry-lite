@@ -31,7 +31,11 @@ function createMcpTool(mcpTool: McpTool, forcePrompt: boolean): Tool {
   return {
     type: 'function',
     description: mcpTool.description || mcpTool.name,
-    inputSchema: jsonSchema(mcpTool.inputSchema as JSONSchema7),
+    inputSchema: jsonSchema({
+      ...mcpTool.inputSchema,
+      type: 'object',
+      properties: mcpTool.inputSchema.properties ?? {}
+    } as JSONSchema7),
     needsApproval: async () => forcePrompt,
     execute: async (args: Record<string, unknown>, options) => {
       const { toolCallId, abortSignal } = options

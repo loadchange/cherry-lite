@@ -22,6 +22,7 @@ import { toast } from '@renderer/services/toast'
 import type { Topic as RendererTopic } from '@renderer/types/topic'
 import { fetchMessagesSummary } from '@renderer/utils/aiGeneration'
 import { sortTopicsForDisplayGroups } from '@renderer/utils/chat/topicsHelpers'
+import { matchesSearchText } from '@renderer/utils/pinyin'
 import { DEFAULT_ASSISTANT_EMOJI } from '@shared/data/presets/defaultAssistant'
 import type { Topic as ApiTopic } from '@shared/data/types/topic'
 import { Bot } from 'lucide-react'
@@ -324,7 +325,7 @@ const AssistantHistoryRecords = ({
   const getSourceId = useCallback((topic: HistoryTopicItem) => getTopicSourceId(topic, assistantById), [assistantById])
   const matchesSearch = useCallback(
     (topic: HistoryTopicItem, keywords: string) =>
-      (topic.name || t('chat.default.topic.name')).toLowerCase().includes(keywords),
+      matchesSearchText(topic.name || t('chat.default.topic.name'), keywords),
     [t]
   )
   const onActiveRecordChange = useCallback(

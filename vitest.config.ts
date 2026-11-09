@@ -21,6 +21,14 @@ const rendererConfig = (electronViteConfig as any).renderer
 export default defineConfig({
   test: {
     projects: [
+      {
+        extends: true,
+        test: {
+          name: 'web-search',
+          environment: 'node',
+          include: ['packages/web-search/src/**/__tests__/**/*.test.ts']
+        }
+      },
       // 主进程单元测试配置
       {
         extends: true,
@@ -107,6 +115,7 @@ export default defineConfig({
         resolve: {
           alias: {
             '@shared': resolve('src/shared'),
+            '@cherrystudio/web-search': resolve('packages/web-search/src'),
             '@cherrystudio/provider-registry/node': resolve('packages/provider-registry/src/registry-loader'),
             '@cherrystudio/provider-registry': resolve('packages/provider-registry/src')
           }
@@ -126,6 +135,7 @@ export default defineConfig({
         resolve: {
           alias: {
             '@shared': resolve('src/shared'),
+            '@cherrystudio/web-search': resolve('packages/web-search/src'),
             '@cherrystudio/provider-registry/node': resolve('packages/provider-registry/src/registry-loader'),
             '@cherrystudio/provider-registry': resolve('packages/provider-registry/src')
           }

@@ -135,7 +135,7 @@ const parseProxyBypassRule = (rule: string): ParsedProxyBypassRule | null => {
   }
 
   if (isWildcardIp(cleanedHost)) {
-    const regexPattern = cleanedHost.replace(/\./g, '\\.').replace(/\*/g, '\\d+')
+    const regexPattern = cleanedHost.replace(/\./g, '\\.').replace(/\*/g, '[\\d.]+')
     return {
       type: ProxyBypassRuleType.Ip,
       matchType: 'generalWildcard',

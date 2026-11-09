@@ -21,7 +21,7 @@ import { type SystemEventSchemas, systemRequestSchemas } from './system'
 import { type TabEventSchemas, tabRequestSchemas } from './tab'
 import { translateRequestSchemas } from './translate'
 import { type TtsEventSchemas, ttsRequestSchemas } from './tts'
-import { webSearchRequestSchemas } from './webSearch'
+import { type WebSearchEventSchemas, webSearchRequestSchemas } from './webSearch'
 import { type WebviewEventSchemas, webviewRequestSchemas } from './webview'
 import { type WindowEventSchemas, windowRequestSchemas } from './window'
 
@@ -82,6 +82,7 @@ export type IpcEventSchemas = AiEventSchemas &
   SystemEventSchemas &
   TabEventSchemas &
   TtsEventSchemas &
+  WebSearchEventSchemas &
   WebviewEventSchemas &
   WindowEventSchemas
 /** Union of all declared event names (`never` until a domain is migrated). */

@@ -67,6 +67,8 @@ const DELIVERY: Record<string, Partial<Record<string, Delivery>>> = {
   zhipu: { 'web-search': { kind: 'provider-options' } },
   // $web_search echo tool injected by the moonshot extension factory.
   moonshot: { 'web-search': factories('moonshot') },
+  'moonshot-global': { 'web-search': factories('moonshot') },
+  qwencloud: { 'web-search': { kind: 'provider-options' }, 'url-context': factories('anthropic') },
   poe: { 'web-search': { kind: 'provider-options' } },
   cherryin: { 'web-search': { kind: 'gateway-mapped' }, 'url-context': { kind: 'gateway-mapped' } },
   'new-api': { 'web-search': { kind: 'gateway-mapped' }, 'url-context': { kind: 'gateway-mapped' } },

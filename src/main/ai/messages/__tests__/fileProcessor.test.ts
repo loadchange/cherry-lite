@@ -3,6 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 
 import type { FileUIPart } from '@shared/data/types/message'
+import sharp from 'sharp'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@logger', () => ({
@@ -24,6 +25,13 @@ import { materializeNativeFilePart } from '../fileProcessor'
 const filePart = (p: Partial<FileUIPart>): FileUIPart =>
   ({ type: 'file', url: '', mediaType: 'application/octet-stream', ...p }) as FileUIPart
 
+let validPng: Buffer
+beforeAll(async () => {
+  validPng = await sharp({ create: { width: 1, height: 1, channels: 4, background: '#ffffff' } })
+    .png()
+    .toBuffer()
+})
+
 describe('materializeNativeFilePart — file:// inline', () => {
   let tmpDir: string
   let imgPath: string
@@ -31,12 +39,7 @@ describe('materializeNativeFilePart — file:// inline', () => {
   beforeAll(async () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'cherry-fp-'))
     imgPath = path.join(tmpDir, 'pixel.png')
-    const png = Buffer.from(
-      '89504E470D0A1A0A0000000D49484452000000010000000108060000001F15C4890000000D4944415478DA636400' +
-        '01000000050001A7DFAA680000000049454E44AE426082',
-      'hex'
-    )
-    await fs.writeFile(imgPath, png)
+    await fs.writeFile(imgPath, validPng)
   })
 
   afterAll(async () => {
@@ -64,8 +67,15 @@ describe('materializeNativeFilePart — file:// inline', () => {
   })
 
   it('leaves data: URLs untouched', async () => {
-    const out = await materializeNativeFilePart(filePart({ url: 'data:image/png;base64,AAA', mediaType: 'image/png' }))
-    expect(out?.url).toBe('data:image/png;base64,AAA')
+    const out = await materializeNativeFilePart(
+      filePart({ url: `data:image/png;base64,${validPng.toString('base64')}`, mediaType: 'image/png' })
+    )
+    expect(out?.url).toBe(`data:image/png;base64,${validPng.toString('base64')}`)
+  })
+
+  it('drops corrupt inline image bytes', async () => {
+    const out = await materializeNativeFilePart(filePart({ url: 'data:image/png;base64,QUJD', mediaType: 'image/png' }))
+    expect(out).toBeNull()
   })
 
   it('leaves http(s) URLs untouched', async () => {
@@ -90,12 +100,12 @@ describe('materializeNativeFilePart — file:// inline', () => {
 describe('materializeNativeFilePart — fileEntryId inline', () => {
   it('reads via FileManager and applies its MIME (overriding a bad hint)', async () => {
     readMock.mockReset()
-    readMock.mockResolvedValueOnce({ content: 'QUJD', mime: 'image/png' })
+    readMock.mockResolvedValueOnce({ content: validPng.toString('base64'), mime: 'image/png' })
     const out = await materializeNativeFilePart(
       filePart({ mediaType: '.png', providerMetadata: { cherry: { fileEntryId: 'entry-1' } } })
     )
     expect(out?.mediaType).toBe('image/png')
-    expect(out?.url).toBe('data:image/png;base64,QUJD')
+    expect(out?.url).toBe(`data:image/png;base64,${validPng.toString('base64')}`)
     expect(readMock).toHaveBeenCalledWith('entry-1', { encoding: 'base64' })
   })
 

@@ -1279,6 +1279,7 @@
         "minimal_description": "Minimal reasoning",
         "off": "Off",
         "off_description": "Disable reasoning",
+        "ultra": "Ultra",
         "xhigh": "Extra High",
         "xhigh_description": "Extra high level reasoning"
       },
@@ -7416,6 +7417,7 @@
           "save_failed": "Save failed",
           "zhipu_sync_failed": "Failed to sync Zhipu API key to Web Search. Please re-save the key or check Web Search settings."
         },
+        "fallback_notice": "{{primary}} is unavailable; switched to {{fallback}}",
         "fetch_urls_provider": "URL fetch provider",
         "free": "Free",
         "is_default": "Default",
@@ -7430,14 +7432,22 @@
         "overwrite_tooltip": "Force use search service instead of LLM",
         "provider_description": {
           "bocha": "Chinese AI search API with real-time web and structured results.",
+          "crawl4ai": "Use Crawl4AI Cloud with an API key, or enter a self-hosted Crawl4AI address with an optional token.",
+          "deepseek": "DeepSeek official Search and Fetch APIs, returning ranked web results and Markdown page content.",
+          "desearch": "Desearch web search API for AI apps, returning titles, links and snippets.",
+          "duckduckgo": "Free built-in keyword search powered by DuckDuckGo's HTML endpoint. No API key required.",
           "exa": "Neural search API for AI apps, tuned for semantic web retrieval.",
           "exa_mcp": "Expose Exa search to agents through the Exa MCP Server.",
           "fetch": "Built-in URL fetch provider. Fetches web page content from a URL to enrich search results.",
           "firecrawl": "Firecrawl crawler and search service, optimized to turn websites into Markdown.",
           "jina": "Jina Reader search and read APIs for retrieving clean web content.",
+          "parallel": "Web search API for AI agents, returning ranked links and token-dense excerpts.",
           "querit": "Search service for AI apps with web retrieval results.",
+          "searchapi": "SearchApi real-time search API returning Google results as structured JSON.",
           "searxng": "Self-hostable free internet metasearch engine across many sources.",
+          "serply": "Serply search API returning Google results as structured JSON for AI apps.",
           "tavily": "Search engine optimized for LLMs.",
+          "yuanbao": "Tencent Yuanbao Search API. Requires a service API key. The result count is an upper limit; the service may return fewer results.",
           "zhipu": "Zhipu GLM Web Search for live web retrieval and current information."
         },
         "search_max_result": {

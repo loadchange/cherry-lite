@@ -71,7 +71,7 @@ async function fileUrlToDataUrl(fileUrl: string) {
  * same signature. Add the provider/model strategy input then — callers won't
  * need to change.
  */
-export async function materializeNativeFilePart(part: FileUIPart): Promise<FileUIPart | null> {
+async function materializeInner(part: FileUIPart): Promise<FileUIPart | null> {
   const fileEntryId = readCherryMeta(part)?.fileEntryId
   if (fileEntryId) {
     const inlined = await fileEntryIdToDataUrl(fileEntryId)
@@ -93,4 +93,32 @@ export async function materializeNativeFilePart(part: FileUIPart): Promise<FileU
   if (!inlined) return null
 
   return { ...part, ...inlined }
+}
+
+export async function materializeNativeFilePart(part: FileUIPart): Promise<FileUIPart | null> {
+  const materialized = await materializeInner(part)
+  if (
+    !materialized ||
+    !/^image\/(?:png|jpeg|webp|gif)$/i.test(materialized.mediaType) ||
+    !materialized.url.startsWith('data:')
+  )
+    return materialized
+  try {
+    const comma = materialized.url.indexOf(',')
+    if (comma < 0) return null
+    const header = materialized.url.slice(0, comma)
+    const payload = materialized.url.slice(comma + 1)
+    const bytes = /;base64$/i.test(header)
+      ? Buffer.from(payload, 'base64')
+      : Buffer.from(
+          payload.replace(/%([0-9a-f]{2})/gi, (_, hex: string) => String.fromCharCode(parseInt(hex, 16))),
+          'binary'
+        )
+    const sharp = (await import('sharp')).default
+    await sharp(bytes, { failOn: 'error', limitInputPixels: 100_000_000 }).stats()
+    return materialized
+  } catch {
+    logger.warn('Unreadable image attachment', { filename: materialized.filename, mediaType: materialized.mediaType })
+    return null
+  }
 }
