@@ -189,7 +189,15 @@ export abstract class BaseService {
   protected registerDisposable<T extends Disposable>(disposable: T): T
   protected registerDisposable(dispose: () => void): Disposable
   protected registerDisposable<T extends Disposable>(disposableOrFn: T | (() => void)): T | Disposable {
-    const disposable = typeof disposableOrFn === 'function' ? toDisposable(disposableOrFn) : disposableOrFn
+    if (typeof disposableOrFn !== 'function') {
+      this._disposables.push(disposableOrFn)
+      return disposableOrFn
+    }
+    const disposable = toDisposable(() => {
+      const index = this._disposables.indexOf(disposable)
+      if (index !== -1) this._disposables.splice(index, 1)
+      disposableOrFn()
+    })
     this._disposables.push(disposable)
     return disposable
   }
@@ -199,10 +207,8 @@ export abstract class BaseService {
    * Called automatically after onStop() and in _doDestroy().
    */
   private _cleanupDisposables(): void {
-    for (const disposable of this._disposables) {
-      disposable.dispose()
-    }
-    this._disposables = []
+    let disposable: Disposable | undefined
+    while ((disposable = this._disposables.shift())) disposable.dispose()
   }
 
   /**

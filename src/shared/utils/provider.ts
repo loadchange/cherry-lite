@@ -2,6 +2,7 @@ import {
   isServerToolModelEligible as isRegistryServerToolModelEligible,
   isWebSearchEffortUnsupported,
   matchVendor,
+  normalizeModelId,
   SERVER_TOOL,
   SERVER_TOOL_MODEL_SCOPE,
   type ServerTool,
@@ -201,9 +202,10 @@ export function isSupportStreamOptionsProvider(provider: Provider): boolean {
   return provider.apiFeatures?.streamOptions ?? false
 }
 
-function getServerTool(provider: Pick<Provider, 'serverTools'>, id: ServerTool) {
-  return provider.serverTools?.find((tool) => tool.id === id)
-}
+export const DASHSCOPE_HOSTED_WEB_SEARCH_MODELS = [
+  { canonicalId: 'glm-5-2', wireIds: ['glm-5.2'] },
+  { canonicalId: 'kimi-k3', wireIds: ['kimi-k3', 'kimi/kimi-k3'] }
+] as const
 
 /** Whether the host serves this tool for the model's vendor family (declaration `vendors` narrowing). */
 function serverToolServesModelVendor(tool: ServerToolConfig, model: Model): boolean {
@@ -233,33 +235,85 @@ function resolveServerToolEndpoint(
 export function isServerToolModelEligible(
   model: Model,
   provider: Pick<Provider, 'id' | 'presetProviderId'>,
-  tool: ServerTool
+  tool: ServerTool,
+  endpointType?: EndpointType
 ): boolean {
   if (isNonChatModel(model)) return false
 
-  return isRegistryServerToolModelEligible(getRawModelId(model), provider.presetProviderId ?? provider.id, tool)
+  return isRegistryServerToolModelEligible(
+    getRawModelId(model),
+    provider.presetProviderId ?? provider.id,
+    tool,
+    endpointType
+  )
 }
 
-/** Effective built-in web-search availability for one provider-model pair. */
+/**
+ * Effective built-in web-search availability for one provider-model pair over one endpoint.
+ * A provider may declare the tool several times to split its serving scope by model line ×
+ * endpoint; eligibility then needs BOTH on the same declaration, so `undefined` (no such tool
+ * declaration) and "declared but not on this endpoint" both read as unavailable.
+ */
 export function isBuiltinWebSearchAvailable(
   model: Model,
   provider: Pick<Provider, 'id' | 'presetProviderId' | 'defaultChatEndpoint' | 'serverTools'>,
   endpointType?: EndpointType
 ): boolean {
-  const tool = getServerTool(provider, SERVER_TOOL.WEB_SEARCH)
+  return isBuiltinServerToolAvailable(model, provider, SERVER_TOOL.WEB_SEARCH, endpointType)
+}
+
+/** Effective provider-native URL-fetch availability for one provider-model pair. */
+export function isBuiltinWebFetchAvailable(
+  model: Model,
+  provider: Pick<Provider, 'id' | 'presetProviderId' | 'defaultChatEndpoint' | 'serverTools'>,
+  endpointType?: EndpointType
+): boolean {
+  return isBuiltinServerToolAvailable(model, provider, SERVER_TOOL.URL_CONTEXT, endpointType)
+}
+
+function isBuiltinServerToolAvailable(
+  model: Model,
+  provider: Pick<Provider, 'id' | 'presetProviderId' | 'defaultChatEndpoint' | 'serverTools'>,
+  toolId: ServerTool,
+  endpointType?: EndpointType
+): boolean {
+  const endpoint = resolveServerToolEndpoint(model, provider, endpointType)
+  const declarations =
+    provider.serverTools?.filter(
+      (tool) =>
+        tool.id === toolId && serverToolServesModelVendor(tool, model) && serverToolServesEndpoint(tool, endpoint)
+    ) ?? []
+  if (declarations.length === 0) return false
+  if (isNonChatModel(model)) return false
+
   if (
-    !tool ||
-    !serverToolServesModelVendor(tool, model) ||
-    !serverToolServesEndpoint(tool, resolveServerToolEndpoint(model, provider, endpointType))
+    endpoint === ENDPOINT_TYPE.ANTHROPIC_MESSAGES &&
+    (matchesPreset(provider, 'dashscope') || matchesPreset(provider, 'qwencloud'))
   ) {
-    return false
+    const rawId = getRawModelId(model)
+    const canonicalId = normalizeModelId(rawId)
+    // Catalog normalization collapses dated aliases; these tools are documented only for the named SKUs.
+    if (canonicalId === 'deepseek-v4-1-flash' && rawId !== 'deepseek-v4.1-flash-1017') return false
+    if (canonicalId === 'deepseek-v4-flash' && rawId !== 'deepseek-v4-flash-0731') return false
   }
 
-  if (tool.modelScope === SERVER_TOOL_MODEL_SCOPE.ALL_CHAT_MODELS) {
-    return !isNonChatModel(model)
+  if (toolId === SERVER_TOOL.WEB_SEARCH && matchesPreset(provider, 'dashscope')) {
+    const rawId = getRawModelId(model)
+    const hostedModel = DASHSCOPE_HOSTED_WEB_SEARCH_MODELS.find((row) => row.canonicalId === normalizeModelId(rawId))
+    if (
+      hostedModel &&
+      ((endpoint !== ENDPOINT_TYPE.OPENAI_RESPONSES && endpoint !== ENDPOINT_TYPE.ANTHROPIC_MESSAGES) ||
+        !hostedModel.wireIds.some((wireId) => wireId === rawId))
+    ) {
+      return false
+    }
   }
 
-  return isServerToolModelEligible(model, provider, SERVER_TOOL.WEB_SEARCH)
+  if (declarations.some((d) => d.modelScope === SERVER_TOOL_MODEL_SCOPE.ALL_CHAT_MODELS)) {
+    return true
+  }
+
+  return isServerToolModelEligible(model, provider, toolId, endpoint)
 }
 
 export type WebToolRoute = 'client' | 'server' | 'none'
@@ -278,26 +332,6 @@ export interface WebToolRoutes {
 }
 
 /** Effective provider-native URL-fetch availability for one provider-model pair. */
-export function isBuiltinWebFetchAvailable(
-  model: Model,
-  provider: Pick<Provider, 'id' | 'presetProviderId' | 'defaultChatEndpoint' | 'serverTools'>,
-  endpointType?: EndpointType
-): boolean {
-  const tool = getServerTool(provider, SERVER_TOOL.URL_CONTEXT)
-  if (
-    !tool ||
-    !serverToolServesModelVendor(tool, model) ||
-    !serverToolServesEndpoint(tool, resolveServerToolEndpoint(model, provider, endpointType))
-  ) {
-    return false
-  }
-
-  if (tool.modelScope === SERVER_TOOL_MODEL_SCOPE.ALL_CHAT_MODELS) {
-    return !isNonChatModel(model)
-  }
-
-  return isServerToolModelEligible(model, provider, SERVER_TOOL.URL_CONTEXT)
-}
 
 /**
  * Select one web-tool side for a request, then expose only the capabilities

@@ -1279,6 +1279,7 @@
         "minimal_description": "最小程度的推理",
         "off": "关闭",
         "off_description": "禁用推理",
+        "ultra": "超高",
         "xhigh": "穷究",
         "xhigh_description": "超高强度推理"
       },
@@ -7416,6 +7417,7 @@
           "save_failed": "保存失败",
           "zhipu_sync_failed": "智谱 API 密钥同步到 Web Search 失败，请重新保存密钥或检查 Web Search 设置。"
         },
+        "fallback_notice": "{{primary}} 不可用，已切换至 {{fallback}}",
         "fetch_urls_provider": "URL 获取服务商",
         "free": "免费",
         "is_default": "默认搜索",
@@ -7430,14 +7432,22 @@
         "overwrite_tooltip": "强制使用搜索服务商而不是大语言模型进行搜索",
         "provider_description": {
           "bocha": "面向 AI 场景的中文搜索 API，提供实时网页与结构化结果。",
+          "crawl4ai": "使用 API 密钥连接 Crawl4AI Cloud，或输入自托管的 Crawl4AI 地址，令牌为可选项。",
+          "deepseek": "DeepSeek 官方搜索与网页抓取 API，返回排序后的网页结果和 Markdown 页面内容。",
+          "desearch": "Desearch 网页搜索 API，返回标题、链接和摘要，适用于 AI 应用。",
+          "duckduckgo": "基于 DuckDuckGo 网页端的免费关键词搜索，无需 API Key。",
           "exa": "为 AI 应用设计的神经搜索 API，擅长语义检索高质量网页。",
           "exa_mcp": "通过 Exa MCP Server 将 Exa 搜索能力暴露给智能体工具调用。",
           "fetch": "内置 URL 获取服务商，用于从指定 URL 获取网页内容，适合补全搜索结果正文。",
           "firecrawl": "Firecrawl 网页抓取与搜索服务，支持将网页转换为 Markdown 格式。",
           "jina": "Jina Reader 搜索与阅读接口，用于检索并提取网页正文。",
+          "parallel": "面向 AI 智能体的网页搜索 API，返回按相关性排序的链接与高密度摘录。",
           "querit": "面向 AI 应用的搜索服务，提供可接入的网页检索结果。",
+          "searchapi": "SearchApi 实时搜索 API，以结构化 JSON 返回 Google 搜索结果。",
           "searxng": "可自托管的免费互联网元搜索引擎，聚合多个搜索源。",
+          "serply": "Serply 搜索 API，以结构化 JSON 返回 Google 搜索结果，适用于 AI 应用。",
           "tavily": "专为 LLM 优化的搜索引擎。",
+          "yuanbao": "腾讯元宝搜索 API，需配置服务 API Key。结果数量为上限，服务实际返回可能更少。",
           "zhipu": "智谱 GLM Web Search，提供联网搜索与实时信息检索。"
         },
         "search_max_result": {

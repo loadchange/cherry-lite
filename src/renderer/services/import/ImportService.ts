@@ -2,6 +2,7 @@ import { dataApiService } from '@data/DataApiService'
 import { loggerService } from '@logger'
 import i18n from '@renderer/i18n/resolver'
 import type { Message } from '@renderer/types/newMessage'
+import { uuid } from '@renderer/utils/uuid'
 import type { CreateAssistantDto } from '@shared/data/api/schemas/assistants'
 import type { CreateMessageDto } from '@shared/data/api/schemas/messages'
 
@@ -99,11 +100,13 @@ class ImportService {
           topicsCount: 0,
           messagesCount: 0,
           error: i18n.t('import.error.invalid_format', {
+            name: importer.name,
             defaultValue: `Invalid ${importer.name} format`
           })
         }
       }
 
+      const result = await importer.parse(fileContent, uuid())
       const importerKey = `import.${importer.name.toLowerCase()}.assistant_name`
       const dto: CreateAssistantDto = {
         name: i18n.t(importerKey, {
@@ -113,8 +116,24 @@ class ImportService {
       }
       const assistant = await dataApiService.post('/assistants', { body: dto })
 
-      const result = await importer.parse(fileContent, assistant.id)
-      await this.persistImport(result, assistant)
+      const createdTopicIds: string[] = []
+      try {
+        await this.persistImport(result, assistant, createdTopicIds)
+      } catch (error) {
+        for (const topicId of createdTopicIds) {
+          try {
+            await dataApiService.delete(`/topics/${topicId}`)
+          } catch (cleanupError) {
+            logger.error('Failed to roll back imported topic', { topicId, error: cleanupError })
+          }
+        }
+        try {
+          await dataApiService.delete(`/assistants/${assistant.id}`)
+        } catch (cleanupError) {
+          logger.error('Failed to roll back imported assistant', { assistantId: assistant.id, error: cleanupError })
+        }
+        throw error
+      }
 
       logger.info(
         `Import completed: ${result.topics.length} conversations, ${result.messages.length} messages imported`
@@ -190,15 +209,17 @@ class ImportService {
    */
   private async persistImport(
     result: ImportResult,
-    assistant: { id: string; name: string; emoji: string }
+    assistant: { id: string; name: string; emoji: string },
+    createdTopicIds: string[]
   ): Promise<void> {
     const { topics, blocks, messages } = result
     const blockContent = new Map(blocks.map((block) => [block.id, block.content]))
 
     for (const topic of topics) {
       const createdTopic = await dataApiService.post('/topics', {
-        body: { name: topic.name, assistantId: topic.assistantId }
+        body: { name: topic.name, assistantId: assistant.id }
       })
+      createdTopicIds.push(createdTopic.id)
 
       let parentId: string | null = null
       for (const message of topic.messages) {

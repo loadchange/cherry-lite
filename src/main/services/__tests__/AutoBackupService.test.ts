@@ -12,6 +12,7 @@ import { BackupOperationBusyError, legacyBackupManager } from '../LegacyBackupMa
 
 const mocks = vi.hoisted(() => ({
   BackupOperationBusyError: class extends Error {},
+  BackupActiveWritersError: class extends Error {},
   applicationGet: vi.fn(),
   applicationGetPath: vi.fn((key: string) => (key === 'app.userdata' ? '/mock/userData' : '/mock/install')),
   broadcastToType: vi.fn(),
@@ -44,6 +45,7 @@ vi.mock('@main/utils/legacyFile', async (importOriginal) => ({
 vi.mock('../LegacyBackupManager', () => {
   return {
     BackupOperationBusyError: mocks.BackupOperationBusyError,
+    BackupActiveWritersError: mocks.BackupActiveWritersError,
     legacyBackupManager: {
       backupToLocalDir: mocks.backupToLocalDir
     }
@@ -237,6 +239,16 @@ describe('AutoBackupService', () => {
     const failure = service.getStateSnapshot().pendingNotifications[0]
     expect(failure).toMatchObject({ type: 'local', status: 'failed' })
     service.acknowledgeNotification(failure.type, failure.id)
+    expect(service.getStateSnapshot().pendingNotifications).toEqual([])
+  })
+
+  it('postpones active-writer failures without exhausting the retry budget', async () => {
+    mocks.backupToLocalDir.mockRejectedValue(new mocks.BackupActiveWritersError('conversation running'))
+    await vi.advanceTimersByTimeAsync(60_000 + 30_000 * 5)
+    expect(mocks.backupToLocalDir).toHaveBeenCalledTimes(6)
+    expect(service.getStateSnapshot().pendingNotifications).toEqual([])
+    mocks.backupToLocalDir.mockResolvedValue({ result: '/backups/recovered.zip', cleanupError: null })
+    await vi.advanceTimersByTimeAsync(30_000)
     expect(service.getStateSnapshot().pendingNotifications).toEqual([])
   })
 

@@ -24,6 +24,17 @@ async function transform(params: LanguageModelV3CallOptions): Promise<LanguageMo
 }
 
 describe('toolSchemaCompatibilityFeature', () => {
+  it('normalizes parameterless tools and disables unspecified strict mode without mutating input', async () => {
+    const params: LanguageModelV3CallOptions = {
+      prompt: [],
+      tools: [{ type: 'function', name: 'ping', inputSchema: { type: 'object' } }]
+    }
+    const result = await transform(params)
+    expect(result.tools?.[0]).toMatchObject({ strict: false, inputSchema: { type: 'object', properties: {} } })
+    expect(params.tools?.[0]).not.toHaveProperty('strict')
+    expect(params.tools?.[0]).not.toHaveProperty('inputSchema.properties')
+  })
+
   it('strips unsupported validation keywords from nested strict schemas without mutating the source', async () => {
     const params: LanguageModelV3CallOptions = {
       prompt: [],
@@ -141,6 +152,7 @@ describe('toolSchemaCompatibilityFeature', () => {
         {
           type: 'function',
           name: 'loose',
+          strict: false,
           inputSchema: { type: 'object', properties: { n: { type: 'integer', minimum: 0 } } }
         },
         {

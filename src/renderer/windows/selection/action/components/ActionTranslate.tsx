@@ -1,5 +1,6 @@
 import { Button, Popover, PopoverContent, PopoverTrigger, Tooltip } from '@cherrystudio/ui'
 import { usePreference } from '@data/hooks/usePreference'
+import { preferenceService } from '@data/PreferenceService'
 import { loggerService } from '@logger'
 import { toMessageListItem } from '@renderer/components/chat/messages/utils/messageListItem'
 import CopyButton from '@renderer/components/CopyButton'
@@ -48,6 +49,29 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
   const { languages, getLanguage } = useLanguages()
   const isLanguagesLoaded = languages !== undefined
   const detectLanguage = useDetectLang()
+  const [savedLangCodes, setSavedLangCodes] = useState<{
+    preferred: TranslateLangCode
+    alter: TranslateLangCode
+  } | null>(null)
+  const initialLangCodes = useRef({ preferred: preferredLangCode, alter: alterLangCode })
+  useEffect(() => {
+    let active = true
+    void preferenceService
+      .getMultiple({
+        preferred: 'feature.translate.action.preferred_lang',
+        alter: 'feature.translate.action.alter_lang'
+      })
+      .then((codes) => {
+        if (active) setSavedLangCodes(codes)
+      })
+      .catch((error) => {
+        logger.warn('Failed to load translation language preferences', error)
+        if (active) setSavedLangCodes(initialLangCodes.current)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const [targetLanguage, setTargetLanguage] = useState<TranslateLanguage>(() => {
     const candidate = language || navigator.language || defaultLanguage
@@ -81,22 +105,22 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
   // It's called only in initialization.
   // It will change target/alter language, so fetchResult will be triggered. Be careful!
   const updateLanguagePair = useCallback(() => {
-    if (!isLanguagesLoaded) {
+    if (!isLanguagesLoaded || !savedLangCodes) {
       logger.silly('[updateLanguagePair] Languages are not loaded. Skip.')
       return
     }
 
-    const targetLang = getLanguage(preferredLangCode)
+    const targetLang = getLanguage(savedLangCodes.preferred)
     if (targetLang) {
       setTargetLanguage(targetLang)
       targetLangRef.current = targetLang
     }
 
-    const alterLang = getLanguage(alterLangCode)
+    const alterLang = getLanguage(savedLangCodes.alter)
     if (alterLang) {
       setAlterLanguage(alterLang)
     }
-  }, [getLanguage, isLanguagesLoaded, preferredLangCode, alterLangCode])
+  }, [getLanguage, isLanguagesLoaded, savedLangCodes])
 
   // Initialize values only once
   const initialize = useCallback(async () => {
@@ -106,7 +130,7 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
     }
 
     // Only try to initialize when languages loaded, so updateLanguagePair would not fail.
-    if (!isLanguagesLoaded) {
+    if (!isLanguagesLoaded || !savedLangCodes) {
       logger.silly('[initialize] Languages not loaded. Skip initialization.')
       return
     }
@@ -122,7 +146,7 @@ const ActionTranslate: FC<Props> = ({ action, scrollToBottom }) => {
     logger.silly('[initialize] UpdateLanguagePair completed.')
 
     setInitialized(true)
-  }, [initialized, isLanguagesLoaded, selectedText, updateLanguagePair])
+  }, [initialized, isLanguagesLoaded, savedLangCodes, selectedText, updateLanguagePair])
 
   // Try to initialize when:
   // 1. action.selectedText change (generally will not)

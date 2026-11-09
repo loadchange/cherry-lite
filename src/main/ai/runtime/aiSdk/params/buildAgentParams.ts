@@ -8,12 +8,12 @@ import { getProviderForCapability, isPermanentWebSearchConfigError } from '@main
 import { WEB_FETCH_TOOL_NAME, WEB_SEARCH_TOOL_NAME } from '@shared/ai/builtinTools'
 import type { CompactionSink } from '@shared/ai/compaction'
 import type { WebSearchCapability } from '@shared/data/preference/preferenceTypes'
-import { isWebSearchProviderReady } from '@shared/data/presets/webSearchProviders'
 import { type Assistant, DEFAULT_ASSISTANT_SETTINGS } from '@shared/data/types/assistant'
 import { ENDPOINT_TYPE, type EndpointType, type Model } from '@shared/data/types/model'
 import type { Provider } from '@shared/data/types/provider'
-import { isFunctionCallingModel } from '@shared/utils/model'
+import { isFunctionCallingModel, isQwenModel } from '@shared/utils/model'
 import { finalizeWebToolRoutes, resolveWebToolRoutes, type WebToolRoutes } from '@shared/utils/provider'
+import { isWebSearchProviderReady } from '@shared/utils/webSearch'
 import { type JSONValue, stepCountIs, type StopCondition, type ToolSet, type UIMessage } from 'ai'
 
 import { resolveRequestContextSettings } from '../../../contextBuild/resolveRequestContextSettings'
@@ -600,7 +600,18 @@ export function applyCallOverrides(
   callOverrides: CallOverrides | undefined,
   model: Model
 ): { standardParams: Partial<Record<string, unknown>>; providerOptions: ProviderOptions } {
-  if (!callOverrides) return base
+  const normalizeTemperature = model.providerId === 'dashscope' && isQwenModel(model)
+  if (
+    !callOverrides &&
+    !(
+      normalizeTemperature &&
+      typeof base.standardParams.temperature === 'number' &&
+      Number.isFinite(base.standardParams.temperature) &&
+      base.standardParams.temperature >= 2
+    )
+  )
+    return base
+  callOverrides ??= {}
 
   const sampling: Partial<Record<string, unknown>> = {}
   if (callOverrides.temperature !== undefined) sampling.temperature = callOverrides.temperature
@@ -609,6 +620,14 @@ export function applyCallOverrides(
   if (callOverrides.topK !== undefined) sampling.topK = callOverrides.topK
   if (callOverrides.stopSequences !== undefined) sampling.stopSequences = callOverrides.stopSequences
   const standardParams = { ...base.standardParams, ...filterStandardParams(sampling, model) }
+  if (
+    normalizeTemperature &&
+    typeof standardParams.temperature === 'number' &&
+    Number.isFinite(standardParams.temperature) &&
+    standardParams.temperature >= 2
+  ) {
+    standardParams.temperature = 1.9
+  }
 
   let providerOptions = base.providerOptions
   if (callOverrides.providerOptions) {

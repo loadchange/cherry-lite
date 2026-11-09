@@ -1,9 +1,25 @@
 import type { Provider } from './types'
 import { openaiCompatible } from './types'
 
-export const minimaxImageOverrides = [
+export const minimaxOverrides = [
   {
-    modelId: 'image-01',
+    modelId: 'minimax-m3-1-flash',
+    apiModelId: 'MiniMax-M3.1-Flash',
+    endpointTypes: ['openai-chat-completions', 'anthropic-messages'],
+    reasoningContracts: {
+      'anthropic-messages': {
+        wire: {
+          effort: { operations: [{ target: 'effort', value: { source: 'effort' } }] }
+        }
+      }
+    }
+  },
+  {
+    apiModelId: 'minimax-m3',
+    endpointTypes: ['openai-chat-completions', 'anthropic-messages']
+  },
+  {
+    apiModelId: 'image-01',
     imageGeneration: {
       modes: {
         edit: {
@@ -44,7 +60,7 @@ export const minimaxImageOverrides = [
     }
   },
   {
-    modelId: 'image-01-live',
+    apiModelId: 'image-01-live',
     imageGeneration: {
       modes: {
         edit: {
@@ -85,6 +101,7 @@ export const minimaxImageOverrides = [
 export default openaiCompatible({
   id: 'minimax',
   name: 'MiniMax',
+  availableInEditions: ['global', 'cn'],
   baseUrl: 'https://api.minimaxi.com/v1/',
   anthropic: 'https://api.minimaxi.com/anthropic',
   website: {
@@ -93,8 +110,5 @@ export default openaiCompatible({
     models: 'https://platform.minimaxi.com/document/Models',
     official: 'https://platform.minimaxi.com/'
   },
-  apiFeatures: {
-    arrayContent: false
-  },
-  overrides: minimaxImageOverrides
+  overrides: minimaxOverrides
 })

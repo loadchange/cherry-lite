@@ -140,7 +140,10 @@ export class ChatgptImporter implements ConversationImporter {
     }
 
     // Trace back to root
+    const visited = new Set<string>()
     while (nodeId) {
+      if (visited.has(nodeId)) throw new Error('Invalid ChatGPT export: cyclic parent references')
+      visited.add(nodeId)
       const node = mapping[nodeId]
       if (!node) break
 

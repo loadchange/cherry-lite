@@ -2,9 +2,55 @@ import { type ModelMessage, tool, type UIMessage } from 'ai'
 import { describe, expect, it } from 'vitest'
 import * as z from 'zod'
 
-import { coalesceConsecutiveSameRole, ensureNonEmptyAssistantContent, toModelMessages } from '../messageRules'
+import {
+  coalesceConsecutiveSameRole,
+  ensureNonEmptyAssistantContent,
+  normalizeReplayParts,
+  toModelMessages
+} from '../messageRules'
 
 const ui = (role: UIMessage['role'], parts: UIMessage['parts'], id = 'm'): UIMessage => ({ id, role, parts })
+
+describe('normalizeReplayParts', () => {
+  const toolPart = (overrides: Record<string, unknown> = {}) =>
+    ({
+      type: 'dynamic-tool',
+      toolName: 'lookup',
+      toolCallId: 'call-1',
+      state: 'output-available',
+      input: {},
+      output: 'ok',
+      ...overrides
+    }) as UIMessage['parts'][number]
+
+  it('keeps terminal evidence instead of duplicate provisional local tool calls', () => {
+    const messages = [ui('assistant', [toolPart({ state: 'input-available' }), toolPart()])]
+    expect(normalizeReplayParts(messages)[0].parts).toEqual([toolPart()])
+    expect(messages[0].parts).toHaveLength(2)
+  })
+
+  it('preserves provider-executed tool call pairs', () => {
+    const messages = [
+      ui('assistant', [
+        toolPart({ state: 'input-available', providerExecuted: true }),
+        toolPart({ providerExecuted: true })
+      ])
+    ]
+    expect(normalizeReplayParts(messages)[0].parts).toHaveLength(2)
+  })
+
+  it('drops blank signed reasoning, invalid inputs, and empty tool names', () => {
+    const messages = [
+      ui('assistant', [
+        { type: 'reasoning', text: ' ', providerMetadata: { anthropic: { signature: 'signed' } } },
+        toolPart({ input: null }),
+        toolPart({ toolName: ' ' }),
+        { type: 'text', text: 'answer' }
+      ])
+    ]
+    expect(normalizeReplayParts(messages)[0].parts).toEqual([{ type: 'text', text: 'answer' }])
+  })
+})
 
 // toModelMessages runs the exact Agent.stream order; these guard each step so deleting
 // one (coalesce, ignoreIncompleteToolCalls, the empty-content placeholder) fails a test.

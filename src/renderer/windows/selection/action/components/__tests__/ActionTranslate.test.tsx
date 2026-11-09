@@ -44,6 +44,10 @@ vi.mock('@cherrystudio/ui', async (importOriginal) => ({
   Tooltip: ({ children }: React.PropsWithChildren) => <>{children}</>
 }))
 
+vi.mock('@data/PreferenceService', () => ({
+  preferenceService: { getMultiple: vi.fn(async () => ({ preferred: 'zh-cn', alter: 'en-us' })) }
+}))
+
 vi.mock('@data/hooks/usePreference', () => ({
   usePreference: (key: string) => {
     if (key === 'app.language') return ['zh-cn', vi.fn()]

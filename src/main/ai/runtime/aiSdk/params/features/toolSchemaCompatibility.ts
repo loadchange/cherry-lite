@@ -117,10 +117,14 @@ function normalizeToolSchemas(params: LanguageModelV3CallOptions): LanguageModel
   const transformedTools = tools.map((tool) => {
     if (tool.type !== 'function') return tool
     const keywords = tool.strict === true ? STRICT_UNSUPPORTED : new Set(ALWAYS_UNSUPPORTED)
-    const inputSchema = stripKeywords(tool.inputSchema as JSONSchema7Definition, keywords)
-    if (inputSchema === tool.inputSchema) return tool
+    const stripped = stripKeywords(tool.inputSchema as JSONSchema7Definition, keywords)
+    const inputSchema =
+      typeof stripped === 'object' && stripped !== null && stripped.type === 'object' && stripped.properties == null
+        ? { ...stripped, properties: {} }
+        : stripped
+    if (inputSchema === tool.inputSchema && tool.strict !== undefined) return tool
     changed = true
-    return { ...tool, inputSchema: inputSchema as JSONSchema7 }
+    return { ...tool, strict: tool.strict ?? false, inputSchema: inputSchema as JSONSchema7 }
   })
 
   return changed ? { ...params, tools: transformedTools } : params

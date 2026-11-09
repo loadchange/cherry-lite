@@ -60,6 +60,7 @@ interface UseChatRuntimeStateParams {
   rootId: string | null
   messagesCacheMutate: UseTopicMessagesCacheParams['mutate']
   assistant?: Assistant
+  composerModelId?: UniqueModelId
   onBranchLiveStateChange?: (state: TopicMessageFlowLiveState | null) => void
   clearBranchDraft?: () => void
   getBranchDraftAnchorId?: () => string | null
@@ -111,6 +112,7 @@ export function useChatRuntimeState({
   rootId,
   messagesCacheMutate,
   assistant,
+  composerModelId,
   onBranchLiveStateChange,
   clearBranchDraft,
   getBranchDraftAnchorId
@@ -375,7 +377,8 @@ export function useChatRuntimeState({
       isTopicAwaitingApproval ||
       turnController.phase === 'persisting' ||
       turnController.phase === 'opening',
-    assistant
+    assistant,
+    composerModelId
   })
 
   const sendMessage = useCallback(

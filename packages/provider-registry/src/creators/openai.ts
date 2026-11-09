@@ -1,12 +1,83 @@
 import { openaiCompatible } from './_api'
 import { defineCreator } from './types'
 
+const gptImageFullSupports = {
+  background: { options: ['auto', 'transparent', 'opaque'], type: 'enum' as const },
+  moderation: { options: ['auto', 'low'], type: 'enum' as const },
+  numImages: { default: 1, max: 10, min: 1, type: 'range' as const },
+  quality: { options: ['auto', 'low', 'medium', 'high'], type: 'enum' as const },
+  size: {
+    default: '1024x1024',
+    options: ['auto', '1024x1024', '1536x1024', '1024x1536'],
+    render: 'chips' as const,
+    type: 'enum' as const
+  }
+}
+
+const gptImageFullImageGeneration = {
+  modes: {
+    edit: { supports: gptImageFullSupports },
+    generate: { supports: gptImageFullSupports }
+  }
+}
+
+const gptImage25ImageGeneration = {
+  modes: {
+    generate: {
+      supports: {
+        quality: gptImageFullSupports.quality,
+        size: {
+          default: '1024x1024',
+          options: [
+            'auto',
+            '1024x1024',
+            '1536x1024',
+            '1024x1536',
+            '1536x864',
+            '864x1536',
+            '1536x960',
+            '3840x2160',
+            '2160x3840'
+          ],
+          render: 'chips' as const,
+          type: 'enum' as const
+        }
+      }
+    }
+  }
+}
+
+const gptImage26EditSupports = {
+  complexity: { options: ['low', 'medium', 'high'], type: 'enum' as const },
+  outputFormat: { options: ['png', 'jpeg', 'webp', 'gif'], type: 'enum' as const },
+  frameCount: { min: 2, max: 16, default: 9, step: 1, type: 'range' as const },
+  frameDurationMs: { min: 20, max: 655350, default: 200, step: 10, type: 'range' as const },
+  background: gptImageFullSupports.background,
+  numImages: gptImageFullSupports.numImages,
+  quality: gptImageFullSupports.quality,
+  size: gptImageFullSupports.size
+}
+
+const gptImage26ImageGeneration = {
+  modes: {
+    generate: {
+      supports: {
+        ...gptImage26EditSupports,
+        moderation: gptImageFullSupports.moderation
+      }
+    },
+    edit: { supports: gptImage26EditSupports }
+  }
+}
+
 export default defineCreator({
   id: 'openai',
   name: 'OpenAI',
   fetchModels: openaiCompatible('openai', 'OPENAI_API_KEY'),
   modelsDevProviders: ['openai'],
   reasoningFamilies: [
+    { pattern: '^gpt-6[.-]1-sol(?:$|-)', effort: ['low', 'medium', 'high', 'xhigh', 'max'] },
+    { pattern: '^gpt-6-astra', effort: ['low', 'medium', 'high', 'xhigh', 'max'] },
     { pattern: '^(?:o\\d|gpt).*deep[-_]?research', effort: ['medium'] },
     { pattern: '^gpt-5[.-]1-codex-max', effort: ['medium', 'high', 'xhigh'] },
     { pattern: '^gpt-5[.-]1-codex', effort: ['medium', 'high'] },
@@ -18,6 +89,8 @@ export default defineCreator({
     // gpt-5.2 and later minor versions inherit the 5.2 vocabulary
     { pattern: '^gpt-5[.-]\\d+(?!.*chat)', effort: ['none', 'low', 'medium', 'high', 'xhigh'] },
     { pattern: '^gpt-5(?![.-]\\d)(?!.*chat)', effort: ['minimal', 'low', 'medium', 'high'] },
+    // gpt-6 and later inherit the full upstream effort ladder (gpt-6-astra is the first SKU)
+    { pattern: '^gpt-6', effort: ['none', 'low', 'medium', 'high', 'xhigh', 'max'] },
     { pattern: '^gpt-oss', effort: ['low', 'medium', 'high'] },
     // o-series reasoning SKUs (excluding the non-reasoning previews)
     { pattern: '^o1(?!-preview|-mini)|^o3|^o4', effort: ['low', 'medium', 'high'] },
@@ -49,72 +122,223 @@ export default defineCreator({
   webSearchUnsupportedEfforts: [{ pattern: '^gpt-5(?![.-]\\d)(?!.*chat)', efforts: ['minimal'] }],
   models: [
     {
+      id: 'gpt-image-2-6-flare',
+      name: 'GPT Image 2.6 Flare',
+      family: 'gpt-image',
+      capabilities: ['image-recognition', 'image-generation'],
+      inputModalities: ['text', 'image'],
+      outputModalities: ['image'],
+      endpointTypes: ['openai-image-generation', 'openai-image-edit'],
+      imageGeneration: gptImage26ImageGeneration
+    },
+    {
+      id: 'gpt-image-2-6-sunburst',
+      name: 'GPT Image 2.6 Sunburst',
+      family: 'gpt-image',
+      capabilities: ['image-recognition', 'image-generation'],
+      inputModalities: ['text', 'image'],
+      outputModalities: ['image'],
+      endpointTypes: ['openai-image-generation', 'openai-image-edit'],
+      imageGeneration: gptImage26ImageGeneration
+    },
+    {
+      id: 'gpt-6.1-terra',
+      name: 'GPT-6.1 Terra',
+      family: 'gpt',
+      capabilities: ['reasoning', 'function-call', 'image-recognition', 'structured-output', 'file-search'],
+      inputModalities: ['text', 'image'],
+      outputModalities: ['text'],
+      endpointTypes: ['openai-responses'],
+      contextWindow: 1050000,
+      maxInputTokens: 922000,
+      maxOutputTokens: 128000,
+      pricing: {
+        input: { currency: 'USD', perMillionTokens: 1 },
+        cacheRead: { currency: 'USD', perMillionTokens: 0.05 },
+        cacheWrite: { currency: 'USD', perMillionTokens: 1.25 },
+        output: { currency: 'USD', perMillionTokens: 5 },
+        inputTokenTiers: [
+          {
+            minInputTokens: 272001,
+            input: { currency: 'USD', perMillionTokens: 2 },
+            cacheRead: { currency: 'USD', perMillionTokens: 0.1 },
+            cacheWrite: { currency: 'USD', perMillionTokens: 2.5 },
+            output: { currency: 'USD', perMillionTokens: 7.5 }
+          }
+        ]
+      },
+      parameterSupport: {
+        temperature: { supported: false },
+        topP: { supported: false },
+        topK: { supported: false },
+        frequencyPenalty: false,
+        presencePenalty: false,
+        maxTokens: true,
+        stopSequences: false,
+        systemMessage: true
+      },
+      reasoning: {
+        controls: [{ kind: 'effort', values: ['none', 'low', 'medium', 'high', 'xhigh', 'max'], default: 'medium' }]
+      }
+    },
+    {
+      id: 'gpt-6.1-sol',
+      name: 'GPT-6.1 Sol',
+      family: 'gpt',
+      capabilities: ['reasoning', 'function-call', 'image-recognition', 'structured-output', 'file-search'],
+      inputModalities: ['text', 'image'],
+      outputModalities: ['text'],
+      endpointTypes: ['openai-responses'],
+      contextWindow: 1050000,
+      maxInputTokens: 922000,
+      maxOutputTokens: 128000,
+      pricing: {
+        input: { currency: 'USD', perMillionTokens: 2 },
+        cacheRead: { currency: 'USD', perMillionTokens: 0.1 },
+        cacheWrite: { currency: 'USD', perMillionTokens: 2.5 },
+        output: { currency: 'USD', perMillionTokens: 10 },
+        inputTokenTiers: [
+          {
+            minInputTokens: 272001,
+            input: { currency: 'USD', perMillionTokens: 4 },
+            cacheRead: { currency: 'USD', perMillionTokens: 0.2 },
+            cacheWrite: { currency: 'USD', perMillionTokens: 5 },
+            output: { currency: 'USD', perMillionTokens: 15 }
+          }
+        ]
+      },
+      parameterSupport: {
+        temperature: { supported: false },
+        topP: { supported: false },
+        topK: { supported: false },
+        frequencyPenalty: false,
+        presencePenalty: false,
+        maxTokens: true,
+        stopSequences: false,
+        systemMessage: true
+      },
+      reasoning: {
+        controls: [{ kind: 'effort', values: ['low', 'medium', 'high', 'xhigh', 'max'], default: 'medium' }]
+      }
+    },
+    {
+      id: 'gpt-6-sol',
+      name: 'GPT-6 Sol',
+      family: 'gpt',
+      capabilities: ['reasoning', 'function-call', 'image-recognition', 'structured-output', 'file-search'],
+      inputModalities: ['text', 'image'],
+      outputModalities: ['text'],
+      contextWindow: 1050000,
+      maxInputTokens: 922000,
+      maxOutputTokens: 128000,
+      pricing: {
+        input: { currency: 'USD', perMillionTokens: 2 },
+        cacheRead: { currency: 'USD', perMillionTokens: 0.2 },
+        cacheWrite: { currency: 'USD', perMillionTokens: 2.5 },
+        output: { currency: 'USD', perMillionTokens: 10 },
+        inputTokenTiers: [
+          {
+            minInputTokens: 272001,
+            input: { currency: 'USD', perMillionTokens: 4 },
+            cacheRead: { currency: 'USD', perMillionTokens: 0.4 },
+            cacheWrite: { currency: 'USD', perMillionTokens: 5 },
+            output: { currency: 'USD', perMillionTokens: 15 }
+          }
+        ]
+      },
+      reasoning: { controls: [{ kind: 'effort', values: ['none', 'low', 'medium', 'high', 'xhigh', 'max'] }] }
+    },
+    {
+      id: 'gpt-6-luna',
+      name: 'GPT-6 Luna',
+      family: 'gpt',
+      capabilities: ['reasoning', 'function-call', 'image-recognition', 'structured-output', 'file-search'],
+      inputModalities: ['text', 'image'],
+      outputModalities: ['text'],
+      contextWindow: 1050000,
+      maxInputTokens: 922000,
+      maxOutputTokens: 128000,
+      pricing: {
+        input: { currency: 'USD', perMillionTokens: 0.1 },
+        cacheRead: { currency: 'USD', perMillionTokens: 0.01 },
+        cacheWrite: { currency: 'USD', perMillionTokens: 0.125 },
+        output: { currency: 'USD', perMillionTokens: 0.5 },
+        inputTokenTiers: [
+          {
+            minInputTokens: 272001,
+            input: { currency: 'USD', perMillionTokens: 0.2 },
+            cacheRead: { currency: 'USD', perMillionTokens: 0.02 },
+            cacheWrite: { currency: 'USD', perMillionTokens: 0.25 },
+            output: { currency: 'USD', perMillionTokens: 0.75 }
+          }
+        ]
+      },
+      reasoning: { controls: [{ kind: 'effort', values: ['none', 'low', 'medium', 'high', 'xhigh', 'max'] }] }
+    },
+    {
+      id: 'gpt-6-astra',
+      name: 'GPT-6 Astra',
+      family: 'gpt',
+      capabilities: ['reasoning', 'function-call', 'image-recognition', 'structured-output', 'file-search'],
+      inputModalities: ['text', 'image'],
+      outputModalities: ['text'],
+      endpointTypes: ['openai-responses'],
+      contextWindow: 1050000,
+      maxInputTokens: 922000,
+      maxOutputTokens: 128000,
+      pricing: {
+        input: { currency: 'USD', perMillionTokens: 10 },
+        cacheRead: { currency: 'USD', perMillionTokens: 1 },
+        cacheWrite: { currency: 'USD', perMillionTokens: 12.5 },
+        output: { currency: 'USD', perMillionTokens: 50 },
+        inputTokenTiers: [
+          {
+            minInputTokens: 272001,
+            input: { currency: 'USD', perMillionTokens: 20 },
+            cacheRead: { currency: 'USD', perMillionTokens: 2 },
+            cacheWrite: { currency: 'USD', perMillionTokens: 25 },
+            output: { currency: 'USD', perMillionTokens: 75 }
+          }
+        ]
+      },
+      parameterSupport: {
+        temperature: { supported: false },
+        topP: { supported: false },
+        topK: { supported: false },
+        frequencyPenalty: false,
+        presencePenalty: false,
+        maxTokens: true,
+        stopSequences: false,
+        systemMessage: true
+      },
+      reasoning: { controls: [{ kind: 'effort', values: ['low', 'medium', 'high', 'xhigh', 'max'] }] }
+    },
+    {
+      id: 'gpt-image-2-5-flare',
+      name: 'GPT Image 2.5 Flare',
+      family: 'gpt-image',
+      capabilities: ['image-recognition', 'image-generation'],
+      inputModalities: ['text', 'image'],
+      outputModalities: ['image'],
+      imageGeneration: gptImage25ImageGeneration
+    },
+    {
+      id: 'gpt-image-2-5-sunburst',
+      name: 'GPT Image 2.5 Sunburst',
+      family: 'gpt-image',
+      capabilities: ['image-recognition', 'image-generation'],
+      inputModalities: ['text', 'image'],
+      outputModalities: ['image'],
+      imageGeneration: gptImage25ImageGeneration
+    },
+    {
       id: 'gpt-image-1-mini',
       name: 'GPT-Image-1-Mini',
       family: 'gpt-image',
       capabilities: ['image-recognition', 'image-generation', 'file-input'],
       inputModalities: ['text', 'image'],
       outputModalities: ['text', 'image'],
-      imageGeneration: {
-        modes: {
-          edit: {
-            supports: {
-              background: {
-                options: ['auto', 'transparent', 'opaque'],
-                type: 'enum'
-              },
-              moderation: {
-                options: ['auto', 'low'],
-                type: 'enum'
-              },
-              numImages: {
-                default: 1,
-                max: 10,
-                min: 1,
-                type: 'range'
-              },
-              quality: {
-                options: ['auto', 'low', 'medium', 'high'],
-                type: 'enum'
-              },
-              size: {
-                default: '1024x1024',
-                options: ['auto', '1024x1024', '1536x1024', '1024x1536'],
-                render: 'chips',
-                type: 'enum'
-              }
-            }
-          },
-          generate: {
-            supports: {
-              background: {
-                options: ['auto', 'transparent', 'opaque'],
-                type: 'enum'
-              },
-              moderation: {
-                options: ['auto', 'low'],
-                type: 'enum'
-              },
-              numImages: {
-                default: 1,
-                max: 10,
-                min: 1,
-                type: 'range'
-              },
-              quality: {
-                options: ['auto', 'low', 'medium', 'high'],
-                type: 'enum'
-              },
-              size: {
-                default: '1024x1024',
-                options: ['auto', '1024x1024', '1536x1024', '1024x1536'],
-                render: 'chips',
-                type: 'enum'
-              }
-            }
-          }
-        }
-      }
+      imageGeneration: gptImageFullImageGeneration
     },
     {
       id: 'dall-e-3',
@@ -200,7 +424,17 @@ export default defineCreator({
               },
               size: {
                 default: '1024x1024',
-                options: ['auto', '1024x1024', '1536x1024', '1024x1536'],
+                options: [
+                  'auto',
+                  '1024x1024',
+                  '1536x1024',
+                  '1024x1536',
+                  '1536x864',
+                  '864x1536',
+                  '1536x960',
+                  '3840x2160',
+                  '2160x3840'
+                ],
                 render: 'chips',
                 type: 'enum'
               }
@@ -216,66 +450,7 @@ export default defineCreator({
       capabilities: ['image-recognition', 'image-generation', 'file-input'],
       inputModalities: ['text', 'image'],
       outputModalities: ['image'],
-      imageGeneration: {
-        modes: {
-          edit: {
-            supports: {
-              background: {
-                options: ['auto', 'transparent', 'opaque'],
-                type: 'enum'
-              },
-              moderation: {
-                options: ['auto', 'low'],
-                type: 'enum'
-              },
-              numImages: {
-                default: 1,
-                max: 10,
-                min: 1,
-                type: 'range'
-              },
-              quality: {
-                options: ['auto', 'low', 'medium', 'high'],
-                type: 'enum'
-              },
-              size: {
-                default: '1024x1024',
-                options: ['auto', '1024x1024', '1536x1024', '1024x1536'],
-                render: 'chips',
-                type: 'enum'
-              }
-            }
-          },
-          generate: {
-            supports: {
-              background: {
-                options: ['auto', 'transparent', 'opaque'],
-                type: 'enum'
-              },
-              moderation: {
-                options: ['auto', 'low'],
-                type: 'enum'
-              },
-              numImages: {
-                default: 1,
-                max: 10,
-                min: 1,
-                type: 'range'
-              },
-              quality: {
-                options: ['auto', 'low', 'medium', 'high'],
-                type: 'enum'
-              },
-              size: {
-                default: '1024x1024',
-                options: ['auto', '1024x1024', '1536x1024', '1024x1536'],
-                render: 'chips',
-                type: 'enum'
-              }
-            }
-          }
-        }
-      }
+      imageGeneration: gptImageFullImageGeneration
     },
     // GPT-5 chat / reasoning SKUs. models.dev over-tags these with `image-generation`
     // + an `image` output modality — GPT-5 emits images only via the Responses

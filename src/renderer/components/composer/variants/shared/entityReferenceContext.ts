@@ -16,6 +16,17 @@ export const REFERENCE_CONTEXT_MAX_MESSAGE_CHARS = 2000
 const REFERENCE_CONTEXT_MAX_MESSAGES = 200
 
 /**
+ * The referenced name is conversation-derived free text rendered inside the
+ * `<referenced-conversation ...>` opening tag, so the markup alphabet has to be
+ * escaped the way double quotes already are: an unescaped `<` or `>` in the name
+ * would end the tag — or close the whole guarded block before the boundary note
+ * — letting the name pose as current-conversation structure.
+ */
+function escapeReferencedName(name: string): string {
+  return name.replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[ch]!).replace(/"/g, "'")
+}
+
+/**
  * Pure formatter: chronological transcript entries in → capped, delimited context block out.
  * Keeps only user/assistant entries with non-empty text; caps each message, then keeps the
  * most recent messages that fit the total budget (always at least one), in chronological order.
@@ -45,7 +56,7 @@ export function buildEntityReferencePromptText(options: {
     used += block.length + 2
   }
 
-  const openTag = `<referenced-conversation type="${options.entityType}" name="${options.name.replace(/"/g, "'")}">`
+  const openTag = `<referenced-conversation type="${options.entityType}" name="${escapeReferencedName(options.name)}">`
   const body = kept.length > 0 ? kept.join('\n\n') : '[empty]'
   const note =
     kept.length < usable.length ? `\n[showing the ${kept.length} most recent of ${usable.length} messages]\n` : '\n'

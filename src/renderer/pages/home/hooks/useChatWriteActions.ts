@@ -91,6 +91,7 @@ interface Params {
   scrollToBottom: () => void
   startNewContextBlocked: boolean
   assistant?: Assistant
+  composerModelId?: UniqueModelId
 }
 
 interface Result {
@@ -114,7 +115,8 @@ export function useChatWriteActions(params: Params): Result {
     seedReservedMessages,
     scrollToBottom,
     startNewContextBlocked,
-    assistant
+    assistant,
+    composerModelId
   } = params
   const {
     branchWithoutIds,
@@ -320,9 +322,6 @@ export function useChatWriteActions(params: Params): Result {
       // Anchor semantics depend on the target role:
       //   - assistant: keep parent user intact, spawn sibling — anchor = parentId
       //   - user:      keep the user itself, spawn assistant child — anchor = target.id
-      // `mentionedModels`: plain retry on an assistant uses the target's
-      // own model (otherwise retrying kimi would produce a gemini reply
-      // when assistant default is gemini). User resend picks the default.
       const target = messageId ? uiMessages.find((m) => m.id === messageId) : undefined
       const parentAnchorId = target
         ? target.role === 'user'
@@ -330,9 +329,12 @@ export function useChatWriteActions(params: Params): Result {
           : (target.metadata?.parentId ?? undefined)
         : undefined
       const regenModelId =
-        target?.role === 'assistant'
-          ? (options?.modelId ?? (target.metadata?.modelId as UniqueModelId | undefined))
-          : options?.modelId
+        options?.modelId ??
+        (target?.metadata?.status === 'pending'
+          ? undefined
+          : (composerModelId ??
+            assistant?.modelId ??
+            (target?.role === 'assistant' ? (target.metadata?.modelId as UniqueModelId | undefined) : undefined)))
       const turnOptions = options?.turnOptions ?? getInheritedTurnOptions(uiMessages, target)
 
       // PR 3: hydrate `useChat.state.messages` with the current DB-fresh
@@ -354,7 +356,7 @@ export function useChatWriteActions(params: Params): Result {
       })
       await regeneratePromise
     },
-    [regenerate, capabilityBody, uiMessages, setMessages]
+    [regenerate, capabilityBody, uiMessages, setMessages, composerModelId, assistant?.modelId]
   )
 
   const handleForkAndResend = useCallback<ChatWriteActions['forkAndResend']>(

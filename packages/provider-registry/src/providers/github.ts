@@ -72,6 +72,7 @@ const standaloneModels = [
 
 export default openaiCompatible({
   id: 'github',
+  availableInEditions: ['global'],
   name: 'Github Models',
   baseUrl: 'https://models.github.ai/inference',
   website: {
@@ -81,7 +82,7 @@ export default openaiCompatible({
     official: 'https://github.com/marketplace/models'
   },
   overrides: [
-    ...servedModels.map((modelId) => ({ modelId, pricing: FREE })),
-    ...standaloneModels.map((row) => ({ ...row, pricing: FREE }))
+    ...servedModels.map((modelId) => ({ apiModelId: modelId, pricing: FREE })),
+    ...standaloneModels.map((row) => ({ ...row, apiModelId: row.modelId, pricing: FREE }))
   ]
 })

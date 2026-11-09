@@ -9,11 +9,12 @@
  *     tsx scripts/generate-catalog.ts            # dry run (prints summary)
  *     tsx scripts/generate-catalog.ts --write    # write both JSON files
  *     tsx scripts/generate-catalog.ts --report   # also dump /tmp/gen-*.txt review files
+ *     tsx scripts/generate-catalog.ts --write --model gemini-4-argon # refresh one canonical model
  */
-import { createHash } from 'node:crypto'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { parseArgs } from 'node:util'
 
 import type { ZodType } from 'zod'
 
@@ -32,8 +33,11 @@ import type { ReasoningFamilyRule } from '../src/schemas/model'
 import { ReasoningFamilyRuleSchema } from '../src/schemas/model'
 import { stripHostReprefix } from '../src/utils/normalize'
 import { deriveLegacyReasoningFields } from '../src/utils/reasoningControls'
-import { canonOf, prefixHit, splitOverrideWireId } from './canonicalize'
+import { getServiceTierCatalogErrors } from '../src/utils/serviceTierCatalog'
+import { canonOf, deriveOverrideModelId, isModelsDevRoutingAlias, prefixHit } from './canonicalize'
+import { sortKeys, stampAndSerialize } from './catalogSerialization.mjs'
 import { mergeSelectedRows, refreshSnapshotReasoning } from './catalogSnapshot'
+import { scopeModelRefresh } from './scopeModelRefresh'
 import {
   type CherryMeta,
   finalizeMeta,
@@ -56,17 +60,22 @@ const PROVIDER_MODELS_PATH = path.join(__dirname, '../data/provider-models.json'
 const REASONING_FAMILIES_GEN_PATH = path.join(__dirname, '../src/patterns/reasoning-families.gen.ts')
 const SERVER_TOOL_MODELS_GEN_PATH = path.join(__dirname, '../src/patterns/server-tool-models.gen.ts')
 const SERVER_TOOL_CONSTRAINTS_GEN_PATH = path.join(__dirname, '../src/patterns/server-tool-constraints.gen.ts')
-const WRITE = process.argv.includes('--write')
-const REPORT = process.argv.includes('--report')
+const { values: args } = parseArgs({
+  options: {
+    write: { type: 'boolean' },
+    report: { type: 'boolean' },
+    model: { type: 'string', multiple: true },
+    'providers-only': { type: 'boolean' }
+  }
+})
+const WRITE = args.write
+const REPORT = args.report
 // Each artifact's `version` is a hash of its own (version-less, key-sorted) content: equal content ⇒
 // equal version, ANY content change ⇒ new version. Seeders (`PresetProviderSeeder` via `SeedRunner`)
 // skip when the journal version matches, so a date stamp would let a same-day regeneration change
 // content without changing version — and the seed would silently never run. Upstream (models.dev/
 // OpenRouter) is read live by default; set MODELSDEV_CACHE / OPENROUTER_CACHE /
 // OPENROUTER_IMAGE_CACHE to cache it during dev.
-const contentVersion = (body: unknown): string =>
-  createHash('sha256').update(JSON.stringify(body)).digest('hex').slice(0, 16)
-
 /**
  * Collect + validate every creator-declared reasoning family rule, in
  * CREATORS × declaration order (order IS the match priority — never sort).
@@ -111,16 +120,31 @@ function buildReasoningFamiliesGen(): string {
 }
 
 /**
- * Compile provider-owned server-tool selectors into exact catalog model ids.
+ * Compile provider-owned server-tool selectors into per-declaration catalog model id sets.
  * Exact ids keep runtime availability deterministic and prevent a broad family
  * prefix from leaking onto newly discovered image/TTS/transcription siblings.
+ * A provider may declare the same tool several times to split the serving scope
+ * (model line × endpoint); each declaration compiles to its own entry so runtime
+ * eligibility stays declaration-scoped.
  */
 function collectProviderServerToolModels(
   models: Map<string, any>
-): Record<string, Partial<Record<ServerTool, string[]>>> {
-  const result: Record<string, Partial<Record<ServerTool, string[]>>> = {}
+): Record<string, Partial<Record<ServerTool, Array<{ ids: string[]; endpointTypes?: string[] }>>>> {
+  const result: Record<string, Partial<Record<ServerTool, Array<{ ids: string[]; endpointTypes?: string[] }>>>> = {}
   for (const provider of PROVIDERS) {
-    const tools: Partial<Record<ServerTool, string[]>> = {}
+    const providerModels = new Map(models)
+    for (const override of provider.overrides ?? []) {
+      if (!override.modelId || !override.name) continue
+      const id = canonOf(override.modelId)
+      if (!providerModels.has(id)) {
+        providerModels.set(id, {
+          ...override,
+          id,
+          capabilities: override.capabilities?.force ?? override.capabilities?.add
+        })
+      }
+    }
+    const tools: Partial<Record<ServerTool, Array<{ ids: string[]; endpointTypes?: string[] }>>> = {}
     for (const config of provider.serverTools ?? []) {
       if (config.modelScope !== 'model-dependent') continue
       if (!config.modelIdPrefixes?.length && !config.modelIds?.length) {
@@ -130,7 +154,7 @@ function collectProviderServerToolModels(
       const exactModelIds = new Set(config.modelIds ?? [])
       const explicitImageIds = new Set(config.imageModelIds ?? [])
       const ids: string[] = []
-      for (const model of models.values()) {
+      for (const model of providerModels.values()) {
         if (
           !exactModelIds.has(model.id) &&
           !(config.modelIdPrefixes ?? []).some((prefix) => prefixHit(model.id, prefix))
@@ -150,7 +174,13 @@ function collectProviderServerToolModels(
         }
         ids.push(model.id)
       }
-      if (ids.length > 0) tools[config.id] = ids.sort()
+      if (ids.length > 0) {
+        const entry = {
+          ids: ids.sort(),
+          ...(config.endpointTypes?.length ? { endpointTypes: [...config.endpointTypes] } : {})
+        }
+        ;(tools[config.id] ??= []).push(entry)
+      }
     }
     if (Object.keys(tools).length > 0) result[provider.id] = tools
   }
@@ -167,12 +197,18 @@ function buildServerToolModelsGen(models: Map<string, any>): string {
     ' * Compiled from provider-owned server-tool model selectors',
     ' * by scripts/generate-catalog.ts — edit the provider and run `pnpm generate`.',
     ' */',
-    "import type { ServerTool } from '../schemas/enums'",
+    "import type { EndpointType, ServerTool } from '../schemas/enums'",
+    '',
+    'export interface ServerToolModelDeclaration {',
+    '  ids: readonly string[]',
+    '  /** Endpoint protocols this declaration serves; absent ⇒ every configured endpoint. */',
+    '  endpointTypes?: readonly EndpointType[]',
+    '}',
     '',
     'export const PROVIDER_SERVER_TOOL_MODEL_IDS: Readonly<',
-    '  Record<string, Partial<Record<ServerTool, readonly string[]>>>',
+    '  Record<string, Partial<Record<ServerTool, readonly ServerToolModelDeclaration[]>>>',
     '> =',
-    `  ${JSON.stringify(modelIds, null, 2)}`,
+    `  ${JSON.stringify(Object.fromEntries(Object.entries(modelIds).sort(([a], [b]) => a.localeCompare(b))), null, 2)}`,
     ''
   ].join('\n')
 }
@@ -228,12 +264,6 @@ function buildServerToolConstraintsGen(models: Map<string, any>): string {
   ].join('\n')
 }
 
-/** Key-sort `body`, stamp `version: contentVersion(body)`, and serialize — the single write shape. */
-const stampAndSerialize = (body: Record<string, unknown>): string => {
-  const sorted = sortKeys(body)
-  return JSON.stringify(sortKeys({ ...sorted, version: contentVersion(sorted) }), null, 2) + '\n'
-}
-
 // Canonicalization (`canonOf`) + prefix matching (`prefixHit`) live in `./canonicalize` so they can be
 // unit-tested / reused without running this script's generation IIFE.
 
@@ -249,17 +279,6 @@ const crossVendorHost = (id: string, ownerCreatorId: string | undefined) => {
   const creator = vendor && vendor !== ownerCreatorId ? creatorById.get(vendor) : undefined
   return !!creator && !(creator.idPrefixes ?? []).some((p) => prefixHit(canonOf(id), p))
 }
-
-const sortKeys = (v: any): any =>
-  Array.isArray(v)
-    ? v.map(sortKeys)
-    : v && typeof v === 'object'
-      ? Object.fromEntries(
-          Object.keys(v)
-            .sort()
-            .map((k) => [k, sortKeys(v[k])])
-        )
-      : v
 
 /** Load an upstream source (cache file or live URL) and validate its top-level shape with zod. */
 async function load<T>(env: string, url: string, schema: ZodType<T>): Promise<T> {
@@ -301,18 +320,21 @@ function buildIndex(md: ModelsDevApi, or: OpenRouterApi): Index {
   for (const [p, v] of Object.entries(md)) {
     if (!ownerOf.has(p)) continue
     for (const [id, m] of Object.entries(v.models ?? {})) {
+      if (isModelsDevRoutingAlias(p, id)) continue
       if (crossVendorHost(id, ownerOf.get(p))) continue
       consider(id, parseMdEntry(m), p)
     }
   }
+  const openRouter = PROVIDERS.find((provider) => provider.id === 'openrouter')
   const openRouterStandalones = new Set(
-    PROVIDERS.find((provider) => provider.id === 'openrouter')?.overrides?.flatMap((override) =>
-      override.name && override.modelId ? [override.modelId] : []
-    )
+    [
+      ...(openRouter?.standaloneModelIds ?? []),
+      ...(openRouter?.modelTemplates?.flatMap((template) => (template.name ? [template.modelId] : [])) ?? [])
+    ].map(canonOf)
   )
   for (const m of or.data ?? []) {
-    // A named `~vendor/*` override is an OpenRouter-owned moving alias, not a creator model.
-    if (m.id.startsWith('~') && openRouterStandalones.has(canonOf(m.id))) continue
+    // Provider-declared standalone routes are not creator models.
+    if (openRouterStandalones.has(canonOf(m.id))) continue
     consider(m.id, parseOrEntry(m), 'openrouter')
   }
 
@@ -340,7 +362,8 @@ async function assignCreators(index: Index, md: ModelsDevApi): Promise<Map<strin
     if (!creator.modelsDevProviders) continue
     const ids = new Set<string>()
     for (const p of creator.modelsDevProviders)
-      for (const id of Object.keys(md[p]?.models ?? {})) if (!crossVendorHost(id, creator.id)) ids.add(canonOf(id))
+      for (const id of Object.keys(md[p]?.models ?? {}))
+        if (!isModelsDevRoutingAlias(p, id) && !crossVendorHost(id, creator.id)) ids.add(canonOf(id))
     creatorProviderIds.set(creator.id, ids)
   }
   // each creator's own API list (most native; keyless → empty, falls back to the passes below)
@@ -481,12 +504,12 @@ function buildModels(index: Index, claimed: Map<string, string>): Map<string, an
 
 /**
  * Build providers.json from PROVIDERS: the connection config only (generation-only `modelsDevProvider` /
- * `fetchModels` / `overrides` are dropped), with `description` templated as `"{name} - AI model provider"`.
+ * `fetchModels` / `overrides` / `modelTemplates` are dropped), with `description` templated as `"{name} - AI model provider"`.
  * Array order follows PROVIDERS; `sortKeys` orders each provider's keys.
  */
 function buildProviders(): ProviderEntry[] {
   // oxlint-disable-next-line no-unused-vars
-  return PROVIDERS.map(({ modelsDevProvider, fetchModels, overrides, ...conn }) => {
+  return PROVIDERS.map(({ modelsDevProvider, fetchModels, standaloneModelIds, overrides, modelTemplates, ...conn }) => {
     const serverTools = conn.serverTools?.map((tool) => {
       const config = { ...tool }
       delete config.modelIdPrefixes
@@ -496,6 +519,15 @@ function buildProviders(): ProviderEntry[] {
     })
     return {
       ...conn,
+      apiFeatures: {
+        arrayContent: !['deepseek', 'baichuan', 'minimax', 'xirang', 'poe'].includes(conn.id),
+        streamOptions: conn.id !== 'mistral',
+        developerRole: false,
+        serviceTier: ['openai', 'openai-codex', 'groq'].includes(conn.id),
+        verbosity: false,
+        reportsActualCost: conn.reportsActualCost === true,
+        ...conn.apiFeatures
+      },
       ...(serverTools ? { serverTools } : {}),
       description: `${conn.name} - AI model provider`
     }
@@ -515,6 +547,9 @@ function buildProviderModels(
   orImageModels: OpenRouterApi,
   baseIds: Set<string>
 ): { overrides: any[] } {
+  const openRouterStandaloneIds = new Set(
+    PROVIDERS.find((provider) => provider.id === 'openrouter')?.standaloneModelIds?.map(canonOf) ?? []
+  )
   const seen = new Set<string>()
   const rows: any[] = []
   const variantsKey = (o: any): string => (o.modelVariants ?? []).slice().sort().join(',')
@@ -522,15 +557,13 @@ function buildProviderModels(
   // apiModelIds (e.g. tokenhub's dated 原厂直供 variants alongside the undated id) — `listProviderRegistryModels`
   // turns each surviving row into a distinct selectable model (its unique id derives from apiModelId).
   const addOverride = (raw: any): void => {
-    const o = splitOverrideWireId(raw)
+    const o = raw.apiModelId ? deriveOverrideModelId(raw) : raw
     const k = `${o.providerId} ${o.modelId} ${o.apiModelId ?? ''} ${variantsKey(o)}`
     if (seen.has(k)) return
     seen.add(k)
     rows.push(o)
   }
-  // md-derived rows key on `modelId` only — upstream date snapshots that canonicalize to one id collapse to
-  // a single row. Providers may also declare model-id reasoning templates; the template is expanded into
-  // each matching upstream row while its upstream pricing/apiModelId remain intact.
+  // md-derived rows key on `modelId`; templates expand into matching rows without replacing upstream identity.
   const addModel = (o: any): void => {
     const k = `${o.providerId} ${o.modelId} ${variantsKey(o)}`
     if (seen.has(k)) return
@@ -538,35 +571,26 @@ function buildProviderModels(
     rows.push(o)
   }
   for (const p of PROVIDERS) {
-    const reasoningTemplates = (p.overrides ?? []).filter(
-      (override) =>
-        p.modelsDevProvider &&
-        !override.apiModelId &&
-        (override.endpointTypes ||
-          override.reasoningContracts ||
-          override.parameterSupport ||
-          Object.hasOwn(override, 'pricing'))
-    )
-    const matchedTemplates = new Set<(typeof reasoningTemplates)[number]>()
-    for (const override of p.overrides ?? []) {
-      if (!reasoningTemplates.includes(override)) addOverride({ providerId: p.id, ...override })
-    }
+    const modelTemplates = p.modelTemplates ?? []
+    const matchedTemplates = new Set<(typeof modelTemplates)[number]>()
+    for (const override of p.overrides ?? []) addOverride({ providerId: p.id, ...override })
     const src = p.modelsDevProvider ? (md[p.modelsDevProvider]?.models ?? {}) : {}
     for (const [apiModelId, m] of Object.entries(src)) {
+      if (p.modelsDevProvider && isModelsDevRoutingAlias(p.modelsDevProvider, apiModelId)) continue
       const meta = parseMdEntry(m)
       if (!meta?.pricing) continue // no pricing → runtime resolves to base, no row needed
       const modelId = canonOf(apiModelId)
       if (!modelId) continue
-      const template = reasoningTemplates.find((override) => override.modelId === modelId)
+      const template = modelTemplates.find((override) => override.modelId === modelId)
       if (template) matchedTemplates.add(template)
       const row: any = { providerId: p.id, modelId, apiModelId, pricing: meta.pricing, ...template }
       if (!baseIds.has(modelId)) {
         if (!meta.name) continue
-        row.name = meta.name // vendor-exclusive → standalone
+        row.name ??= meta.name // vendor-exclusive → standalone
       }
       addModel(row)
     }
-    for (const template of reasoningTemplates) {
+    for (const template of modelTemplates) {
       if (!matchedTemplates.has(template)) addOverride({ providerId: p.id, ...template })
     }
   }
@@ -605,11 +629,25 @@ function buildProviderModels(
     const modelId = canonOf(model.id)
     if (!imageGeneration || !modelId) continue
     const meta = parseOrEntry(model)
+    const existing =
+      rows.find((row) => row.providerId === 'openrouter' && row.apiModelId === model.id) ??
+      rows.find(
+        (row) =>
+          !baseIds.has(modelId) &&
+          row.providerId === 'openrouter' &&
+          row.modelId === modelId &&
+          row.apiModelId === undefined
+      )
     const imageRow = {
       providerId: 'openrouter',
       modelId,
       apiModelId: model.id,
-      ...(!baseIds.has(modelId) ? { name: model.name ?? model.id, ownedBy: model.id.split('/')[0] } : {}),
+      ...(!baseIds.has(modelId)
+        ? {
+            name: existing?.name ?? model.name ?? model.id,
+            ownedBy: openRouterStandaloneIds.has(modelId) ? 'openrouter' : (existing?.ownedBy ?? model.id.split('/')[0])
+          }
+        : {}),
       capabilities: { add: ['image-generation'] },
       endpointTypes: ['openai-image-generation'],
       ...(meta?.inputModalities ? { inputModalities: meta.inputModalities } : {}),
@@ -619,7 +657,6 @@ function buildProviderModels(
     // `/models` may already have contributed pricing for this exact OpenRouter model. Enrich that
     // row in place so its pricing and the image catalog's controls coexist instead of first-wins
     // deduplication silently dropping one side.
-    const existing = rows.find((row) => row.providerId === 'openrouter' && row.apiModelId === model.id)
     if (existing) Object.assign(existing, imageRow)
     else addModel(imageRow)
   }
@@ -628,6 +665,17 @@ function buildProviderModels(
 }
 
 void (async () => {
+  if (args['providers-only']) {
+    if (WRITE) {
+      const { models } = JSON.parse(fs.readFileSync(MODELS_PATH, 'utf8'))
+      fs.writeFileSync(PROVIDERS_PATH, stampAndSerialize({ providers: buildProviders() }))
+      fs.writeFileSync(
+        SERVER_TOOL_MODELS_GEN_PATH,
+        buildServerToolModelsGen(new Map(models.map((model: { id: string }) => [model.id, model])))
+      )
+    }
+    return
+  }
   const md = await load('MODELSDEV_CACHE', 'https://models.dev/api.json', ModelsDevApiSchema)
   const [orModels, orImageModels] = await Promise.all([
     load('OPENROUTER_CACHE', 'https://openrouter.ai/api/v1/models', OpenRouterApiSchema),
@@ -638,21 +686,56 @@ void (async () => {
   const index = buildIndex(md, or)
   const claimed = await assignCreators(index, md)
   let models = buildModels(index, claimed)
+  let pm = buildProviderModels(md, orModels, orImageModels, new Set(models.keys()))
   const snapshotDirectory = process.env.CATALOG_BASE_DIR
   const selectedIds = (name: string) => new Set((process.env[name] ?? '').split(',').filter(Boolean))
   if (snapshotDirectory) {
     const selected = selectedIds('CATALOG_MODEL_IDS')
-    if (!selected.size) throw new Error('CATALOG_BASE_DIR requires explicit CATALOG_MODEL_IDS')
-    if (!selectedIds('CATALOG_PROVIDER_MODELS').size) {
-      throw new Error('CATALOG_BASE_DIR requires explicit CATALOG_PROVIDER_MODELS')
+    const selectedProviders = selectedIds('CATALOG_PROVIDER_IDS')
+    if (!selected.size && !selectedProviders.size && !selectedIds('CATALOG_PROVIDER_MODELS').size) {
+      throw new Error('CATALOG_BASE_DIR requires explicit model or provider selections')
     }
-    const previous = JSON.parse(fs.readFileSync(path.join(snapshotDirectory, 'models.json'), 'utf8')).models
+    const previousModels = JSON.parse(fs.readFileSync(path.join(snapshotDirectory, 'models.json'), 'utf8')).models
     models = new Map(
-      mergeSelectedRows<any>(previous, [...models.values()], selected, (model) => model.id).map((model) => [
+      mergeSelectedRows<any>(previousModels, [...models.values()], selected, (model) => model.id).map((model) => [
         model.id,
         model
       ])
     )
+    const previousOverrides = JSON.parse(
+      fs.readFileSync(path.join(snapshotDirectory, 'provider-models.json'), 'utf8')
+    ).overrides
+    const generated = pm.overrides
+    pm.overrides = mergeSelectedRows<any>(
+      previousOverrides,
+      generated,
+      selectedIds('CATALOG_PROVIDER_MODELS'),
+      (row) => `${row.providerId}/${row.modelId}`
+    )
+    if (selectedProviders.size) {
+      pm.overrides = [
+        ...pm.overrides.filter((row) => !selectedProviders.has(row.providerId)),
+        ...generated.filter((row) => selectedProviders.has(row.providerId))
+      ]
+    }
+    pm.overrides = refreshSnapshotReasoning(pm.overrides, generated, selectedIds('CATALOG_REASONING_PROVIDERS'))
+  }
+  if (args.model?.length) {
+    const scoped = scopeModelRefresh(
+      {
+        models: JSON.parse(fs.readFileSync(MODELS_PATH, 'utf8')).models,
+        overrides: JSON.parse(fs.readFileSync(PROVIDER_MODELS_PATH, 'utf8')).overrides
+      },
+      { models: [...models.values()], overrides: pm.overrides },
+      args.model
+    )
+    models = new Map(scoped.models.map((model) => [model.id, model]))
+    pm = {
+      overrides: scoped.overrides.sort((a, b) =>
+        `${a.providerId} ${a.modelId}`.localeCompare(`${b.providerId} ${b.modelId}`)
+      )
+    }
+    console.log(`refreshing only: ${args.model.join(', ')}`)
   }
 
   const unassigned = [...index.keys()].filter((k) => !claimed.has(k))
@@ -694,23 +777,18 @@ void (async () => {
       delete rest.metadata
       return { ...rest, ...(metadata ? { metadata } : {}) }
     })
+  const providers = buildProviders()
+  const serviceTierErrors = getServiceTierCatalogErrors(providers, pm.overrides)
+  if (serviceTierErrors.length > 0) {
+    throw new Error(`Invalid service tier catalog:\n${serviceTierErrors.join('\n')}`)
+  }
+
   fs.writeFileSync(MODELS_PATH, stampAndSerialize({ models: list }))
   console.log(`\nWROTE ${MODELS_PATH} (${list.length} models).`)
 
-  const providers = buildProviders()
   fs.writeFileSync(PROVIDERS_PATH, stampAndSerialize({ providers }))
   console.log(`WROTE ${PROVIDERS_PATH} (${providers.length} providers).`)
 
-  const pm = buildProviderModels(md, orModels, orImageModels, new Set(models.keys()))
-  if (snapshotDirectory) {
-    const selected = selectedIds('CATALOG_PROVIDER_MODELS')
-    const previous = JSON.parse(fs.readFileSync(path.join(snapshotDirectory, 'provider-models.json'), 'utf8')).overrides
-    const generated = pm.overrides
-    pm.overrides = mergeSelectedRows<any>(previous, generated, selected, (row) => `${row.providerId}/${row.modelId}`)
-    // Use the newly ingested descriptors, but retain every other field from the pinned catalog.
-    pm.overrides = refreshSnapshotReasoning(pm.overrides, generated, selectedIds('CATALOG_REASONING_PROVIDERS'))
-    pm.overrides.sort((a, b) => `${a.providerId} ${a.modelId}`.localeCompare(`${b.providerId} ${b.modelId}`))
-  }
   fs.writeFileSync(PROVIDER_MODELS_PATH, stampAndSerialize(pm))
   console.log(`WROTE ${PROVIDER_MODELS_PATH} (${pm.overrides.length} rows).`)
 

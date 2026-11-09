@@ -408,7 +408,7 @@ export const GEMINI_FLASH_MODEL_REGEX = /gemini.*flash/i
  * unique id carries the wire name instead.
  */
 export function getRawModelId(model: Model): string {
-  return model.apiModelId ?? parseUniqueModelId(model.id).modelId
+  return model.apiModelId || parseUniqueModelId(model.id).modelId
 }
 
 // ---------------------------------------------------------------------------

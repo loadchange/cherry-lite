@@ -83,6 +83,7 @@ const chatContract = (support: ReasoningSupport, wire: ReasoningWireProfile) => 
 export default openaiCompatible({
   id: 'nvidia',
   name: 'nvidia',
+  availableInEditions: ['global'],
   baseUrl: 'https://integrate.api.nvidia.com',
   // NIM reasoning controls are model-specific. Unknown/new models stay
   // fail-closed until an exact contract is audited below.
@@ -94,7 +95,7 @@ export default openaiCompatible({
     official: 'https://build.nvidia.com/explore/discover'
   },
   modelsDevProvider: 'nvidia',
-  overrides: [
+  modelTemplates: [
     ...['qwen3-5-122b-a10b', 'qwen3-5-397b-a17b'].map((modelId) => ({
       modelId,
       reasoningContracts: chatContract(toggleSupport, enableThinkingWire)

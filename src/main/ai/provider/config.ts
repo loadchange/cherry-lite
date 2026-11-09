@@ -185,7 +185,8 @@ export async function resolveProviderAiSdkConfig(
     // resolves under providerId 'moonshot'; the provider's transformRequestBody
     // rewrites the declaration to Kimi's builtin_function shape (moonshotProvider.ts).
     {
-      match: (p, id) => id === 'openai-compatible' && matchesPreset(p, 'moonshot'),
+      match: (p, id) =>
+        id === 'openai-compatible' && (matchesPreset(p, 'moonshot') || matchesPreset(p, 'moonshot-global')),
       build: withSelectedApiKey((ctx) => ({
         providerId: 'moonshot',
         endpoint: ctx.endpoint,

@@ -120,6 +120,8 @@ export class BackupOperationBusyError extends Error {
   }
 }
 
+export class BackupActiveWritersError extends Error {}
+
 class BackupManager {
   private readonly operationMutex = new Mutex()
 
@@ -1263,7 +1265,7 @@ class BackupManager {
 
   private assertNoActiveDataWriters(): void {
     if (application.get('AiStreamManager').hasLiveStreams()) {
-      throw new Error(
+      throw new BackupActiveWritersError(
         `${BACKUP_ACTIVE_WRITERS_ERROR_CODE}: A conversation is still running. Wait for it to finish, then retry the backup or restore.`
       )
     }

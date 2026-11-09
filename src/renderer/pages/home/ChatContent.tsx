@@ -172,6 +172,7 @@ const ChatContentInner: FC<InnerProps> = ({
     rootId,
     messagesCacheMutate,
     assistant,
+    composerModelId: assistantContext?.model?.id,
     onBranchLiveStateChange,
     clearBranchDraft,
     getBranchDraftAnchorId

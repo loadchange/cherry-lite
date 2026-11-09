@@ -74,7 +74,7 @@ export async function registerIpc() {
         sessions.map(async (session) => {
           await session.clearCache()
           await session.clearStorageData({
-            storages: ['cookies', 'filesystem', 'shadercache', 'websql', 'serviceworkers', 'cachestorage']
+            storages: ['cookies', 'filesystem', 'shadercache', 'serviceworkers', 'cachestorage']
           })
         })
       )

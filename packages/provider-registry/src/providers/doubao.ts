@@ -1,5 +1,4 @@
-import type { ProviderModelOverride } from '../schemas/provider-models'
-import { defineProvider } from './types'
+import { defineProvider, type ProviderModelOffer } from './types'
 import { EFFORT, modeWire } from './wires'
 
 /**
@@ -41,6 +40,15 @@ const highEffortDefaults = new Set([
   'doubao-seed-2-1-turbo-260628'
 ])
 
+/** seed-2.x SKUs offered on Ark's `service_tier: 'fast'` low-latency inference. */
+const fastTierModels = new Set([
+  'doubao-seed-2-1-pro-260628',
+  'doubao-seed-2-1-turbo-260628',
+  'doubao-seed-2-0-pro-260215',
+  'doubao-seed-2-0-lite-260428',
+  'doubao-seed-2-0-mini-260428'
+])
+
 /**
  * thinking.type on/off-only SKUs (no reasoning_effort). The provider-level chat wire below speaks
  * thinking.type, but the native openai responses adapter strips unknown providerOptions keys, so the
@@ -78,13 +86,14 @@ const legacyChatModels = [
   'qwen3-14b'
 ]
 
-const overrides: Partial<ProviderModelOverride>[] = [
+const overrides: ProviderModelOffer[] = [
   // The effort SKUs are the 250615+ line Ark serves over /responses, where the built-in web_search tool
   // and encrypted-CoT replay live — list Responses first so it's preferred, keeping chat selectable.
-  ...effortModels.map((modelId) => ({
-    modelId,
+  ...effortModels.map((apiModelId) => ({
+    apiModelId,
     endpointTypes: ['openai-responses' as const, 'openai-chat-completions' as const],
-    reasoningContracts: highEffortDefaults.has(modelId)
+    ...(fastTierModels.has(apiModelId) ? { supportsFastMode: true } : {}),
+    reasoningContracts: highEffortDefaults.has(apiModelId)
       ? {
           'openai-chat-completions': {
             ...effortContracts['openai-chat-completions'],
@@ -94,24 +103,27 @@ const overrides: Partial<ProviderModelOverride>[] = [
         }
       : effortContracts
   })),
-  ...chatOnlyEffortModels.map((modelId) => ({
-    modelId,
+  ...chatOnlyEffortModels.map((apiModelId) => ({
+    apiModelId,
     endpointTypes: ['openai-chat-completions' as const],
     reasoningContracts: { 'openai-chat-completions': { wire: effortWire } }
   })),
-  ...chatOnlyToggleModels.map((modelId) => ({
-    modelId,
+  ...chatOnlyToggleModels.map((apiModelId) => ({
+    apiModelId,
     endpointTypes: ['openai-chat-completions' as const]
   })),
-  ...legacyChatModels.map((modelId) => ({
-    modelId,
+  ...legacyChatModels.map((apiModelId) => ({
+    apiModelId,
     endpointTypes: ['openai-chat-completions' as const]
   }))
 ]
 
 export default defineProvider({
   id: 'doubao',
-  name: 'doubao',
+  name: 'Doubao',
+  availableInEditions: ['global', 'cn'],
+  // Ark 低延迟推理 rides OpenAI's serviceTier option with its own value (docs/82379/1569618).
+  fastMode: { transport: 'openai-priority' as const, serviceTier: 'fast' },
   // Chat Completions stays the provider default: endpoint selection falls back to it for any model
   // without `endpointTypes` (user-added custom models, `/models` discoveries that miss an override), and
   // Ark only serves /responses for 250615+ SKUs. Responses is opted into per model below.

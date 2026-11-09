@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
+import { isWebSearchProviderReady } from '../../../utils/webSearch'
 import { WEB_SEARCH_PROVIDER_IDS, type WebSearchProvider } from '../../preference/preferenceTypes'
 import {
-  isWebSearchProviderReady,
   PRESETS_WEB_SEARCH_PROVIDERS,
   WebSearchProviderIdSchema,
   WebSearchProviderOverrideSchema,

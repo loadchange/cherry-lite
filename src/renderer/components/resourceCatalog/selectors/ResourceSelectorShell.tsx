@@ -12,6 +12,7 @@ import {
   type SelectorShellMountStrategy,
   type SelectorShellProps
 } from '@renderer/components/SelectorShell'
+import { matchesSearchText } from '@renderer/utils/pinyin'
 import { Pin, Plus, SquarePen } from 'lucide-react'
 import {
   type KeyboardEvent as ReactKeyboardEvent,
@@ -313,8 +314,7 @@ export function ResourceSelectorShell<T extends ResourceSelectorShellItem>(props
     if (query) {
       filtered = filtered.filter(
         (item) =>
-          item.name.toLowerCase().includes(query) ||
-          (item.description ? item.description.toLowerCase().includes(query) : false)
+          matchesSearchText(item.name, query) || (item.description ? matchesSearchText(item.description, query) : false)
       )
     }
 

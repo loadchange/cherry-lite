@@ -44,10 +44,31 @@ export interface AISDKMessage extends ContextMessage {
  * non-system message is a user message. This is a system boundary — IR
  * downstream is trusted to satisfy invariants.
  */
+export function repairToolResultNames(prompt: LanguageModelV3Prompt): LanguageModelV3Prompt {
+  const toolCallNames = new Map<string, string>()
+  return prompt.map((message) => {
+    if (message.role === 'assistant') {
+      for (const part of message.content) {
+        if (part.type === 'tool-call') toolCallNames.set(part.toolCallId, part.toolName)
+      }
+    }
+    if (message.role !== 'assistant' && message.role !== 'tool') return message
+    let changed = false
+    const content = message.content.map((part) => {
+      if (part.type !== 'tool-result') return part
+      const toolName = toolCallNames.get(part.toolCallId)
+      if (toolName === undefined || toolName === part.toolName) return part
+      changed = true
+      return { ...part, toolName }
+    })
+    return changed ? ({ ...message, content } as typeof message) : message
+  })
+}
+
 export function fromAISDK(prompt: LanguageModelV3Prompt): AISDKMessage[] {
   const messages: AISDKMessage[] = []
 
-  for (const msg of prompt) {
+  for (const msg of repairToolResultNames(prompt)) {
     if (msg.role === 'system') {
       messages.push({
         role: 'system',

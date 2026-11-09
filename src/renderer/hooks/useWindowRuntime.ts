@@ -40,6 +40,12 @@ const DEFAULT_NAV_BACKGROUND = 'var(--sidebar)'
  */
 export function useWindowRuntime(): void {
   const { t } = useTranslation()
+  useIpcOn('web_search.fallback', ({ primaryProviderId, fallbackProviderId }) => {
+    toast.info({
+      title: t('settings.tool.websearch.fallback_notice', { primary: primaryProviderId, fallback: fallbackProviderId }),
+      timeout: 5000
+    })
+  })
   const [language] = usePreference('app.language')
   const [exitFullscreenPref] = usePreference('shortcut.app.fullscreen.exit')
   const enableQuitFullScreen = exitFullscreenPref?.enabled !== false

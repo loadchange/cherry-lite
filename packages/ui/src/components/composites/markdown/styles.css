@@ -4,3 +4,9 @@
 @import 'katex/dist/katex.min.css' layer(app);
 @import 'remark-github-blockquote-alert/alert.css' layer(app);
 @import 'streamdown/styles.css' layer(app);
+
+@layer app {
+  .markdown-fade-in [data-sd-animate] {
+    animation-fill-mode: backwards;
+  }
+}
